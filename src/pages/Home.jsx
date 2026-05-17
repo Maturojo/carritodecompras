@@ -26,7 +26,7 @@ export default function Home() {
 
   const filtered = useMemo(() => {
     let list = products.filter(p => {
-      const matchCat = activeCategory === 'todos' || p.category === activeCategory
+      const matchCat = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
       const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
       const matchPrice = p.price >= priceMin && p.price <= priceMax
       return matchCat && matchSearch && matchPrice
