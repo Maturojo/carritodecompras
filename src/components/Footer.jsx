@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
-            <span>🧉</span> Mate&amp;Co
+            <img src="/logo.png" alt="Mate&Co" className="footer-logo-img" />
           </Link>
           <p>Todo lo que necesitás para tu ritual del mate. Artesanal, argentino, con amor.</p>
         </div>

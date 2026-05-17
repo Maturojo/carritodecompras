@@ -86,6 +86,23 @@ button { cursor: pointer; border: none; font-family: inherit; }
   align-items: center;
   justify-content: space-between;
 }
+.navbar-logo-img {
+  height: 44px;
+  width: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--crema);
+  padding: 2px;
+}
+.footer-logo-img {
+  height: 56px;
+  width: 56px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--crema);
+  padding: 2px;
+  opacity: 0.9;
+}
 .navbar-logo {
   display: flex;
   align-items: center;
