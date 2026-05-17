@@ -15,12 +15,15 @@ export default function Nosotros() {
   return (
     <main className="page-content">
 
-      <section className="inner-hero">
-        <span className="section-pretitle">Quiénes somos</span>
-        <h1 className="inner-hero-title">Una historia de mates<br />y pasión artesanal</h1>
-        <p className="inner-hero-sub">
-          Somos un equipo chico con un amor enorme por la cultura del mate. Creemos que un buen mate empieza con los productos correctos.
-        </p>
+      <section className="inner-hero nosotros-hero" style={{ backgroundImage: 'url(/nosotros.jpeg)' }}>
+        <div className="inner-hero-overlay" />
+        <div className="inner-hero-content">
+          <span className="section-pretitle">Quiénes somos</span>
+          <h1 className="inner-hero-title">Una historia de mates<br />y pasión artesanal</h1>
+          <p className="inner-hero-sub">
+            Somos un equipo chico con un amor enorme por la cultura del mate. Creemos que un buen mate empieza con los productos correctos.
+          </p>
+        </div>
       </section>
 
       <section className="nosotros-story">
