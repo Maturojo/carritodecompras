@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Swal from 'sweetalert2'
 
 export default function Register() {
   const { register } = useAuth()
@@ -9,7 +10,7 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (form.password !== form.confirm) {
       setError('Las contraseñas no coinciden.')
@@ -22,6 +23,19 @@ export default function Register() {
     setLoading(true)
     const result = register({ nombre: form.nombre, email: form.email, password: form.password })
     if (result.ok) {
+      await Swal.fire({
+        title: `¡Bienvenido/a, ${form.nombre.split(' ')[0]}! 🧉`,
+        text: 'Tu cuenta fue creada con éxito. ¡Ya sos parte de la comunidad!',
+        icon: 'success',
+        confirmButtonText: 'Ir a mi cuenta',
+        confirmButtonColor: '#9c664d',
+        background: '#FDF9F0',
+        color: '#1a1209',
+        iconColor: '#9c664d',
+        customClass: { popup: 'swal-mate' },
+        timer: 4000,
+        timerProgressBar: true,
+      })
       navigate('/mi-cuenta')
     } else {
       setError(result.error)
