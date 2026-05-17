@@ -1,0 +1,332 @@
+import { useState } from 'react'
+import { useStore } from '../../context/StoreContext'
+import { categories } from '../../data/products'
+import { exportToExcel, importFromExcel } from '../../utils/excel'
+
+const newVariant = () => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  name: '',
+  price: '',
+  stock: '',
+  images: [''],
+})
+
+const emptyForm = () => ({
+  name: '',
+  description: '',
+  category: 'mates',
+  variants: [newVariant()],
+})
+
+export default function AdminProducts() {
+  const { products, addProduct, updateProduct, deleteProduct } = useStore()
+  const [showForm, setShowForm]       = useState(false)
+  const [editingId, setEditingId]     = useState(null)
+  const [form, setForm]               = useState(emptyForm())
+  const [search, setSearch]           = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [importMsg, setImportMsg]     = useState(null)
+  const [openVariant, setOpenVariant] = useState(0)
+
+  const formatPrice = (n) =>
+    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
+
+  /* ── Export / Import Excel ── */
+  const handleExport = () => {
+    // Una fila por variante
+    const rows = products.flatMap(p => {
+      const variants = p.variants?.length ? p.variants : [{ name: 'Única', price: p.price, stock: p.stock, images: [p.image] }]
+      return variants.map(v => ({
+        'Nombre':       p.name,
+        'Descripción':  p.description,
+        'Categoría':    p.category,
+        'Variante':     v.name,
+        'Precio':       v.price,
+        'Stock':        v.stock,
+        'Imágenes':     (v.images || []).join(' | '),
+      }))
+    })
+    exportToExcel(rows, 'Productos', 'mateshop-productos')
+  }
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      const rows = await importFromExcel(file)
+      // Agrupar filas por nombre de producto
+      const map = new Map()
+      rows.forEach(r => {
+        const key = r['Nombre']
+        if (!map.has(key)) {
+          map.set(key, {
+            name: r['Nombre'],
+            description: r['Descripción'] || '',
+            category: r['Categoría'] || 'mates',
+            variants: [],
+          })
+        }
+        map.get(key).variants.push({
+          id: Date.now().toString() + Math.random().toString(36).slice(2),
+          name:   r['Variante'] || 'Única',
+          price:  Number(r['Precio']) || 0,
+          stock:  Number(r['Stock'])  || 0,
+          images: r['Imágenes'] ? String(r['Imágenes']).split(' | ').filter(Boolean) : [],
+        })
+      })
+      map.forEach(p => addProduct(p))
+      setImportMsg(`✅ ${map.size} productos importados correctamente`)
+    } catch {
+      setImportMsg('❌ Error al leer el archivo Excel.')
+    }
+    setTimeout(() => setImportMsg(null), 4000)
+    e.target.value = ''
+  }
+
+  /* ── Form base ── */
+  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+  /* ── Variants ── */
+  const addVariant = () => {
+    const v = newVariant()
+    setForm(f => ({ ...f, variants: [...f.variants, v] }))
+    setOpenVariant(form.variants.length)
+  }
+
+  const removeVariant = (vid) =>
+    setForm(f => ({ ...f, variants: f.variants.filter(v => v.id !== vid) }))
+
+  const updateVariant = (vid, field, value) =>
+    setForm(f => ({
+      ...f,
+      variants: f.variants.map(v => v.id === vid ? { ...v, [field]: value } : v),
+    }))
+
+  /* ── Images per variant ── */
+  const addImage   = (vid) =>
+    setForm(f => ({ ...f, variants: f.variants.map(v => v.id === vid ? { ...v, images: [...v.images, ''] } : v) }))
+
+  const removeImage = (vid, idx) =>
+    setForm(f => ({ ...f, variants: f.variants.map(v => v.id === vid ? { ...v, images: v.images.filter((_, i) => i !== idx) } : v) }))
+
+  const updateImage = (vid, idx, value) =>
+    setForm(f => ({
+      ...f,
+      variants: f.variants.map(v =>
+        v.id === vid ? { ...v, images: v.images.map((img, i) => i === idx ? value : img) } : v
+      ),
+    }))
+
+  /* ── Edit ── */
+  const handleEdit = (product) => {
+    const variants = product.variants?.length
+      ? product.variants.map(v => ({
+          ...v,
+          price:  String(v.price),
+          stock:  String(v.stock),
+          images: v.images?.length ? v.images : [''],
+        }))
+      : [{ ...newVariant(), name: 'Única', price: String(product.price || ''), stock: String(product.stock || ''), images: [product.image || ''] }]
+
+    setForm({ name: product.name, description: product.description || '', category: product.category || 'mates', variants })
+    setEditingId(product.id)
+    setOpenVariant(0)
+    setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  /* ── Submit ── */
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const cleanVariants = form.variants.map(v => ({
+      ...v,
+      price:  Number(v.price),
+      stock:  Number(v.stock),
+      images: v.images.filter(img => img.trim() !== ''),
+    }))
+    const data = {
+      ...form,
+      variants: cleanVariants,
+      price: cleanVariants[0]?.price  || 0,
+      stock: cleanVariants[0]?.stock  || 0,
+      image: cleanVariants[0]?.images[0] || '',
+    }
+    if (editingId) updateProduct(editingId, data)
+    else           addProduct(data)
+    setForm(emptyForm())
+    setEditingId(null)
+    setShowForm(false)
+  }
+
+  const handleCancel = () => { setForm(emptyForm()); setEditingId(null); setShowForm(false) }
+  const handleDelete = (id) => { deleteProduct(id); setConfirmDelete(null) }
+
+  const catOptions = categories.filter(c => c.id !== 'todos')
+  const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()))
+
+  return (
+    <div className="admin-products">
+
+      {/* Toolbar */}
+      <div className="admin-toolbar">
+        <input className="admin-search" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="toolbar-actions">
+          <a className="admin-btn-secondary" href="/plantilla-productos.xlsx" download>📋 Plantilla</a>
+          <button className="admin-btn-secondary" onClick={handleExport}>⬇️ Exportar</button>
+          <label className="admin-btn-secondary" style={{ cursor: 'pointer' }}>
+            ⬆️ Importar
+            <input type="file" accept=".xlsx,.xls,.json" onChange={handleImport} style={{ display: 'none' }} />
+          </label>
+          <button className="admin-btn-primary" onClick={() => { setForm(emptyForm()); setEditingId(null); setOpenVariant(0); setShowForm(true) }}>
+            + Nuevo producto
+          </button>
+        </div>
+      </div>
+
+      {importMsg && <div className="import-msg">{importMsg}</div>}
+
+      {/* ── Formulario ── */}
+      {showForm && (
+        <div className="admin-card form-card">
+          <h3>{editingId ? 'Editar producto' : 'Nuevo producto'}</h3>
+          <form className="product-form" onSubmit={handleSubmit}>
+
+            {/* Base */}
+            <div className="form-row">
+              <div className="admin-form-group">
+                <label>Nombre *</label>
+                <input name="name" value={form.name} onChange={handleChange} required className="admin-input" placeholder="Mate de calabaza..." />
+              </div>
+              <div className="admin-form-group">
+                <label>Categoría *</label>
+                <select name="category" value={form.category} onChange={handleChange} className="admin-input">
+                  {catOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="admin-form-group">
+              <label>Descripción *</label>
+              <textarea name="description" value={form.description} onChange={handleChange} required className="admin-input admin-textarea" rows={3} placeholder="Descripción del producto..." />
+            </div>
+
+            {/* ── Variantes ── */}
+            <div className="variants-section">
+              <div className="variants-header">
+                <h4>Variantes <span className="variant-count">{form.variants.length}</span></h4>
+                <button type="button" className="admin-btn-secondary small" onClick={addVariant}>+ Agregar variante</button>
+              </div>
+
+              {form.variants.map((v, idx) => (
+                <div key={v.id} className={`variant-card ${openVariant === idx ? 'open' : ''}`}>
+                  <div className="variant-card-header" onClick={() => setOpenVariant(openVariant === idx ? -1 : idx)}>
+                    <span className="variant-toggle">{openVariant === idx ? '▼' : '▶'}</span>
+                    <span className="variant-label">{v.name || `Variante ${idx + 1}`}</span>
+                    {v.price && <span className="variant-price-preview">{formatPrice(Number(v.price))}</span>}
+                    {form.variants.length > 1 && (
+                      <button type="button" className="variant-remove-btn" onClick={e => { e.stopPropagation(); removeVariant(v.id) }}>✕</button>
+                    )}
+                  </div>
+
+                  {openVariant === idx && (
+                    <div className="variant-body">
+                      <div className="form-row">
+                        <div className="admin-form-group">
+                          <label>Nombre de la variante *</label>
+                          <input value={v.name} onChange={e => updateVariant(v.id, 'name', e.target.value)} required className="admin-input" placeholder="Ej: Natural 250ml, Rojo, Grande..." />
+                        </div>
+                        <div className="admin-form-group">
+                          <label>Precio (ARS) *</label>
+                          <input type="number" value={v.price} onChange={e => updateVariant(v.id, 'price', e.target.value)} required min="0" className="admin-input" placeholder="2500" />
+                        </div>
+                        <div className="admin-form-group">
+                          <label>Stock *</label>
+                          <input type="number" value={v.stock} onChange={e => updateVariant(v.id, 'stock', e.target.value)} required min="0" className="admin-input" placeholder="10" />
+                        </div>
+                      </div>
+
+                      {/* Imágenes */}
+                      <div className="admin-form-group">
+                        <label>Imágenes (URLs)</label>
+                        <div className="images-list">
+                          {v.images.map((img, imgIdx) => (
+                            <div key={imgIdx} className="image-row">
+                              <input
+                                value={img}
+                                onChange={e => updateImage(v.id, imgIdx, e.target.value)}
+                                className="admin-input"
+                                placeholder="https://..."
+                              />
+                              {img && <img src={img} alt="" className="image-thumb" onError={e => e.target.style.display='none'} />}
+                              {v.images.length > 1 && (
+                                <button type="button" className="img-remove-btn" onClick={() => removeImage(v.id, imgIdx)}>✕</button>
+                              )}
+                            </div>
+                          ))}
+                          <button type="button" className="admin-btn-secondary small" onClick={() => addImage(v.id)}>
+                            + Agregar imagen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="admin-btn-primary">{editingId ? 'Guardar cambios' : 'Agregar producto'}</button>
+              <button type="button" className="admin-btn-secondary" onClick={handleCancel}>Cancelar</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Tabla */}
+      <div className="admin-card">
+        <p className="admin-count">{filtered.length} productos</p>
+        <div className="products-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Variantes</th><th>Precio desde</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              {filtered.map(p => {
+                const firstVariant = p.variants?.[0]
+                const minPrice = p.variants?.length ? Math.min(...p.variants.map(v => v.price)) : p.price
+                const img = firstVariant?.images?.[0] || p.image || ''
+                return (
+                  <tr key={p.id}>
+                    <td><img src={img || 'https://placehold.co/48x48/e8e0d5/888?text=?'} alt={p.name} className="table-product-img" /></td>
+                    <td className="product-name-cell">{p.name}</td>
+                    <td><span className="cat-tag">{p.category}</span></td>
+                    <td><span className="variant-badge">{p.variants?.length || 1} variante{(p.variants?.length || 1) !== 1 ? 's' : ''}</span></td>
+                    <td className="price-cell">{formatPrice(minPrice)}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button className="action-btn edit" onClick={() => handleEdit(p)}>✏️ Editar</button>
+                        <button className="action-btn delete" onClick={() => setConfirmDelete(p.id)}>🗑️ Eliminar</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {confirmDelete && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <h3>¿Eliminar producto?</h3>
+            <p>Esta acción no se puede deshacer.</p>
+            <div className="modal-actions">
+              <button className="admin-btn-danger" onClick={() => handleDelete(confirmDelete)}>Eliminar</button>
+              <button className="admin-btn-secondary" onClick={() => setConfirmDelete(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
