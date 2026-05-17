@@ -31,7 +31,7 @@ export default function Navbar() {
       <nav className="navbar">
         <div className="navbar-inner">
           <Link to="/" className="navbar-logo" onClick={close}>
-            <img src="/logo.png" alt="Mate&Co" className="navbar-logo-img" />
+            <img src="/logo.jpeg" alt="Mate&Co" className="navbar-logo-img" />
           </Link>
 
           <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
