@@ -21,7 +21,7 @@ export default function Register() {
       return
     }
     setLoading(true)
-    const result = register({ nombre: form.nombre, email: form.email, password: form.password })
+    const result = await register({ nombre: form.nombre, email: form.email, password: form.password })
     if (result.ok) {
       await Swal.fire({
         title: `¡Bienvenido/a, ${form.nombre.split(' ')[0]}! 🧉`,
