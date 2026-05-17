@@ -17,7 +17,7 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const result = login(form)
+    const result = await login(form)
     if (result.ok) {
       await Swal.fire({
         title: `¡Hola de nuevo, ${result.user?.nombre?.split(' ')[0] || ''}! 👋`,
