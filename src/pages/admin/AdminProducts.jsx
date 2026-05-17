@@ -52,34 +52,39 @@ export default function AdminProducts() {
   const handleImport = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+    setImportMsg('⏳ Importando productos...')
     try {
       const rows = await importFromExcel(file)
       // Agrupar filas por nombre de producto
       const map = new Map()
       rows.forEach(r => {
-        const key = r['Nombre']
-        if (!map.has(key)) {
-          map.set(key, {
-            name: r['Nombre'],
+        const nombre = String(r['Nombre'] || '').trim()
+        if (!nombre) return
+        if (!map.has(nombre)) {
+          map.set(nombre, {
+            name:        nombre,
             description: r['Descripción'] || '',
-            category: r['Categoría'] || 'mates',
-            variants: [],
+            category:    (r['Categoría'] || 'otros').toLowerCase().trim(),
+            variants:    [],
           })
         }
-        map.get(key).variants.push({
-          id: Date.now().toString() + Math.random().toString(36).slice(2),
-          name:   r['Variante'] || 'Única',
+        map.get(nombre).variants.push({
+          id:     Date.now().toString() + Math.random().toString(36).slice(2),
+          name:   String(r['Variante'] || 'Única').trim(),
           price:  Number(r['Precio']) || 0,
           stock:  Number(r['Stock'])  || 0,
-          images: r['Imágenes'] ? String(r['Imágenes']).split(' | ').filter(Boolean) : [],
+          images: r['Imágenes'] ? String(r['Imágenes']).split(' | ').map(s => s.trim()).filter(Boolean) : [],
         })
       })
-      map.forEach(p => addProduct(p))
-      setImportMsg(`✅ ${map.size} productos importados correctamente`)
-    } catch {
-      setImportMsg('❌ Error al leer el archivo Excel.')
+      // Guardar TODOS en MongoDB esperando cada uno
+      const productos = Array.from(map.values())
+      await Promise.all(productos.map(p => addProduct(p)))
+      setImportMsg(`✅ ${productos.length} productos importados correctamente`)
+    } catch (err) {
+      console.error('Error importando:', err)
+      setImportMsg('❌ Error al importar. Revisá el archivo Excel.')
     }
-    setTimeout(() => setImportMsg(null), 4000)
+    setTimeout(() => setImportMsg(null), 5000)
     e.target.value = ''
   }
 
