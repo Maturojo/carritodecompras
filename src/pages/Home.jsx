@@ -18,24 +18,28 @@ export default function Home() {
   const [sort, setSort] = useState('default')
   const [showFilters, setShowFilters] = useState(false)
 
-  const prices = products.map(p => p.price)
-  const globalMin = Math.min(...prices)
-  const globalMax = Math.max(...prices)
-  const [priceMin, setPriceMin] = useState(globalMin)
-  const [priceMax, setPriceMax] = useState(globalMax)
+  // Precio base: primer variante o precio directo
+  const getPrice = (p) => p.variants?.[0]?.price ?? p.price ?? 0
+
+  const prices = products.map(getPrice)
+  const globalMin = prices.length ? Math.min(...prices) : 0
+  const globalMax = prices.length ? Math.max(...prices) : 99999
+  const [priceMin, setPriceMin] = useState(0)
+  const [priceMax, setPriceMax] = useState(99999)
 
   const filtered = useMemo(() => {
     let list = products.filter(p => {
-      const matchCat = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
-      const matchPrice = p.price >= priceMin && p.price <= priceMax
+      const precio = getPrice(p)
+      const matchCat    = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
+      const matchSearch = (p.name || '').toLowerCase().includes(search.toLowerCase())
+      const matchPrice  = precio >= priceMin && precio <= priceMax
       return matchCat && matchSearch && matchPrice
     })
 
     switch (sort) {
-      case 'price-asc':  return [...list].sort((a, b) => a.price - b.price)
-      case 'price-desc': return [...list].sort((a, b) => b.price - a.price)
-      case 'newest':     return [...list].sort((a, b) => b.id - a.id)
+      case 'price-asc':  return [...list].sort((a, b) => getPrice(a) - getPrice(b))
+      case 'price-desc': return [...list].sort((a, b) => getPrice(b) - getPrice(a))
+      case 'newest':     return [...list].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
       case 'name':       return [...list].sort((a, b) => a.name.localeCompare(b.name))
       default:           return list
     }
