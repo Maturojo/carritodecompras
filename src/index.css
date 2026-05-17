@@ -493,11 +493,17 @@ button { cursor: pointer; border: none; font-family: inherit; }
 /* ── Hamburger ── */
 .hamburger {
   display: none;
-  background: none;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
   color: var(--blanco);
-  font-size: 1.4rem;
-  padding: 0.25rem 0.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
+.hamburger svg { width: 18px; height: 18px; }
 
 /* ── btn-outline ── */
 .btn-outline {
@@ -1356,17 +1362,31 @@ button { cursor: pointer; border: none; font-family: inherit; }
   gap: 0.25rem;
 }
 .nav-icon-btn {
-  background: none;
-  border: none;
-  font-size: 1.15rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
   cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 8px;
-  color: rgba(255,255,255,0.85);
-  transition: background 0.15s;
-  display: flex; align-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.88);
+  transition: background 0.18s, border-color 0.18s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-decoration: none;
 }
-.nav-icon-btn:hover { background: rgba(255,255,255,0.12); }
+.nav-icon-btn svg { width: 18px; height: 18px; }
+.nav-icon-btn:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+.nav-icon-btn.active {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+}
 .user-avatar-mini {
   width: 26px; height: 26px;
   border-radius: 50%;
