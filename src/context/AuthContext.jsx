@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
       const data = await res.json()
       if (!res.ok) return { ok: false, error: data.error || 'Error al iniciar sesión.' }
       setUser(data.user)
-      return { ok: true }
+      return { ok: true, user: data.user }
     } catch {
       return { ok: false, error: 'Error de conexión. Intentá de nuevo.' }
     }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Swal from 'sweetalert2'
 
 export default function Login() {
   const { login } = useAuth()
@@ -18,6 +19,19 @@ export default function Login() {
     setError('')
     const result = login(form)
     if (result.ok) {
+      await Swal.fire({
+        title: `¡Hola de nuevo, ${result.user?.nombre?.split(' ')[0] || ''}! 👋`,
+        text: 'Iniciaste sesión correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#9c664d',
+        background: '#FDF9F0',
+        color: '#1a1209',
+        iconColor: '#9c664d',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      })
       navigate(from)
     } else {
       setError(result.error)
