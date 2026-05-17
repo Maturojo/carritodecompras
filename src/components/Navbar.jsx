@@ -68,7 +68,6 @@ export default function Navbar() {
       <nav className="navbar">
         <div className="navbar-inner">
           <Link to="/" className="navbar-logo" onClick={close}>
-            <img src="/logo.jpeg" alt="Mate&Co" className="navbar-logo-img" />
             <span className="logo-text">Mate&amp;Co</span>
           </Link>
 
