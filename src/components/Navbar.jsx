@@ -32,7 +32,7 @@ export default function Navbar() {
         <div className="navbar-inner">
           <Link to="/" className="navbar-logo" onClick={close}>
             <span className="logo-icon">🧉</span>
-            <span className="logo-text">MateShop</span>
+            <span className="logo-text">Mate&amp;Co</span>
           </Link>
 
           <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>

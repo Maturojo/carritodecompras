@@ -33,7 +33,7 @@ export default function AdminLayout({ onLogout }) {
       {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <span className="admin-logo">🧉 MateShop</span>
+          <span className="admin-logo">🧉 Mate&amp;Co</span>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
         <nav className="admin-nav">

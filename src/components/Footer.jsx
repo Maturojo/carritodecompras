@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
-            <span>🧉</span> MateShop
+            <span>🧉</span> Mate&amp;Co
           </Link>
           <p>Todo lo que necesitás para tu ritual del mate. Artesanal, argentino, con amor.</p>
         </div>
@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>© 2025 MateShop. Hecho con 🧉 en Argentina.</p>
+        <p>© 2025 Mate&amp;Co. Hecho con 🧉 en Argentina.</p>
       </div>
     </footer>
   )

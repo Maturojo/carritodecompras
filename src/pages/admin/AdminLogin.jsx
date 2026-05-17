@@ -20,7 +20,7 @@ export default function AdminLogin({ onLogin }) {
     <div className="admin-login">
       <div className="admin-login-card">
         <span className="admin-login-icon">🧉</span>
-        <h1>MateShop Admin</h1>
+        <h1>Mate&amp;Co Admin</h1>
         <p>Ingresá la contraseña para acceder al panel</p>
         <form onSubmit={handleSubmit}>
           <input

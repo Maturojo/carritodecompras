@@ -8,7 +8,7 @@ const timeline = [
   { year: '2022', event: 'Primera venta desde la cocina de casa con 5 mates artesanales.' },
   { year: '2023', event: 'Sumamos 10 artesanos de Misiones, Corrientes y Entre Ríos.' },
   { year: '2024', event: 'Lanzamos la línea de yerbas seleccionadas y superamos los 300 clientes.' },
-  { year: '2025', event: 'Abrimos MateShop online para llegar a todo el país.' },
+  { year: '2025', event: 'Abrimos Mate&Co online para llegar a todo el país.' },
 ]
 
 export default function Nosotros() {

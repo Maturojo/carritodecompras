@@ -61,7 +61,7 @@ export default function Landing() {
             <span className="section-pretitle">Nuestra historia</span>
             <h2 className="section-title">Más que una tienda,<br />una pasión</h2>
             <p>
-              MateShop nació de una mesa familiar un domingo a la tarde, con mate en mano y la pregunta de siempre: ¿dónde conseguir buenos mates artesanales sin tener que ir hasta una feria?
+              Mate&amp;Co nació de una mesa familiar un domingo a la tarde, con mate en mano y la pregunta de siempre: ¿dónde conseguir buenos mates artesanales sin tener que ir hasta una feria?
             </p>
             <p>
               Hoy trabajamos con artesanos de todo el país para traerte productos únicos que respetan la tradición mateadora. Cada pieza que vendemos la elegimos como si fuera para nuestra propia mesa.
