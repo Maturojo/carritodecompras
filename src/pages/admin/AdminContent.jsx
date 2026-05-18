@@ -19,17 +19,28 @@ export default function AdminContent() {
 
   const handleSave = async (page) => {
     setSaving(true)
-    await saveContent(page, form[page])
-    setSaving(false)
-    Swal.fire({
-      title: '¡Guardado!',
-      text: 'Los cambios se aplicaron en el sitio.',
-      icon: 'success',
-      confirmButtonColor: '#9c664d',
-      timer: 2000,
-      timerProgressBar: true,
-      showConfirmButton: false,
-    })
+    try {
+      await saveContent(page, form[page])
+      Swal.fire({
+        title: '¡Guardado!',
+        text: 'Los cambios se aplicaron en el sitio.',
+        icon: 'success',
+        confirmButtonColor: '#9c664d',
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      })
+    } catch (err) {
+      Swal.fire({
+        title: 'Error al guardar',
+        text: err.message || 'No se pudo conectar con la base de datos. Revisá la configuración de Vercel.',
+        icon: 'error',
+        confirmButtonColor: '#9c664d',
+        confirmButtonText: 'Entendido',
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

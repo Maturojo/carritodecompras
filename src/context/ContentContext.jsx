@@ -53,11 +53,16 @@ export function ContentProvider({ children }) {
   }, [])
 
   const saveContent = async (key, data) => {
-    await fetch('/api/content', {
+    const res = await fetch('/api/content', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, ...data }),
     })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || `Error ${res.status} al guardar`)
+    }
+    // Solo actualizar estado local si el guardado en MongoDB fue exitoso
     setContent(prev => ({ ...prev, [key]: { ...prev[key], ...data } }))
   }
 

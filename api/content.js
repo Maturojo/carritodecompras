@@ -16,6 +16,7 @@ export default async function handler(req, res) {
 
     // GET → traer contenido por key
     if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
       const { key } = req.query
       if (key) {
         const doc = await col.findOne({ key })
