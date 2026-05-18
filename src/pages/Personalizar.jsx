@@ -255,7 +255,7 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
 function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
                          scale = 1, textFont = 'Georgia, serif',
                          textoCompleto = false, distribucion = 'auto',
-                         customImage = null, imageRepeat = 1, size = 400 }) {
+                         customImageSrc = null, imageRepeat = 1, size = 400 }) {
   const canvasRef  = useRef()
   const isDragging = useRef(false)
   const lastAngle  = useRef(0)
@@ -265,6 +265,9 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    // Función principal de dibujo — recibe el objeto Image ya cargado (o null)
+    const paint = (loadedImg) => {
     const ctx = canvas.getContext('2d')
     const W = size, cx = W/2, cy = W/2
     const outerR = W * 0.46
@@ -364,12 +367,11 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
     ctx.restore()
 
     /* ── Imagen propia sobre el aro ── */
-    if (customImage) {
-      const imgSz   = ringW * 1.5 * scale          // tamaño = ancho del aro × escala
+    if (loadedImg) {
+      const imgSz    = ringW * 1.5 * scale
       const ringMidR = (outerR + innerR) / 2
 
       ctx.save()
-      // Recortar al anillo (donut clip)
       ctx.beginPath()
       ctx.arc(cx, cy, outerR - 1, 0, Math.PI * 2)
       ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2, true)
@@ -383,14 +385,14 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
         ctx.translate(ix, iy)
         ctx.rotate(a + Math.PI / 2)
         ctx.globalAlpha = 0.9
-        ctx.drawImage(customImage, -imgSz / 2, -imgSz / 2, imgSz, imgSz)
+        ctx.drawImage(loadedImg, -imgSz / 2, -imgSz / 2, imgSz, imgSz)
         ctx.restore()
       }
       ctx.restore()
     }
 
     /* Indicador de posición — pequeño triángulo en el "frente" del diseño */
-    if (diseño !== 'ninguno' || textoVirola.trim() || customImage) {
+    if (diseño !== 'ninguno' || textoVirola.trim() || loadedImg) {
       const indicAngle = offset - Math.PI/2  // arriba por defecto
       const indR = outerR + 12
       const ix = cx + indR * Math.cos(indicAngle)
@@ -403,7 +405,19 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
       ctx.restore()
     }
 
-  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, customImage, imageRepeat, size])
+    } // fin de paint()
+
+    // Cargar imagen si hay src, si no pintar directamente
+    if (customImageSrc) {
+      const img = new Image()
+      img.onload  = () => paint(img)
+      img.onerror = () => paint(null)
+      img.src = customImageSrc
+    } else {
+      paint(null)
+    }
+
+  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, customImageSrc, imageRepeat, size])
 
   /* ── Helpers para calcular ángulo ── */
   const getAngle = (clientX, clientY) => {
@@ -586,7 +600,6 @@ export default function Personalizar() {
   const [textoCompleto, setTextoCompleto] = useState(false)
   const [distribucion,  setDistribucion]  = useState('auto')
   const [customImageSrc,setCustomImageSrc]= useState(null)
-  const [customImageObj,setCustomImageObj]= useState(null)
   const [imageRepeat,   setImageRepeat]   = useState(1)
   const [autoRotate,    setAutoRotate]    = useState(true)
   const [vista,         setVista]         = useState('3d')
@@ -595,16 +608,10 @@ export default function Personalizar() {
     const file = e.target.files[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => {
-      const src = ev.target.result
-      setCustomImageSrc(src)
-      const img = new Image()
-      img.onload = () => setCustomImageObj(img)
-      img.src = src
-    }
+    reader.onload = ev => setCustomImageSrc(ev.target.result)
     reader.readAsDataURL(file)
   }
-  const clearImage = () => { setCustomImageSrc(null); setCustomImageObj(null) }
+  const clearImage = () => setCustomImageSrc(null)
 
   const waMsg = encodeURIComponent(
     `Hola! Me interesa un mate personalizado:\n` +
@@ -661,7 +668,7 @@ export default function Personalizar() {
                   textFont={textFont}
                   textoCompleto={textoCompleto}
                   distribucion={distribucion}
-                  customImage={customImageObj}
+                  customImageSrc={customImageSrc}
                   imageRepeat={imageRepeat}
                   size={370}
                 />
