@@ -4,19 +4,6 @@ import { useContent } from '../context/ContentContext'
 import ProductCard from '../components/ProductCard'
 import SEO from '../components/SEO'
 
-const features = [
-  { icon: '🌿', title: 'Productos naturales', desc: 'Seleccionamos los mejores mates artesanales y yerbas de origen controlado.' },
-  { icon: '🚚', title: 'Envíos a todo el país', desc: 'Despachamos en 24-48 horas hábiles. Seguimiento en tiempo real.' },
-  { icon: '✋', title: 'Hecho a mano', desc: 'Cada mate pasa por manos artesanas antes de llegar a la tuya.' },
-  { icon: '💚', title: 'Garantía de satisfacción', desc: 'Si no estás conforme, te devolvemos el dinero sin preguntas.' },
-]
-
-const testimonials = [
-  { name: 'Valentina R.', city: 'Buenos Aires', text: 'El mate de madera tallado es una obra de arte. Lo uso todos los días y cada mañana lo agradezco.' },
-  { name: 'Matías G.', city: 'Rosario', text: 'Compré el set completo y quedé encantado. Llegó súper bien embalado y más rápido de lo esperado.' },
-  { name: 'Lucía F.', city: 'Córdoba', text: 'La yerba premium es lo mejor que probé. No vuelvo a comprar en el super, definitivamente.' },
-]
-
 export default function Landing() {
   const { products } = useStore()
   const { content } = useContent()
@@ -63,8 +50,8 @@ export default function Landing() {
       {/* ── Features ── */}
       <section className="features-section">
         <div className="features-grid">
-          {features.map(f => (
-            <div key={f.title} className="feature-card">
+          {c.features?.map((f, i) => (
+            <div key={i} className="feature-card">
               <span className="feature-icon">{f.icon}</span>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
@@ -123,8 +110,8 @@ export default function Landing() {
           <h2 className="section-title">Ellos ya son parte<br />de la comunidad</h2>
         </div>
         <div className="testimonials-grid">
-          {testimonials.map(t => (
-            <div key={t.name} className="testimonial-card">
+          {c.testimonials?.map((t, i) => (
+            <div key={i} className="testimonial-card">
               <p className="testimonial-text">"{t.text}"</p>
               <div className="testimonial-author">
                 <span className="author-avatar">{t.name[0]}</span>

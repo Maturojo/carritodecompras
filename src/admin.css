@@ -669,7 +669,7 @@
 .variant-badge { background: rgba(var(--accent-rgb, 76,175,80), 0.12); color: var(--accent); border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.78rem; font-weight: 600; }
 
 /* ── Content Editor ── */
-.admin-content-editor { max-width: 800px; }
+.admin-content-editor { max-width: none; }
 .admin-page-header { margin-bottom: 1.5rem; }
 .admin-page-header h2 { font-size: 1.3rem; font-weight: 700; }
 .admin-page-header p { color: #A89080; font-size: 0.9rem; margin-top: 0.25rem; }
@@ -681,8 +681,22 @@
 .content-section h3 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B07A5A; margin-top: 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid #3D2418; }
 .content-field { display: flex; flex-direction: column; gap: 0.4rem; }
 .content-field label { font-size: 0.82rem; font-weight: 600; color: #A89080; }
-.content-field input, .content-field textarea { background: #1A100A; border: 1.5px solid #3D2418; border-radius: 8px; padding: 0.6rem 0.9rem; color: #F0EBE3; font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; }
+.content-field input, .content-field textarea { background: #1A100A; border: 1.5px solid #3D2418; border-radius: 8px; padding: 0.6rem 0.9rem; color: #F0EBE3; font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box; }
 .content-field input:focus, .content-field textarea:focus { border-color: #B07A5A; }
 .content-field textarea { resize: vertical; min-height: 80px; }
 .content-img-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-top: 0.5rem; border: 1px solid #3D2418; }
 .content-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+
+/* ── Editor split layout ── */
+.editor-split { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
+.editor-form-pane { min-width: 0; }
+.editor-preview-pane { position: sticky; top: 1.5rem; border-radius: 12px; overflow: hidden; border: 1px solid #3D2418; background: #fff; }
+.preview-pane-header { background: #9c664d; color: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+.preview-pane-header span { font-size: 0.8rem; font-weight: 700; }
+.preview-pane-live { background: rgba(255,255,255,0.25); border-radius: 99px; padding: 2px 8px; font-size: 0.7rem; letter-spacing: 0.05em; }
+.preview-pane-body { padding: 16px; max-height: calc(100vh - 220px); overflow-y: auto; background: #fff; }
+@media (max-width: 1200px) {
+  .editor-split { grid-template-columns: 1fr; }
+  .editor-preview-pane { position: static; }
+  .preview-pane-body { max-height: 500px; }
+}

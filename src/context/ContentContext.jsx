@@ -14,6 +14,17 @@ export const DEFAULT_CONTENT = {
     statClientes:  '+500',
     statArtesanos: '30+',
     statAnios:     '3',
+    features: [
+      { icon: '🌿', title: 'Productos naturales', desc: 'Seleccionamos los mejores mates artesanales y yerbas de origen controlado.' },
+      { icon: '🚚', title: 'Envíos a todo el país', desc: 'Despachamos en 24-48 horas hábiles. Seguimiento en tiempo real.' },
+      { icon: '✋', title: 'Hecho a mano', desc: 'Cada mate pasa por manos artesanas antes de llegar a la tuya.' },
+      { icon: '💚', title: 'Garantía de satisfacción', desc: 'Si no estás conforme, te devolvemos el dinero sin preguntas.' },
+    ],
+    testimonials: [
+      { name: 'Valentina R.', city: 'Buenos Aires', text: 'El mate de madera tallado es una obra de arte. Lo uso todos los días y cada mañana lo agradezco.' },
+      { name: 'Matías G.', city: 'Rosario', text: 'Compré el set completo y quedé encantado. Llegó súper bien embalado y más rápido de lo esperado.' },
+      { name: 'Lucía F.', city: 'Córdoba', text: 'La yerba premium es lo mejor que probé. No vuelvo a comprar en el super, definitivamente.' },
+    ],
   },
   nosotros: {
     heroImage:    '/nosotros.jpeg',
