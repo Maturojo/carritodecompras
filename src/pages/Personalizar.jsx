@@ -251,11 +251,58 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
   }
 }
 
+/* ─────────── EFECTO DE GRABADO (canvas offscreen) ─────────── */
+function applyEngravingEffect(img, engravingHex, threshold = 148) {
+  const S    = 320   // tamaño del canvas offscreen
+  const ofc  = document.createElement('canvas')
+  ofc.width  = S; ofc.height = S
+  const octx = ofc.getContext('2d', { willReadFrequently: true })
+
+  // Dibujar imagen original
+  octx.drawImage(img, 0, 0, S, S)
+
+  const imageData = octx.getImageData(0, 0, S, S)
+  const d = imageData.data
+
+  // Color del grabado: versión oscura del metal
+  const hex = engravingHex.replace('#', '')
+  const eR  = parseInt(hex.slice(0, 2), 16)
+  const eG  = parseInt(hex.slice(2, 4), 16)
+  const eB  = parseInt(hex.slice(4, 6), 16)
+
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3]
+
+    // Píxeles ya transparentes → dejar
+    if (a < 25) { d[i + 3] = 0; continue }
+
+    // Luminosidad perceptual
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b
+
+    if (lum < threshold) {
+      // Píxel oscuro → marca de grabado con intensidad proporcional
+      const intensity = Math.pow(1 - lum / threshold, 0.85)
+      d[i]     = eR
+      d[i + 1] = eG
+      d[i + 2] = eB
+      d[i + 3] = Math.min(255, Math.round(intensity * 240 * (a / 255)))
+    } else {
+      // Píxel claro → fondo transparente (background removal)
+      const fade = Math.max(0, 1 - (lum - threshold) / (255 - threshold))
+      d[i + 3] = Math.round(fade * fade * 80 * (a / 255))
+    }
+  }
+
+  octx.putImageData(imageData, 0, 0)
+  return ofc
+}
+
 /* ─────────── COMPONENTE VISTA SUPERIOR INTERACTIVO ─────────── */
 function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
                          scale = 1, textFont = 'Georgia, serif',
                          textoCompleto = false, distribucion = 'auto',
-                         customImageSrc = null, imageRepeat = 1, size = 400 }) {
+                         customImageSrc = null, imageRepeat = 1,
+                         engThreshold = 148, size = 400 }) {
   const canvasRef  = useRef()
   const isDragging = useRef(false)
   const lastAngle  = useRef(0)
@@ -367,12 +414,16 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
     ctx.fillStyle = '#fff'; ctx.fill()
     ctx.restore()
 
-    /* ── Imagen propia sobre el aro ── */
+    /* ── Imagen propia — con efecto grabado y fondo removido ── */
     if (loadedImg) {
-      const imgSz    = ringW * 1.5 * scale
+      const imgSz    = ringW * 1.55 * scale
       const ringMidR = (outerR + innerR) / 2
 
+      // Procesar imagen: quitar fondo + convertir a grabado del color del aro
+      const engCanvas = applyEngravingEffect(loadedImg, adjustHex(aro.hex, -72), engThreshold)
+
       ctx.save()
+      // Clip al anillo (donut)
       ctx.beginPath()
       ctx.arc(cx, cy, outerR - 1, 0, Math.PI * 2)
       ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2, true)
@@ -385,8 +436,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
         ctx.save()
         ctx.translate(ix, iy)
         ctx.rotate(a + Math.PI / 2)
-        ctx.globalAlpha = 0.9
-        ctx.drawImage(loadedImg, -imgSz / 2, -imgSz / 2, imgSz, imgSz)
+        ctx.drawImage(engCanvas, -imgSz / 2, -imgSz / 2, imgSz, imgSz)
         ctx.restore()
       }
       ctx.restore()
@@ -418,7 +468,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
       paint(null)
     }
 
-  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, customImageSrc, imageRepeat, size])
+  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, customImageSrc, imageRepeat, engThreshold, size])
 
   /* ── Helpers para calcular ángulo ── */
   const getAngle = (clientX, clientY) => {
@@ -602,6 +652,7 @@ export default function Personalizar() {
   const [distribucion,  setDistribucion]  = useState('auto')
   const [customImageSrc,setCustomImageSrc]= useState(null)
   const [imageRepeat,   setImageRepeat]   = useState(1)
+  const [engThreshold,  setEngThreshold]  = useState(148)
   const [autoRotate,    setAutoRotate]    = useState(true)
   const [vista,         setVista]         = useState('3d')
 
@@ -671,6 +722,7 @@ export default function Personalizar() {
                   distribucion={distribucion}
                   customImageSrc={customImageSrc}
                   imageRepeat={imageRepeat}
+                  engThreshold={engThreshold}
                   size={370}
                 />
                 {hasGrabado && (
@@ -856,6 +908,26 @@ export default function Personalizar() {
 
             {customImageSrc && (
               <>
+                {/* Sensibilidad del grabado */}
+                <div style={{ marginTop: '0.75rem' }}>
+                  <p className="ctrl-hint" style={{ marginBottom: '0.4rem' }}>
+                    Sensibilidad del grabado —&nbsp;
+                    <strong>{engThreshold < 100 ? 'Suave' : engThreshold < 160 ? 'Normal' : 'Intenso'}</strong>
+                  </p>
+                  <div className="tamanio-slider-wrap">
+                    <span className="tamanio-icon" style={{ fontSize: '0.7rem' }}>Suave</span>
+                    <input type="range" className="tamanio-slider"
+                      min={60} max={220} step={8}
+                      value={engThreshold}
+                      onChange={e => { setEngThreshold(Number(e.target.value)); setVista('top') }}
+                    />
+                    <span className="tamanio-icon" style={{ fontSize: '0.7rem' }}>Intenso</span>
+                  </div>
+                  <p className="ctrl-hint" style={{ marginTop: '0.3rem' }}>
+                    ← Más suave muestra solo trazos finos · Más intenso incluye más detalle
+                  </p>
+                </div>
+
                 <div style={{ marginTop: '0.75rem' }}>
                   <p className="ctrl-hint" style={{ marginBottom: '0.4rem' }}>Repeticiones en el aro</p>
                   <div className="ctrl-grid">
