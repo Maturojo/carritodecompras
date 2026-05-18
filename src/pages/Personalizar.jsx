@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 
-/* ─────────── CONFIGURACIÓN ─────────── */
+/* ─────────── CONFIG ─────────── */
 const TIPOS = [
   { id: 'calabaza', label: 'Calabaza' },
   { id: 'porongo',  label: 'Porongo'  },
@@ -43,48 +43,49 @@ function adjustHex(hex, amt) {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
 }
 
-/* ─────────── PERFIL DEL MATE ─────────── */
+/* ─────────── PERFIL LATHE ─────────── */
 function getMateProfile(tipo) {
   if (tipo === 'calabaza') return [
-    [0.00, -0.95], [0.18, -0.93], [0.50, -0.82], [0.76, -0.60],
-    [0.90, -0.28], [0.94, 0.08],  [0.90, 0.42],  [0.78, 0.68],
-    [0.60, 0.84],  [0.44, 0.93],  [0.36, 1.00],  [0.34, 1.04],
-    [0.34, 1.10],  [0.18, 1.14],  [0.00, 1.16],
+    [0.00,-0.95],[0.18,-0.93],[0.50,-0.82],[0.76,-0.60],
+    [0.90,-0.28],[0.94, 0.08],[0.90, 0.42],[0.78, 0.68],
+    [0.60, 0.84],[0.44, 0.93],[0.36, 1.00],[0.34, 1.04],
+    [0.34, 1.10],[0.18, 1.14],[0.00, 1.16],
   ]
   if (tipo === 'porongo') return [
-    [0.00, -0.98], [0.22, -0.96], [0.52, -0.82], [0.72, -0.52],
-    [0.82, -0.12], [0.84, 0.22],  [0.82, 0.50],  [0.76, 0.72],
-    [0.64, 0.86],  [0.50, 0.94],  [0.40, 1.00],  [0.38, 1.06],
-    [0.38, 1.12],  [0.20, 1.16],  [0.00, 1.18],
+    [0.00,-0.98],[0.22,-0.96],[0.52,-0.82],[0.72,-0.52],
+    [0.82,-0.12],[0.84, 0.22],[0.82, 0.50],[0.76, 0.72],
+    [0.64, 0.86],[0.50, 0.94],[0.40, 1.00],[0.38, 1.06],
+    [0.38, 1.12],[0.20, 1.16],[0.00, 1.18],
   ]
   if (tipo === 'ceramica') return [
-    [0.00, -0.96], [0.28, -0.94], [0.58, -0.80], [0.78, -0.50],
-    [0.88, -0.10], [0.88, 0.28],  [0.85, 0.58],  [0.78, 0.80],
-    [0.64, 0.92],  [0.46, 1.00],  [0.38, 1.06],  [0.38, 1.12],
-    [0.20, 1.16],  [0.00, 1.18],
+    [0.00,-0.96],[0.28,-0.94],[0.58,-0.80],[0.78,-0.50],
+    [0.88,-0.10],[0.88, 0.28],[0.85, 0.58],[0.78, 0.80],
+    [0.64, 0.92],[0.46, 1.00],[0.38, 1.06],[0.38, 1.12],
+    [0.20, 1.16],[0.00, 1.18],
   ]
   return [
-    [0.00, -0.95], [0.30, -0.92], [0.60, -0.82], [0.76, -0.62],
-    [0.80, -0.30], [0.80, 0.32],  [0.80, 0.62],  [0.76, 0.82],
-    [0.62, 0.94],  [0.46, 1.02],  [0.40, 1.07],  [0.40, 1.12],
-    [0.22, 1.16],  [0.00, 1.18],
+    [0.00,-0.95],[0.30,-0.92],[0.60,-0.82],[0.76,-0.62],
+    [0.80,-0.30],[0.80, 0.32],[0.80, 0.62],[0.76, 0.82],
+    [0.62, 0.94],[0.46, 1.02],[0.40, 1.07],[0.40, 1.12],
+    [0.22, 1.16],[0.00, 1.18],
   ]
 }
 
-/* ═══════════════════════════════════════════════════════
-   VISTA SUPERIOR — Canvas 2D de la virola
-═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   DIBUJO DEL CANVAS — funciones
+═══════════════════════════════════ */
 function drawCircularText(ctx, text, cx, cy, radius, startAngle, endAngle) {
   if (!text.trim()) return
   const chars = text.split('')
   const totalArc = endAngle - startAngle
-  // Medir ancho total aproximado del texto
   const charWidths = chars.map(c => ctx.measureText(c).width)
   const totalW = charWidths.reduce((a, b) => a + b, 0) + (chars.length - 1) * 1.5
   const arcNeeded = totalW / radius
-  const start = startAngle + (totalArc - arcNeeded) / 2
-
-  let currentAngle = start
+  if (arcNeeded > totalArc * 1.1) {
+    // Texto muy largo: reducir fuente
+    ctx.font = ctx.font.replace(/\d+px/, f => Math.max(10, parseInt(f) - 2) + 'px')
+  }
+  let currentAngle = startAngle + (totalArc - arcNeeded) / 2
   chars.forEach((char, i) => {
     const charAngle = currentAngle + charWidths[i] / 2 / radius
     ctx.save()
@@ -94,98 +95,6 @@ function drawCircularText(ctx, text, cx, cy, radius, startAngle, endAngle) {
     ctx.restore()
     currentAngle += charWidths[i] / radius + 1.5 / radius
   })
-}
-
-function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex) {
-  const ringMid = (innerR + outerR) / 2
-  const ringW = outerR - innerR
-  const darkColor = adjustHex(aroHex, -60)
-  ctx.fillStyle = darkColor
-  ctx.strokeStyle = darkColor
-  ctx.lineWidth = 1.5
-
-  if (diseño === 'estrellas') {
-    // Estrellas de 6 puntas distribuidas por el aro
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2
-      const rx = cx + ringMid * Math.cos(angle)
-      const ry = cy + ringMid * Math.sin(angle)
-      ctx.save()
-      ctx.translate(rx, ry)
-      ctx.rotate(angle)
-      drawStar(ctx, 0, 0, ringW * 0.22, ringW * 0.10, 6)
-      ctx.fill()
-      ctx.restore()
-    }
-  }
-
-  if (diseño === 'flores') {
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2
-      const rx = cx + ringMid * Math.cos(angle)
-      const ry = cy + ringMid * Math.sin(angle)
-      drawFlor(ctx, rx, ry, ringW * 0.28, darkColor)
-    }
-  }
-
-  if (diseño === 'geometrico') {
-    // Franja de rombos
-    for (let i = 0; i < 20; i++) {
-      const angle = (i / 20) * Math.PI * 2
-      const rx = cx + ringMid * Math.cos(angle)
-      const ry = cy + ringMid * Math.sin(angle)
-      ctx.save()
-      ctx.translate(rx, ry)
-      ctx.rotate(angle + Math.PI / 4)
-      const s = ringW * 0.22
-      ctx.beginPath()
-      ctx.moveTo(0, -s); ctx.lineTo(s * 0.6, 0)
-      ctx.lineTo(0, s);  ctx.lineTo(-s * 0.6, 0)
-      ctx.closePath()
-      ctx.fill()
-      ctx.restore()
-    }
-    // Dos círculos borde
-    ctx.beginPath()
-    ctx.arc(cx, cy, innerR + ringW * 0.15, 0, Math.PI * 2)
-    ctx.lineWidth = 1.2
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(cx, cy, outerR - ringW * 0.15, 0, Math.PI * 2)
-    ctx.stroke()
-  }
-
-  if (diseño === 'ruteamos') {
-    // Iconos de viaje en la mitad inferior del aro
-    const positions = [
-      { angle: Math.PI * 0.55, fn: drawMontania },
-      { angle: Math.PI * 0.72, fn: drawCarpa },
-      { angle: Math.PI * 0.88, fn: drawColectivo },
-      { angle: Math.PI * 1.05, fn: drawBrujula },
-      { angle: Math.PI * 1.22, fn: drawMontania },
-      { angle: Math.PI * 1.38, fn: drawCarpa },
-    ]
-    positions.forEach(({ angle, fn }) => {
-      const rx = cx + ringMid * Math.cos(angle)
-      const ry = cy + ringMid * Math.sin(angle)
-      ctx.save()
-      ctx.translate(rx, ry)
-      ctx.rotate(angle + Math.PI / 2)
-      fn(ctx, 0, 0, ringW * 0.35, darkColor)
-      ctx.restore()
-    })
-    // Estrellas pequeñas en los huecos
-    ;[0.62, 0.78, 0.95, 1.12, 1.28, 1.44].forEach(a => {
-      const angle = Math.PI * a + 0.09
-      const rx = cx + (ringMid + ringW * 0.1) * Math.cos(angle)
-      const ry = cy + (ringMid + ringW * 0.1) * Math.sin(angle)
-      ctx.save()
-      ctx.translate(rx, ry)
-      drawStar(ctx, 0, 0, ringW * 0.08, ringW * 0.04, 4)
-      ctx.fill()
-      ctx.restore()
-    })
-  }
 }
 
 function drawStar(ctx, x, y, outerR, innerR, points) {
@@ -198,192 +107,296 @@ function drawStar(ctx, x, y, outerR, innerR, points) {
   }
   ctx.closePath()
 }
-
 function drawFlor(ctx, cx, cy, r, color) {
   ctx.fillStyle = color
-  // Centro
   ctx.beginPath(); ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2); ctx.fill()
-  // Pétalos
   for (let i = 0; i < 5; i++) {
-    const angle = (i / 5) * Math.PI * 2
+    const a = (i / 5) * Math.PI * 2
     ctx.beginPath()
-    ctx.arc(
-      cx + Math.cos(angle) * r * 0.38,
-      cy + Math.sin(angle) * r * 0.38,
-      r * 0.22, 0, Math.PI * 2
-    )
+    ctx.arc(cx + Math.cos(a)*r*0.38, cy + Math.sin(a)*r*0.38, r*0.22, 0, Math.PI*2)
     ctx.fill()
   }
 }
-
 function drawMontania(ctx, x, y, size, color) {
   ctx.fillStyle = color
   ctx.beginPath()
-  ctx.moveTo(x, y - size * 0.7)
-  ctx.lineTo(x - size * 0.6, y + size * 0.4)
-  ctx.lineTo(x + size * 0.6, y + size * 0.4)
+  ctx.moveTo(x, y-size*0.7); ctx.lineTo(x-size*0.6, y+size*0.4); ctx.lineTo(x+size*0.6, y+size*0.4)
   ctx.closePath(); ctx.fill()
-  // Nieve
-  ctx.fillStyle = adjustHex(color, 80)
+  ctx.fillStyle = adjustHex(color, 90)
   ctx.beginPath()
-  ctx.moveTo(x, y - size * 0.7)
-  ctx.lineTo(x - size * 0.18, y - size * 0.35)
-  ctx.lineTo(x + size * 0.18, y - size * 0.35)
+  ctx.moveTo(x, y-size*0.7); ctx.lineTo(x-size*0.18, y-size*0.35); ctx.lineTo(x+size*0.18, y-size*0.35)
   ctx.closePath(); ctx.fill()
 }
-
 function drawCarpa(ctx, x, y, size, color) {
   ctx.fillStyle = color
   ctx.beginPath()
-  ctx.moveTo(x, y - size * 0.55)
-  ctx.lineTo(x - size * 0.55, y + size * 0.4)
-  ctx.lineTo(x + size * 0.55, y + size * 0.4)
+  ctx.moveTo(x, y-size*0.55); ctx.lineTo(x-size*0.55, y+size*0.4); ctx.lineTo(x+size*0.55, y+size*0.4)
   ctx.closePath(); ctx.fill()
-  // Entrada
-  ctx.fillStyle = adjustHex(color, 60)
+  ctx.fillStyle = adjustHex(color, 55)
   ctx.beginPath()
-  ctx.moveTo(x - size * 0.12, y + size * 0.4)
-  ctx.arc(x, y + size * 0.25, size * 0.2, Math.PI, 0)
-  ctx.lineTo(x + size * 0.12, y + size * 0.4)
-  ctx.closePath(); ctx.fill()
+  ctx.moveTo(x-size*0.12, y+size*0.4)
+  ctx.arc(x, y+size*0.25, size*0.2, Math.PI, 0)
+  ctx.lineTo(x+size*0.12, y+size*0.4); ctx.closePath(); ctx.fill()
 }
-
 function drawColectivo(ctx, x, y, size, color) {
+  const w = size*1.0, h = size*0.55
   ctx.fillStyle = color
-  const w = size * 1.0, h = size * 0.55
-  // Cuerpo
-  ctx.beginPath()
-  ctx.roundRect(x - w / 2, y - h / 2, w, h, size * 0.12)
-  ctx.fill()
-  // Ventanas
+  ctx.beginPath(); ctx.roundRect(x-w/2, y-h/2, w, h, size*0.12); ctx.fill()
   ctx.fillStyle = adjustHex(color, 70)
   ;[-0.28, 0.02, 0.28].forEach(dx => {
     ctx.beginPath()
-    ctx.roundRect(x + dx * w - size * 0.12, y - h * 0.3, size * 0.22, size * 0.22, 2)
-    ctx.fill()
+    ctx.roundRect(x+dx*w-size*0.12, y-h*0.3, size*0.22, size*0.22, 2); ctx.fill()
   })
-  // Ruedas
   ctx.fillStyle = adjustHex(color, -20)
   ;[-0.28, 0.28].forEach(dx => {
-    ctx.beginPath()
-    ctx.arc(x + dx * w, y + h * 0.45, size * 0.14, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.beginPath(); ctx.arc(x+dx*w, y+h*0.45, size*0.14, 0, Math.PI*2); ctx.fill()
   })
 }
-
 function drawBrujula(ctx, x, y, size, color) {
   ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.2
-  ctx.beginPath(); ctx.arc(x, y, size * 0.42, 0, Math.PI * 2); ctx.stroke()
-  // Agujas N/S
+  ctx.beginPath(); ctx.arc(x, y, size*0.42, 0, Math.PI*2); ctx.stroke()
   ctx.beginPath()
-  ctx.moveTo(x, y - size * 0.32); ctx.lineTo(x - size * 0.1, y); ctx.lineTo(x, y + size * 0.32)
-  ctx.lineTo(x + size * 0.1, y); ctx.closePath(); ctx.fill()
+  ctx.moveTo(x, y-size*0.32); ctx.lineTo(x-size*0.1, y); ctx.lineTo(x, y+size*0.32)
+  ctx.lineTo(x+size*0.1, y); ctx.closePath(); ctx.fill()
 }
 
-/* ─────────── COMPONENTE VISTA SUPERIOR ─────────── */
-function VirolaTopView({ aro, diseño, textoVirola, size = 400 }) {
-  const canvasRef = useRef()
+function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) {
+  const ringMid = (innerR + outerR) / 2
+  const ringW   = outerR - innerR
+  const darkColor = adjustHex(aroHex, -65)
+  ctx.fillStyle   = darkColor
+  ctx.strokeStyle = darkColor
+  ctx.lineWidth   = 1.5
 
+  if (diseño === 'estrellas') {
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + offset
+      const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry); ctx.rotate(a)
+      drawStar(ctx, 0, 0, ringW*0.22, ringW*0.10, 6); ctx.fill()
+      ctx.restore()
+    }
+  }
+  if (diseño === 'flores') {
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + offset
+      drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.28, darkColor)
+    }
+  }
+  if (diseño === 'geometrico') {
+    for (let i = 0; i < 20; i++) {
+      const a = (i / 20) * Math.PI * 2 + offset
+      const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/4)
+      const s = ringW * 0.22
+      ctx.beginPath()
+      ctx.moveTo(0,-s); ctx.lineTo(s*0.6,0); ctx.lineTo(0,s); ctx.lineTo(-s*0.6,0)
+      ctx.closePath(); ctx.fill()
+      ctx.restore()
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, innerR+ringW*0.15, 0, Math.PI*2)
+    ctx.lineWidth = 1.2; ctx.stroke()
+    ctx.beginPath(); ctx.arc(cx, cy, outerR-ringW*0.15, 0, Math.PI*2); ctx.stroke()
+  }
+  if (diseño === 'ruteamos') {
+    const iconos = [
+      { t: 0.55, fn: drawMontania },
+      { t: 0.72, fn: drawCarpa    },
+      { t: 0.88, fn: drawColectivo},
+      { t: 1.05, fn: drawBrujula  },
+      { t: 1.22, fn: drawMontania },
+      { t: 1.38, fn: drawCarpa    },
+    ]
+    iconos.forEach(({ t, fn }) => {
+      const a = t * Math.PI + offset
+      const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/2)
+      fn(ctx, 0, 0, ringW*0.35, darkColor)
+      ctx.restore()
+    })
+    ;[0.62, 0.78, 0.95, 1.12, 1.28, 1.44].forEach(t => {
+      const a = t * Math.PI + offset + 0.09
+      const rx = cx + (ringMid+ringW*0.1)*Math.cos(a)
+      const ry = cy + (ringMid+ringW*0.1)*Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry)
+      drawStar(ctx, 0, 0, ringW*0.08, ringW*0.04, 4); ctx.fill()
+      ctx.restore()
+    })
+  }
+}
+
+/* ─────────── COMPONENTE VISTA SUPERIOR INTERACTIVO ─────────── */
+function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, size = 400 }) {
+  const canvasRef  = useRef()
+  const isDragging = useRef(false)
+  const lastAngle  = useRef(0)
+  const [dragging, setDragging] = useState(false)
+
+  /* Dibuja cada vez que cambia alguna prop */
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const W = size, cx = W / 2, cy = W / 2
+    const W = size, cx = W/2, cy = W/2
     const outerR = W * 0.46
     const innerR = W * 0.29
     const ringMid = (outerR + innerR) / 2
 
     ctx.clearRect(0, 0, W, W)
 
-    // Sombra exterior
+    /* Sombra exterior */
     ctx.save()
-    ctx.shadowColor = 'rgba(0,0,0,0.35)'
-    ctx.shadowBlur = W * 0.05
-    ctx.shadowOffsetY = W * 0.015
-    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2)
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = W*0.05; ctx.shadowOffsetY = W*0.015
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2)
     ctx.fillStyle = '#bbb'; ctx.fill()
     ctx.restore()
 
-    // Base del aro (color del metal)
-    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2)
+    /* Base del aro */
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2)
     ctx.fillStyle = aro.hex; ctx.fill()
 
-    // Degradado metálico
-    const grad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR * 0.5, cy + outerR * 0.5)
+    /* Degradado metálico */
+    const grad = ctx.createLinearGradient(cx-outerR, cy-outerR, cx+outerR*0.5, cy+outerR*0.5)
     grad.addColorStop(0,   'rgba(255,255,255,0.50)')
-    grad.addColorStop(0.25,'rgba(255,255,255,0.20)')
+    grad.addColorStop(0.25,'rgba(255,255,255,0.18)')
     grad.addColorStop(0.55,'rgba(0,0,0,0.04)')
     grad.addColorStop(1,   'rgba(0,0,0,0.28)')
-    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2)
     ctx.fillStyle = grad; ctx.fill()
 
-    // Textura granulada leve (alpaca)
-    ctx.save()
-    ctx.globalAlpha = 0.04
-    for (let i = 0; i < 400; i++) {
-      const angle = Math.random() * Math.PI * 2
-      const r = innerR + Math.random() * (outerR - innerR)
-      const px = cx + r * Math.cos(angle)
-      const py = cy + r * Math.sin(angle)
-      ctx.beginPath(); ctx.arc(px, py, 0.8, 0, Math.PI * 2)
-      ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#000'; ctx.fill()
+    /* Textura granulada */
+    ctx.save(); ctx.globalAlpha = 0.035
+    for (let i = 0; i < 500; i++) {
+      const a = Math.random()*Math.PI*2
+      const r = innerR + Math.random()*(outerR-innerR)
+      ctx.beginPath(); ctx.arc(cx+r*Math.cos(a), cy+r*Math.sin(a), 0.8, 0, Math.PI*2)
+      ctx.fillStyle = Math.random()>0.5?'#fff':'#000'; ctx.fill()
     }
     ctx.restore()
 
-    // Borde interior del aro (surco metálico)
-    ctx.beginPath(); ctx.arc(cx, cy, innerR + 4, 0, Math.PI * 2)
+    /* Bordes del aro */
+    ctx.beginPath(); ctx.arc(cx, cy, innerR+4, 0, Math.PI*2)
     ctx.strokeStyle = adjustHex(aro.hex, -50); ctx.lineWidth = 3.5; ctx.stroke()
-    ctx.beginPath(); ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(cx, cy, innerR+1, 0, Math.PI*2)
     ctx.strokeStyle = adjustHex(aro.hex, 30); ctx.lineWidth = 1.5; ctx.stroke()
-
-    // Borde exterior
-    ctx.beginPath(); ctx.arc(cx, cy, outerR - 3, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(cx, cy, outerR-3, 0, Math.PI*2)
     ctx.strokeStyle = adjustHex(aro.hex, -35); ctx.lineWidth = 2.5; ctx.stroke()
 
-    // Diseños en el aro
-    drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex)
+    /* Diseños */
+    drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex, offset)
 
-    // Texto circular en la virola
+    /* Texto circular */
     if (textoVirola.trim()) {
-      const textR = ringMid + (outerR - innerR) * 0.12
-      const fontSize = Math.max(W * 0.038, 13)
-      ctx.font = `bold ${fontSize}px 'Georgia', serif`
-      ctx.fillStyle = adjustHex(aro.hex, -75)
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
+      const textR    = ringMid + (outerR-innerR)*0.1
+      const fontSize = Math.max(W*0.037, 12)
+      ctx.font = `bold ${fontSize}px Georgia, serif`
+      ctx.fillStyle = adjustHex(aro.hex, -78)
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
 
-      // Si hay diseño en la parte de abajo, texto solo arriba (~240°)
-      // Si no hay diseño, texto va por todo el aro
-      const hasDesignBelow = ['ruteamos', 'flores', 'estrellas', 'geometrico'].includes(diseño)
-      const textStartAngle = hasDesignBelow ? -Math.PI * 1.12 : -Math.PI
-      const textEndAngle   = hasDesignBelow ?  Math.PI * 0.12  :  Math.PI
-
-      drawCircularText(ctx, textoVirola, cx, cy, textR, textStartAngle, textEndAngle)
+      const hasDesignBelow = ['ruteamos','flores','estrellas','geometrico'].includes(diseño)
+      // Posición base del texto + offset de rotación
+      const baseStart = hasDesignBelow ? -Math.PI*1.15 : -Math.PI
+      const baseEnd   = hasDesignBelow ?  Math.PI*0.15 :  Math.PI
+      drawCircularText(ctx, textoVirola, cx, cy, textR,
+        baseStart + offset,
+        baseEnd   + offset
+      )
     }
 
-    // Interior del mate (fondo oscuro con degradado)
-    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2)
-    const intGrad = ctx.createRadialGradient(cx - innerR * 0.2, cy - innerR * 0.2, 0, cx, cy, innerR)
-    intGrad.addColorStop(0,   '#4a2a10')
-    intGrad.addColorStop(0.4, '#2e1808')
-    intGrad.addColorStop(1,   '#1a0c04')
+    /* Interior del mate */
+    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2)
+    const intGrad = ctx.createRadialGradient(cx-innerR*0.2, cy-innerR*0.2, 0, cx, cy, innerR)
+    intGrad.addColorStop(0, '#4a2a10'); intGrad.addColorStop(0.4,'#2e1808'); intGrad.addColorStop(1,'#1a0c04')
     ctx.fillStyle = intGrad; ctx.fill()
 
-    // Reflejo tenue del interior
-    ctx.save()
-    ctx.globalAlpha = 0.12
-    ctx.beginPath(); ctx.ellipse(cx - innerR * 0.22, cy - innerR * 0.28, innerR * 0.45, innerR * 0.22, -Math.PI / 4, 0, Math.PI * 2)
+    /* Reflejo interior */
+    ctx.save(); ctx.globalAlpha = 0.12
+    ctx.beginPath(); ctx.ellipse(cx-innerR*0.22, cy-innerR*0.28, innerR*0.45, innerR*0.22, -Math.PI/4, 0, Math.PI*2)
     ctx.fillStyle = '#fff'; ctx.fill()
     ctx.restore()
 
-  }, [aro, diseño, textoVirola, size])
+    /* Indicador de posición — pequeño triángulo en el "frente" del diseño */
+    if (diseño !== 'ninguno' || textoVirola.trim()) {
+      const indicAngle = offset - Math.PI/2  // arriba por defecto
+      const indR = outerR + 12
+      const ix = cx + indR * Math.cos(indicAngle)
+      const iy = cy + indR * Math.sin(indicAngle)
+      ctx.save()
+      ctx.translate(ix, iy); ctx.rotate(indicAngle + Math.PI/2)
+      ctx.fillStyle = adjustHex(aro.hex, -30)
+      ctx.beginPath()
+      ctx.moveTo(0, -7); ctx.lineTo(5, 3); ctx.lineTo(-5, 3); ctx.closePath(); ctx.fill()
+      ctx.restore()
+    }
+
+  }, [aro, diseño, textoVirola, offset, size])
+
+  /* ── Helpers para calcular ángulo ── */
+  const getAngle = (clientX, clientY) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = size / rect.width
+    const scaleY = size / rect.height
+    const x = (clientX - rect.left) * scaleX - size / 2
+    const y = (clientY - rect.top)  * scaleY - size / 2
+    return Math.atan2(y, x)
+  }
+
+  /* ── Mouse ── */
+  const onMouseDown = e => {
+    isDragging.current = true
+    setDragging(true)
+    lastAngle.current = getAngle(e.clientX, e.clientY)
+    e.preventDefault()
+  }
+  const onMouseMove = e => {
+    if (!isDragging.current) return
+    const a = getAngle(e.clientX, e.clientY)
+    let delta = a - lastAngle.current
+    if (delta >  Math.PI) delta -= Math.PI * 2
+    if (delta < -Math.PI) delta += Math.PI * 2
+    onOffsetChange(delta)
+    lastAngle.current = a
+    e.preventDefault()
+  }
+  const onMouseUp = () => { isDragging.current = false; setDragging(false) }
+
+  /* ── Touch ── */
+  const onTouchStart = e => {
+    isDragging.current = true
+    setDragging(true)
+    lastAngle.current = getAngle(e.touches[0].clientX, e.touches[0].clientY)
+    e.preventDefault()
+  }
+  const onTouchMove = e => {
+    if (!isDragging.current) return
+    const a = getAngle(e.touches[0].clientX, e.touches[0].clientY)
+    let delta = a - lastAngle.current
+    if (delta >  Math.PI) delta -= Math.PI * 2
+    if (delta < -Math.PI) delta += Math.PI * 2
+    onOffsetChange(delta)
+    lastAngle.current = a
+    e.preventDefault()
+  }
 
   return (
     <canvas
       ref={canvasRef}
       width={size}
       height={size}
-      style={{ width: '100%', height: '100%', display: 'block', borderRadius: '50%' }}
+      style={{
+        width: '100%', height: '100%', display: 'block',
+        borderRadius: '50%',
+        cursor: dragging ? 'grabbing' : 'grab',
+        userSelect: 'none', touchAction: 'none',
+      }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onMouseUp}
     />
   )
 }
@@ -394,99 +407,75 @@ function MateModel({ tipo, cuerpo, aro, diseño, autoRotate }) {
   useFrame((_, delta) => {
     if (autoRotate && groupRef.current) groupRef.current.rotation.y += delta * 0.35
   })
-
-  const profile = getMateProfile(tipo)
+  const profile   = getMateProfile(tipo)
   const allPoints = profile.map(([x, y]) => new THREE.Vector2(x, y))
-  const maxR = Math.max(...profile.map(([x]) => x))
-  const neckY = profile[profile.length - 5][1]
-  const neckR = profile[profile.length - 5][0]
-
+  const neckY  = profile[profile.length - 5][1]
+  const neckR  = profile[profile.length - 5][0]
   const bodyColor = new THREE.Color(cuerpo.hex)
   const aroColor  = new THREE.Color(aro.hex)
   const darkAro   = new THREE.Color(adjustHex(aro.hex, -40))
 
   return (
     <group ref={groupRef} position={[0, -0.15, 0]}>
-      {/* Cuerpo */}
       <mesh castShadow receiveShadow>
         <latheGeometry args={[allPoints, 80]} />
         <meshStandardMaterial color={bodyColor} roughness={cuerpo.rough} metalness={cuerpo.metal} />
       </mesh>
-
-      {/* Aro — banda */}
-      <mesh position={[0, neckY + 0.04, 0]} castShadow>
-        <cylinderGeometry args={[neckR + 0.010, neckR + 0.007, 0.24, 64]} />
+      <mesh position={[0, neckY+0.04, 0]} castShadow>
+        <cylinderGeometry args={[neckR+0.010, neckR+0.007, 0.24, 64]} />
         <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.2} />
       </mesh>
-      {/* Aro — borde superior */}
-      <mesh position={[0, neckY + 0.15, 0]}>
-        <torusGeometry args={[neckR + 0.007, 0.024, 20, 64]} />
+      <mesh position={[0, neckY+0.15, 0]}>
+        <torusGeometry args={[neckR+0.007, 0.024, 20, 64]} />
         <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.5} />
       </mesh>
-      {/* Aro — borde inferior */}
-      <mesh position={[0, neckY - 0.09, 0]}>
-        <torusGeometry args={[neckR + 0.007, 0.016, 16, 64]} />
+      <mesh position={[0, neckY-0.09, 0]}>
+        <torusGeometry args={[neckR+0.007, 0.016, 16, 64]} />
         <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.5} />
       </mesh>
-
-      {/* Diseños en 3D */}
-      {diseño === 'estrellas' && Array.from({ length: 10 }).map((_, i) => {
-        const a = (i / 10) * Math.PI * 2
-        const r = neckR + 0.02
-        return (
-          <mesh key={i} position={[Math.cos(a) * r, neckY + 0.04, Math.sin(a) * r]}>
-            <sphereGeometry args={[0.018, 6, 6]} />
-            <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal * 0.7} />
-          </mesh>
-        )
+      {diseño === 'estrellas' && Array.from({length:10}).map((_,i) => {
+        const a = (i/10)*Math.PI*2
+        return <mesh key={i} position={[Math.cos(a)*(neckR+0.02), neckY+0.04, Math.sin(a)*(neckR+0.02)]}>
+          <sphereGeometry args={[0.018,6,6]} />
+          <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal*0.7} />
+        </mesh>
       })}
-      {diseño === 'flores' && Array.from({ length: 8 }).map((_, i) => {
-        const a = (i / 8) * Math.PI * 2
-        const r = neckR + 0.018
-        return (
-          <mesh key={i} position={[Math.cos(a) * r, neckY + 0.04, Math.sin(a) * r]}>
-            <sphereGeometry args={[0.022, 8, 8]} />
-            <meshStandardMaterial color={darkAro} roughness={0.35} metalness={aro.metal * 0.6} />
-          </mesh>
-        )
+      {diseño === 'flores' && Array.from({length:8}).map((_,i) => {
+        const a = (i/8)*Math.PI*2
+        return <mesh key={i} position={[Math.cos(a)*(neckR+0.018), neckY+0.04, Math.sin(a)*(neckR+0.018)]}>
+          <sphereGeometry args={[0.022,8,8]} />
+          <meshStandardMaterial color={darkAro} roughness={0.35} metalness={aro.metal*0.6} />
+        </mesh>
       })}
-      {diseño === 'geometrico' && [0.05, -0.06].map((yOff, j) => (
-        <mesh key={j} position={[0, neckY + yOff, 0]}>
-          <torusGeometry args={[neckR + 0.01, 0.010, 4, 6]} />
-          <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal * 0.8} />
+      {diseño === 'geometrico' && [0.05,-0.06].map((yOff,j) => (
+        <mesh key={j} position={[0, neckY+yOff, 0]}>
+          <torusGeometry args={[neckR+0.01, 0.010, 4, 6]} />
+          <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal*0.8} />
         </mesh>
       ))}
-      {diseño === 'ruteamos' && Array.from({ length: 12 }).map((_, i) => {
-        const a = (i / 12) * Math.PI * 2
-        const r = neckR + 0.018
-        const yOff = i % 2 === 0 ? 0.05 : -0.04
-        return (
-          <mesh key={i} position={[Math.cos(a) * r, neckY + yOff, Math.sin(a) * r]}>
-            <boxGeometry args={[0.03, 0.03, 0.01]} />
-            <meshStandardMaterial color={darkAro} roughness={0.25} metalness={aro.metal * 0.75} />
-          </mesh>
-        )
+      {diseño === 'ruteamos' && Array.from({length:12}).map((_,i) => {
+        const a = (i/12)*Math.PI*2
+        return <mesh key={i} position={[Math.cos(a)*(neckR+0.018), neckY+(i%2===0?0.05:-0.04), Math.sin(a)*(neckR+0.018)]}>
+          <boxGeometry args={[0.03,0.03,0.01]} />
+          <meshStandardMaterial color={darkAro} roughness={0.25} metalness={aro.metal*0.75} />
+        </mesh>
       })}
-
-      {/* Interior */}
-      <mesh position={[0, neckY + 0.02, 0]}>
-        <cylinderGeometry args={[neckR - 0.025, neckR - 0.025, 0.04, 40]} />
+      <mesh position={[0, neckY+0.02, 0]}>
+        <cylinderGeometry args={[neckR-0.025, neckR-0.025, 0.04, 40]} />
         <meshStandardMaterial color="#1a0f06" roughness={0.95} metalness={0} />
       </mesh>
-
-      {/* Bombilla */}
-      <group position={[neckR * 0.35, neckY + 0.02, 0]} rotation={[0, 0, -0.28]}>
+      <group position={[neckR*0.35, neckY+0.02, 0]} rotation={[0,0,-0.28]}>
         <mesh>
-          <cylinderGeometry args={[0.022, 0.022, 1.55, 12]} />
+          <cylinderGeometry args={[0.022,0.022,1.55,12]} />
           <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
         </mesh>
-        <mesh position={[0.04, 0.79, 0]} rotation={[0, 0, 0.45]}>
-          <cylinderGeometry args={[0.018, 0.018, 0.28, 10]} />
+        <mesh position={[0.04, 0.79, 0]} rotation={[0,0,0.45]}>
+          <cylinderGeometry args={[0.018,0.018,0.28,10]} />
           <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
         </mesh>
-        <mesh position={[0, -0.68, 0]}>
-          <sphereGeometry args={[0.046, 16, 16]} />
-          <meshStandardMaterial color={new THREE.Color(adjustHex(aro.hex, -20))} roughness={0.35} metalness={aro.metal} />
+        <mesh position={[0,-0.68,0]}>
+          <sphereGeometry args={[0.046,16,16]} />
+          <meshStandardMaterial color={new THREE.Color(adjustHex(aro.hex,-20))} roughness={0.35} metalness={aro.metal} />
         </mesh>
       </group>
     </group>
@@ -497,14 +486,14 @@ function Scene({ tipo, cuerpo, aro, diseño, autoRotate }) {
   return (
     <>
       <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 8, 5]}  intensity={1.4} castShadow shadow-mapSize={[2048, 2048]} />
-      <directionalLight position={[-4, 3, -3]} intensity={0.5} color="#ffeedd" />
-      <directionalLight position={[0, -3, 3]}  intensity={0.2} color="#c8d8e8" />
-      <pointLight position={[2, 4, 3]} intensity={0.6} color="#fff8f0" />
+      <directionalLight position={[5,8,5]}   intensity={1.4} castShadow shadow-mapSize={[2048,2048]} />
+      <directionalLight position={[-4,3,-3]} intensity={0.5} color="#ffeedd" />
+      <directionalLight position={[0,-3,3]}  intensity={0.2} color="#c8d8e8" />
+      <pointLight position={[2,4,3]} intensity={0.6} color="#fff8f0" />
       <Suspense fallback={null}>
         <Environment preset="studio" />
         <MateModel tipo={tipo} cuerpo={cuerpo} aro={aro} diseño={diseño} autoRotate={autoRotate} />
-        <ContactShadows position={[0, -1.15, 0]} opacity={0.55} scale={3.5} blur={2.5} far={1.5} />
+        <ContactShadows position={[0,-1.15,0]} opacity={0.55} scale={3.5} blur={2.5} far={1.5} />
       </Suspense>
     </>
   )
@@ -512,22 +501,25 @@ function Scene({ tipo, cuerpo, aro, diseño, autoRotate }) {
 
 /* ─────────── PÁGINA ─────────── */
 export default function Personalizar() {
-  const [tipo,         setTipo]         = useState('calabaza')
-  const [cuerpo,       setCuerpo]       = useState(CUERPOS[0])
-  const [aro,          setAro]          = useState(AROS[0])
-  const [diseño,       setDiseño]       = useState('ninguno')
-  const [textoVirola,  setTextoVirola]  = useState('')
-  const [autoRotate,   setAutoRotate]   = useState(true)
-  const [vista,        setVista]        = useState('3d')  // '3d' | 'top'
+  const [tipo,        setTipo]        = useState('calabaza')
+  const [cuerpo,      setCuerpo]      = useState(CUERPOS[0])
+  const [aro,         setAro]         = useState(AROS[0])
+  const [diseño,      setDiseño]      = useState('ninguno')
+  const [textoVirola, setTextoVirola] = useState('')
+  const [offset,      setOffset]      = useState(0)        // ángulo de posición del grabado
+  const [autoRotate,  setAutoRotate]  = useState(true)
+  const [vista,       setVista]       = useState('3d')
 
   const waMsg = encodeURIComponent(
     `Hola! Me interesa un mate personalizado:\n` +
     `• Forma: ${TIPOS.find(t => t.id === tipo)?.label}\n` +
     `• Material: ${cuerpo.label}\n` +
     `• Aro: ${aro.label}\n` +
-    `• Grabado virola: ${DISEÑOS_VIROLA.find(d => d.id === diseño)?.label}` +
+    `• Grabado: ${DISEÑOS_VIROLA.find(d => d.id === diseño)?.label}` +
     (textoVirola ? `\n• Texto: "${textoVirola}"` : '')
   )
+
+  const hasGrabado = diseño !== 'ninguno' || textoVirola.trim()
 
   return (
     <main className="page-content">
@@ -541,82 +533,85 @@ export default function Personalizar() {
 
         {/* ── Preview ── */}
         <div className="personalizador-preview">
-
-          {/* Toggle vista */}
           <div className="vista-toggle">
-            <button
-              className={`vista-btn ${vista === '3d' ? 'active' : ''}`}
-              onClick={() => setVista('3d')}
-            >Vista 3D</button>
-            <button
-              className={`vista-btn ${vista === 'top' ? 'active' : ''}`}
-              onClick={() => setVista('top')}
-            >Vista superior</button>
+            <button className={`vista-btn ${vista==='3d'  ? 'active':''}`} onClick={() => setVista('3d')}>Vista 3D</button>
+            <button className={`vista-btn ${vista==='top' ? 'active':''}`} onClick={() => setVista('top')}>Vista superior</button>
           </div>
 
           <div className="mate-canvas-wrap">
             {vista === '3d' ? (
               <>
                 <Canvas
-                  camera={{ position: [0, 0.6, 3.2], fov: 38 }}
+                  camera={{ position:[0,0.6,3.2], fov:38 }}
                   shadows
-                  gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+                  gl={{ antialias:true, toneMapping:THREE.ACESFilmicToneMapping, toneMappingExposure:1.1 }}
                 >
                   <Scene tipo={tipo} cuerpo={cuerpo} aro={aro} diseño={diseño} autoRotate={autoRotate} />
-                  <OrbitControls
-                    enableZoom={false}
-                    minPolarAngle={Math.PI / 5}
-                    maxPolarAngle={Math.PI / 1.7}
-                    onStart={() => setAutoRotate(false)}
-                  />
+                  <OrbitControls enableZoom={false} minPolarAngle={Math.PI/5} maxPolarAngle={Math.PI/1.7}
+                    onStart={() => setAutoRotate(false)} />
                 </Canvas>
                 <p className="canvas-hint">🖱 Arrastrá para girar</p>
               </>
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+              <div className="virola-top-wrap">
                 <VirolaTopView
                   aro={aro}
                   diseño={diseño}
                   textoVirola={textoVirola}
-                  size={380}
+                  offset={offset}
+                  onOffsetChange={delta => setOffset(prev => prev + delta)}
+                  size={370}
                 />
+                {hasGrabado && (
+                  <p className="canvas-hint" style={{ bottom:14 }}>
+                    ✋ Arrastrá para rotar el grabado
+                  </p>
+                )}
               </div>
             )}
           </div>
+
+          {/* Controles de posición — solo en vista top con grabado */}
+          {vista === 'top' && hasGrabado && (
+            <div className="posicion-controls">
+              <span className="posicion-label">Posición del grabado</span>
+              <div className="posicion-btns">
+                <button className="pos-btn" title="Rotar izquierda"
+                  onClick={() => setOffset(p => p - Math.PI/8)}>◁ Izquierda</button>
+                <button className="pos-btn reset-btn"
+                  onClick={() => setOffset(0)}>⟳ Centrar</button>
+                <button className="pos-btn" title="Rotar derecha"
+                  onClick={() => setOffset(p => p + Math.PI/8)}>Derecha ▷</button>
+              </div>
+            </div>
+          )}
 
           {/* Resumen */}
           <div className="design-summary">
             <div className="design-summary-row">
-              <span>Forma</span>
-              <strong>{TIPOS.find(t => t.id === tipo)?.label}</strong>
+              <span>Forma</span><strong>{TIPOS.find(t=>t.id===tipo)?.label}</strong>
             </div>
             <div className="design-summary-row">
-              <span>Material</span>
-              <strong>{cuerpo.label}</strong>
+              <span>Material</span><strong>{cuerpo.label}</strong>
             </div>
             <div className="design-summary-row">
-              <span>Aro</span>
-              <strong>{aro.label}</strong>
+              <span>Aro</span><strong>{aro.label}</strong>
             </div>
             <div className="design-summary-row">
-              <span>Grabado</span>
-              <strong>{DISEÑOS_VIROLA.find(d => d.id === diseño)?.label}</strong>
+              <span>Grabado</span><strong>{DISEÑOS_VIROLA.find(d=>d.id===diseño)?.label}</strong>
             </div>
             {textoVirola && (
               <div className="design-summary-row">
                 <span>Texto</span>
-                <strong style={{ fontSize: '0.82rem', maxWidth: '60%', textAlign: 'right' }}>"{textoVirola}"</strong>
+                <strong style={{fontSize:'0.8rem',maxWidth:'60%',textAlign:'right'}}>"{textoVirola}"</strong>
               </div>
             )}
           </div>
 
-          <a
-            href={`https://wa.me/5492236359767?text=${waMsg}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <a href={`https://wa.me/5492236359767?text=${waMsg}`}
+            target="_blank" rel="noopener noreferrer"
             className="btn-primary full-width"
-            style={{ display: 'block', textAlign: 'center', marginTop: '1rem' }}
-          >
+            style={{ display:'block', textAlign:'center', marginTop:'1rem' }}>
             💬 Consultar este diseño por WhatsApp
           </a>
         </div>
@@ -628,10 +623,8 @@ export default function Personalizar() {
             <h3>Forma del mate</h3>
             <div className="ctrl-grid">
               {TIPOS.map(t => (
-                <button key={t.id}
-                  className={`ctrl-chip ${tipo === t.id ? 'active' : ''}`}
-                  onClick={() => setTipo(t.id)}
-                >{t.label}</button>
+                <button key={t.id} className={`ctrl-chip ${tipo===t.id?'active':''}`}
+                  onClick={() => setTipo(t.id)}>{t.label}</button>
               ))}
             </div>
           </div>
@@ -641,12 +634,10 @@ export default function Personalizar() {
             <div className="ctrl-colors">
               {CUERPOS.map(c => (
                 <button key={c.id}
-                  className={`ctrl-color-btn ${cuerpo.id === c.id ? 'active' : ''}`}
-                  style={{ background: c.hex }}
-                  title={c.label}
-                  onClick={() => setCuerpo(c)}
-                >
-                  {cuerpo.id === c.id && <span className="color-check">✓</span>}
+                  className={`ctrl-color-btn ${cuerpo.id===c.id?'active':''}`}
+                  style={{ background:c.hex }} title={c.label}
+                  onClick={() => setCuerpo(c)}>
+                  {cuerpo.id===c.id && <span className="color-check">✓</span>}
                 </button>
               ))}
             </div>
@@ -657,43 +648,34 @@ export default function Personalizar() {
             <h3>Aro y bombilla</h3>
             <div className="ctrl-grid">
               {AROS.map(a => (
-                <button key={a.id}
-                  className={`ctrl-chip ${aro.id === a.id ? 'active' : ''}`}
-                  onClick={() => setAro(a)}
-                >
-                  <span style={{
-                    width: 12, height: 12, borderRadius: '50%', background: a.hex,
-                    display: 'inline-block', border: '1px solid rgba(0,0,0,0.25)',
-                    boxShadow: '0 0 3px rgba(255,255,255,0.5)'
-                  }} />
+                <button key={a.id} className={`ctrl-chip ${aro.id===a.id?'active':''}`}
+                  onClick={() => setAro(a)}>
+                  <span style={{ width:12,height:12,borderRadius:'50%',background:a.hex,
+                    display:'inline-block',border:'1px solid rgba(0,0,0,0.25)',
+                    boxShadow:'0 0 3px rgba(255,255,255,0.5)' }} />
                   {a.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Diseño en virola */}
           <div className="ctrl-group">
             <h3>Diseño en virola</h3>
             <p className="ctrl-hint">Elegí un grabado para el aro metálico</p>
             <div className="ctrl-grid">
               {DISEÑOS_VIROLA.map(d => (
                 <button key={d.id}
-                  className={`ctrl-chip ${diseño === d.id ? 'active' : ''}`}
-                  onClick={() => { setDiseño(d.id); setVista('top') }}
-                >{d.label}</button>
+                  className={`ctrl-chip ${diseño===d.id?'active':''}`}
+                  onClick={() => { setDiseño(d.id); setVista('top') }}>{d.label}</button>
               ))}
             </div>
           </div>
 
-          {/* Texto personalizado */}
           <div className="ctrl-group">
             <h3>Texto en la virola</h3>
             <p className="ctrl-hint">Tu mensaje grabado en el aro — hasta 45 caracteres</p>
             <div className="ctrl-text-wrap">
-              <input
-                type="text"
-                className="ctrl-text-input"
+              <input type="text" className="ctrl-text-input"
                 placeholder='Ej: "Ruta, mates y viajar a cualquier lado con vos"'
                 maxLength={45}
                 value={textoVirola}
@@ -702,17 +684,15 @@ export default function Personalizar() {
               <span className="ctrl-char-count">{textoVirola.length}/45</span>
             </div>
             {textoVirola && (
-              <button className="ctrl-chip" style={{ marginTop: '0.5rem' }}
+              <button className="ctrl-chip" style={{ marginTop:'0.5rem' }}
                 onClick={() => setTextoVirola('')}>✕ Borrar texto</button>
             )}
           </div>
 
           {vista === '3d' && (
             <div className="ctrl-group">
-              <button
-                className={`ctrl-chip ${autoRotate ? 'active' : ''}`}
-                onClick={() => setAutoRotate(v => !v)}
-              >
+              <button className={`ctrl-chip ${autoRotate?'active':''}`}
+                onClick={() => setAutoRotate(v => !v)}>
                 {autoRotate ? '⏸ Pausar rotación' : '▶ Rotar automático'}
               </button>
             </div>

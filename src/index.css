@@ -2384,6 +2384,56 @@ button { cursor: pointer; border: none; font-family: inherit; }
 .ctrl-color-btn.active { border-color: var(--verde-oscuro); transform: scale(1.1); }
 .color-check { font-size: 0.75rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .ctrl-selected { font-size: 0.82rem; color: var(--texto-suave); }
+/* Virola top view wrapper */
+.virola-top-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Controles de posición del grabado */
+.posicion-controls {
+  background: var(--blanco);
+  border-radius: 14px;
+  box-shadow: var(--sombra);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.posicion-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--verde-oscuro);
+}
+.posicion-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+.pos-btn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--crema-oscuro);
+  background: var(--blanco);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto);
+  cursor: pointer;
+  transition: all 0.16s;
+  white-space: nowrap;
+}
+.pos-btn:hover { border-color: var(--verde); color: var(--verde-oscuro); }
+.pos-btn.reset-btn { border-color: var(--verde); color: var(--verde); }
+.pos-btn.reset-btn:hover { background: var(--verde); color: #fff; }
+
 /* Vista toggle */
 .vista-toggle {
   display: flex;
