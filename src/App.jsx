@@ -21,6 +21,7 @@ import Login         from './pages/Login'
 import Register      from './pages/Register'
 import MiCuenta      from './pages/MiCuenta'
 import AdminPanel    from './pages/admin/AdminPanel'
+import Personalizar  from './pages/Personalizar'
 
 function PublicSite() {
   return (
@@ -37,7 +38,8 @@ function PublicSite() {
         <Route path="/checkout"  element={<Checkout />} />
         <Route path="/login"     element={<Login />} />
         <Route path="/registro"  element={<Register />} />
-        <Route path="/mi-cuenta" element={<MiCuenta />} />
+        <Route path="/mi-cuenta"     element={<MiCuenta />} />
+        <Route path="/personalizar"  element={<Personalizar />} />
       </Routes>
       <Footer />
       <WhatsAppButton />

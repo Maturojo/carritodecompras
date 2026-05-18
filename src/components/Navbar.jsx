@@ -52,10 +52,11 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const links = [
-    { to: '/',          label: 'Inicio' },
-    { to: '/tienda',    label: 'Tienda' },
-    { to: '/nosotros',  label: 'Nosotros' },
-    { to: '/contacto',  label: 'Contacto' },
+    { to: '/',             label: 'Inicio' },
+    { to: '/tienda',       label: 'Tienda' },
+    { to: '/personalizar', label: '✨ Personalizá' },
+    { to: '/nosotros',     label: 'Nosotros' },
+    { to: '/contacto',     label: 'Contacto' },
   ]
 
   const isActive = (path) =>
