@@ -160,9 +160,10 @@ function drawBrujula(ctx, x, y, size, color) {
   ctx.lineTo(x+size*0.1, y); ctx.closePath(); ctx.fill()
 }
 
-function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) {
+function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, scale = 1) {
   const ringMid = (innerR + outerR) / 2
   const ringW   = outerR - innerR
+  const s       = scale          // alias corto
   const darkColor = adjustHex(aroHex, -65)
   ctx.fillStyle   = darkColor
   ctx.strokeStyle = darkColor
@@ -173,14 +174,14 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) 
       const a = (i / 12) * Math.PI * 2 + offset
       const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a)
-      drawStar(ctx, 0, 0, ringW*0.22, ringW*0.10, 6); ctx.fill()
+      drawStar(ctx, 0, 0, ringW*0.22*s, ringW*0.10*s, 6); ctx.fill()
       ctx.restore()
     }
   }
   if (diseño === 'flores') {
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2 + offset
-      drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.28, darkColor)
+      drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.28*s, darkColor)
     }
   }
   if (diseño === 'geometrico') {
@@ -188,9 +189,9 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) 
       const a = (i / 20) * Math.PI * 2 + offset
       const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/4)
-      const s = ringW * 0.22
+      const sz = ringW * 0.22 * s
       ctx.beginPath()
-      ctx.moveTo(0,-s); ctx.lineTo(s*0.6,0); ctx.lineTo(0,s); ctx.lineTo(-s*0.6,0)
+      ctx.moveTo(0,-sz); ctx.lineTo(sz*0.6,0); ctx.lineTo(0,sz); ctx.lineTo(-sz*0.6,0)
       ctx.closePath(); ctx.fill()
       ctx.restore()
     }
@@ -211,7 +212,7 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) 
       const a = t * Math.PI + offset
       const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/2)
-      fn(ctx, 0, 0, ringW*0.35, darkColor)
+      fn(ctx, 0, 0, ringW*0.35*s, darkColor)
       ctx.restore()
     })
     ;[0.62, 0.78, 0.95, 1.12, 1.28, 1.44].forEach(t => {
@@ -219,14 +220,14 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset) 
       const rx = cx + (ringMid+ringW*0.1)*Math.cos(a)
       const ry = cy + (ringMid+ringW*0.1)*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry)
-      drawStar(ctx, 0, 0, ringW*0.08, ringW*0.04, 4); ctx.fill()
+      drawStar(ctx, 0, 0, ringW*0.08*s, ringW*0.04*s, 4); ctx.fill()
       ctx.restore()
     })
   }
 }
 
 /* ─────────── COMPONENTE VISTA SUPERIOR INTERACTIVO ─────────── */
-function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, size = 400 }) {
+function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, scale = 1, size = 400 }) {
   const canvasRef  = useRef()
   const isDragging = useRef(false)
   const lastAngle  = useRef(0)
@@ -283,12 +284,12 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, size
     ctx.strokeStyle = adjustHex(aro.hex, -35); ctx.lineWidth = 2.5; ctx.stroke()
 
     /* Diseños */
-    drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex, offset)
+    drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex, offset, scale)
 
     /* Texto circular */
     if (textoVirola.trim()) {
       const textR    = ringMid + (outerR-innerR)*0.1
-      const fontSize = Math.max(W*0.037, 12)
+      const fontSize = Math.max(W * 0.037 * scale, 9)
       ctx.font = `bold ${fontSize}px Georgia, serif`
       ctx.fillStyle = adjustHex(aro.hex, -78)
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
@@ -329,7 +330,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, size
       ctx.restore()
     }
 
-  }, [aro, diseño, textoVirola, offset, size])
+  }, [aro, diseño, textoVirola, offset, scale, size])
 
   /* ── Helpers para calcular ángulo ── */
   const getAngle = (clientX, clientY) => {
@@ -506,7 +507,8 @@ export default function Personalizar() {
   const [aro,         setAro]         = useState(AROS[0])
   const [diseño,      setDiseño]      = useState('ninguno')
   const [textoVirola, setTextoVirola] = useState('')
-  const [offset,      setOffset]      = useState(0)        // ángulo de posición del grabado
+  const [offset,      setOffset]      = useState(0)
+  const [designScale, setDesignScale] = useState(1)
   const [autoRotate,  setAutoRotate]  = useState(true)
   const [vista,       setVista]       = useState('3d')
 
@@ -560,6 +562,7 @@ export default function Personalizar() {
                   textoVirola={textoVirola}
                   offset={offset}
                   onOffsetChange={delta => setOffset(prev => prev + delta)}
+                  scale={designScale}
                   size={370}
                 />
                 {hasGrabado && (
@@ -571,17 +574,34 @@ export default function Personalizar() {
             )}
           </div>
 
-          {/* Controles de posición — solo en vista top con grabado */}
+          {/* Controles de posición y tamaño — solo en vista top con grabado */}
           {vista === 'top' && hasGrabado && (
             <div className="posicion-controls">
               <span className="posicion-label">Posición del grabado</span>
               <div className="posicion-btns">
-                <button className="pos-btn" title="Rotar izquierda"
+                <button className="pos-btn"
                   onClick={() => setOffset(p => p - Math.PI/8)}>◁ Izquierda</button>
                 <button className="pos-btn reset-btn"
                   onClick={() => setOffset(0)}>⟳ Centrar</button>
-                <button className="pos-btn" title="Rotar derecha"
+                <button className="pos-btn"
                   onClick={() => setOffset(p => p + Math.PI/8)}>Derecha ▷</button>
+              </div>
+
+              <span className="posicion-label" style={{ marginTop: '0.5rem' }}>
+                Tamaño — {Math.round(designScale * 100)}%
+              </span>
+              <div className="tamanio-slider-wrap">
+                <span className="tamanio-icon">A</span>
+                <input
+                  type="range"
+                  className="tamanio-slider"
+                  min={40} max={160} step={5}
+                  value={Math.round(designScale * 100)}
+                  onChange={e => setDesignScale(Number(e.target.value) / 100)}
+                />
+                <span className="tamanio-icon" style={{ fontSize: '1.25rem' }}>A</span>
+                <button className="pos-btn reset-btn" style={{ marginLeft: '0.25rem', padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}
+                  onClick={() => setDesignScale(1)}>Reset</button>
               </div>
             </div>
           )}

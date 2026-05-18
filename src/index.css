@@ -2434,6 +2434,51 @@ button { cursor: pointer; border: none; font-family: inherit; }
 .pos-btn.reset-btn { border-color: var(--verde); color: var(--verde); }
 .pos-btn.reset-btn:hover { background: var(--verde); color: #fff; }
 
+/* Slider de tamaño */
+.tamanio-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tamanio-icon {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  min-width: 14px;
+  text-align: center;
+  line-height: 1;
+  user-select: none;
+}
+.tamanio-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 100px;
+  background: var(--crema-oscuro);
+  outline: none;
+  cursor: pointer;
+}
+.tamanio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--verde);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  cursor: grab;
+  transition: background 0.15s, transform 0.15s;
+}
+.tamanio-slider::-webkit-slider-thumb:hover { background: var(--verde-oscuro); transform: scale(1.15); }
+.tamanio-slider::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--verde);
+  border: 2px solid #fff;
+  cursor: grab;
+}
+
 /* Vista toggle */
 .vista-toggle {
   display: flex;
