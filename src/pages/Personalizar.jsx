@@ -273,6 +273,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
     const outerR = W * 0.46
     const innerR = W * 0.29
     const ringMid = (outerR + innerR) / 2
+    const ringW   = outerR - innerR
 
     ctx.clearRect(0, 0, W, W)
 
