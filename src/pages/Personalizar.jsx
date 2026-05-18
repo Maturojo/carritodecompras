@@ -27,16 +27,55 @@ const AROS = [
   { id: 'plata',  label: 'Plata lisa', hex: '#E8E8E0', rough: 0.15, metal: 1.0  },
 ]
 const DISEÑOS_VIROLA = [
-  { id: 'ninguno',    label: 'Sin diseño'   },
-  { id: 'ruteamos',   label: '🛣 Ruteamos'  },
-  { id: 'flores',     label: '🌸 Flores'    },
-  { id: 'geometrico', label: '◈ Étnico'     },
-  { id: 'estrellas',  label: '✦ Estrellas'  },
+  { id: 'ninguno',    label: 'Sin diseño',  cat: '' },
+  // Naturaleza
+  { id: 'estrellas',  label: '✦ Estrellas', cat: 'Naturaleza' },
+  { id: 'flores',     label: '🌸 Flores',   cat: 'Naturaleza' },
+  { id: 'sol',        label: '☀ Sol',       cat: 'Naturaleza' },
+  { id: 'luna',       label: '🌙 Luna',     cat: 'Naturaleza' },
+  { id: 'hoja',       label: '🍃 Hojas',    cat: 'Naturaleza' },
+  { id: 'ola',        label: '🌊 Olas',     cat: 'Naturaleza' },
+  { id: 'copo',       label: '❄ Copos',     cat: 'Naturaleza' },
+  // Símbolos
+  { id: 'corazon',    label: '❤ Corazones', cat: 'Símbolos' },
+  { id: 'diamante',   label: '◆ Diamantes', cat: 'Símbolos' },
+  { id: 'ancla',      label: '⚓ Anclas',   cat: 'Símbolos' },
+  { id: 'infinito',   label: '∞ Infinito',  cat: 'Símbolos' },
+  { id: 'corona',     label: '♛ Coronas',  cat: 'Símbolos' },
+  // Abstracto
+  { id: 'geometrico', label: '◈ Étnico',    cat: 'Abstracto' },
+  { id: 'espiral',    label: '🌀 Espirales',cat: 'Abstracto' },
+  { id: 'zigzag',     label: '⋀ Zigzag',   cat: 'Abstracto' },
+  { id: 'tribal',     label: '⬟ Tribal',   cat: 'Abstracto' },
+  { id: 'puntos',     label: '· Puntos',    cat: 'Abstracto' },
+  // Temáticos
+  { id: 'ruteamos',   label: '🛣 Ruteamos', cat: 'Temáticos' },
+  { id: 'patas',      label: '🐾 Patas',    cat: 'Temáticos' },
+  { id: 'musical',    label: '🎵 Musical',  cat: 'Temáticos' },
 ]
+
 const FUENTES = [
-  { id: 'serif',  label: 'Clásica',  font: 'Georgia, serif',              preview: 'Ag' },
-  { id: 'sans',   label: 'Moderna',  font: '"Helvetica Neue", sans-serif', preview: 'Ag' },
-  { id: 'script', label: 'Cursiva',  font: '"Brush Script MT", "Comic Sans MS", cursive', preview: 'Ag' },
+  // Serif
+  { id: 'georgia',    label: 'Georgia',     font: 'Georgia, serif',                        cat: 'Serif',   preview: 'Ag' },
+  { id: 'playfair',   label: 'Playfair',    font: '"Playfair Display", Georgia, serif',    cat: 'Serif',   preview: 'Ag' },
+  { id: 'cinzel',     label: 'Cinzel',      font: '"Cinzel", Georgia, serif',              cat: 'Serif',   preview: 'Ag' },
+  { id: 'cormorant',  label: 'Cormorant',   font: '"Cormorant Garamond", Georgia, serif',  cat: 'Serif',   preview: 'Ag' },
+  // Sans
+  { id: 'montserrat', label: 'Montserrat',  font: '"Montserrat", sans-serif',              cat: 'Sans',    preview: 'Ag' },
+  { id: 'poppins',    label: 'Poppins',     font: '"Poppins", sans-serif',                 cat: 'Sans',    preview: 'Ag' },
+  { id: 'raleway',    label: 'Raleway',     font: '"Raleway", sans-serif',                 cat: 'Sans',    preview: 'Ag' },
+  { id: 'oswald',     label: 'Oswald',      font: '"Oswald", sans-serif',                  cat: 'Sans',    preview: 'Ag' },
+  // Script
+  { id: 'dancing',    label: 'Dancing',     font: '"Dancing Script", cursive',             cat: 'Script',  preview: 'Ag' },
+  { id: 'pacifico',   label: 'Pacifico',    font: '"Pacifico", cursive',                   cat: 'Script',  preview: 'Ag' },
+  { id: 'great',      label: 'Great Vibes', font: '"Great Vibes", cursive',                cat: 'Script',  preview: 'Ag' },
+  { id: 'sacramento', label: 'Sacramento',  font: '"Sacramento", cursive',                 cat: 'Script',  preview: 'Ag' },
+  { id: 'satisfy',    label: 'Satisfy',     font: '"Satisfy", cursive',                    cat: 'Script',  preview: 'Ag' },
+  { id: 'caveat',     label: 'Caveat',      font: '"Caveat", cursive',                     cat: 'Script',  preview: 'Ag' },
+  // Display
+  { id: 'bebas',      label: 'Bebas Neue',  font: '"Bebas Neue", sans-serif',              cat: 'Display', preview: 'AG' },
+  { id: 'lobster',    label: 'Lobster',     font: '"Lobster", cursive',                    cat: 'Display', preview: 'Ag' },
+  { id: 'abril',      label: 'Abril',       font: '"Abril Fatface", serif',                cat: 'Display', preview: 'Ag' },
 ]
 
 /* ─────────── UTILIDADES ─────────── */
@@ -112,6 +151,8 @@ function drawStar(ctx, x, y, outerR, innerR, points) {
   }
   ctx.closePath()
 }
+
+/* ── Naturaleza ── */
 function drawFlor(ctx, cx, cy, r, color) {
   ctx.fillStyle = color
   ctx.beginPath(); ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2); ctx.fill()
@@ -122,6 +163,137 @@ function drawFlor(ctx, cx, cy, r, color) {
     ctx.fill()
   }
 }
+function drawSol(ctx, x, y, size, color) {
+  ctx.fillStyle = color; ctx.strokeStyle = color
+  ctx.beginPath(); ctx.arc(x, y, size * 0.27, 0, Math.PI * 2); ctx.fill()
+  ctx.lineWidth = size * 0.1; ctx.lineCap = 'round'
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(x + Math.cos(a)*size*0.36, y + Math.sin(a)*size*0.36)
+    ctx.lineTo(x + Math.cos(a)*size*0.52, y + Math.sin(a)*size*0.52)
+    ctx.stroke()
+  }
+}
+function drawLuna(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  ctx.beginPath()
+  ctx.arc(x, y, size * 0.38, 0, Math.PI * 2, false)
+  ctx.arc(x + size * 0.19, y - size * 0.07, size * 0.29, 0, Math.PI * 2, true)
+  ctx.fill('evenodd')
+}
+function drawHoja(ctx, x, y, size, color) {
+  ctx.fillStyle = color; ctx.strokeStyle = color
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-Math.PI / 4)
+  ctx.beginPath()
+  ctx.moveTo(0, -size * 0.48)
+  ctx.bezierCurveTo(size*0.38, -size*0.28, size*0.38, size*0.28, 0, size*0.48)
+  ctx.bezierCurveTo(-size*0.38, size*0.28, -size*0.38, -size*0.28, 0, -size*0.48)
+  ctx.fill()
+  ctx.strokeStyle = adjustHex(color, 50); ctx.lineWidth = 0.9
+  ctx.beginPath(); ctx.moveTo(0, -size*0.42); ctx.lineTo(0, size*0.42); ctx.stroke()
+  ctx.restore()
+}
+function drawOla(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = size * 0.12; ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(x - size*0.48, y + size*0.08)
+  ctx.bezierCurveTo(x-size*0.22, y-size*0.32, x+size*0.06, y+size*0.34, x+size*0.28, y-size*0.04)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(x - size*0.28, y + size*0.24)
+  ctx.bezierCurveTo(x-size*0.04, y-size*0.12, x+size*0.24, y+size*0.28, x+size*0.48, y+size*0.1)
+  ctx.stroke()
+}
+function drawCopo(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = size * 0.1; ctx.lineCap = 'round'
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a)*size*0.44, y + Math.sin(a)*size*0.44); ctx.stroke()
+    const mx = x + Math.cos(a)*size*0.24, my = y + Math.sin(a)*size*0.24
+    const perp = a + Math.PI / 2
+    ctx.beginPath()
+    ctx.moveTo(mx + Math.cos(perp)*size*0.13, my + Math.sin(perp)*size*0.13)
+    ctx.lineTo(mx - Math.cos(perp)*size*0.13, my - Math.sin(perp)*size*0.13)
+    ctx.stroke()
+  }
+}
+
+/* ── Símbolos ── */
+function drawCorazon(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  ctx.save(); ctx.translate(x, y)
+  const s = size * 0.028
+  ctx.beginPath()
+  ctx.moveTo(0, s * 6)
+  ctx.bezierCurveTo(-s*2, s*4, -s*8, 0, -s*8, -s*5)
+  ctx.bezierCurveTo(-s*8, -s*10, -s*2, -s*12, 0, -s*8)
+  ctx.bezierCurveTo(s*2, -s*12, s*8, -s*10, s*8, -s*5)
+  ctx.bezierCurveTo(s*8, 0, s*2, s*4, 0, s*6)
+  ctx.fill(); ctx.restore()
+}
+function drawDiamante(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  const w = size * 0.38, h = size * 0.5
+  ctx.beginPath()
+  ctx.moveTo(x, y - h/2)
+  ctx.lineTo(x + w/2, y - h*0.08)
+  ctx.lineTo(x, y + h/2)
+  ctx.lineTo(x - w/2, y - h*0.08)
+  ctx.closePath(); ctx.fill()
+  ctx.strokeStyle = adjustHex(color, 50); ctx.lineWidth = 0.7
+  ctx.beginPath()
+  ctx.moveTo(x - w/2, y - h*0.08); ctx.lineTo(x, y - h/2); ctx.lineTo(x + w/2, y - h*0.08)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(x - w/3, y - h*0.08); ctx.lineTo(x, y - h*0.32); ctx.lineTo(x + w/3, y - h*0.08)
+  ctx.stroke()
+}
+function drawAncla(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = 'round'
+  ctx.lineWidth = size * 0.1
+  ctx.beginPath(); ctx.moveTo(x, y - size*0.42); ctx.lineTo(x, y + size*0.42); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x - size*0.30, y - size*0.26); ctx.lineTo(x + size*0.30, y - size*0.26); ctx.stroke()
+  ctx.lineWidth = size * 0.09
+  ctx.beginPath(); ctx.arc(x, y - size*0.34, size*0.10, 0, Math.PI*2); ctx.stroke()
+  ctx.beginPath(); ctx.arc(x, y + size*0.08, size*0.34, 0.05, Math.PI - 0.05); ctx.stroke()
+  ctx.lineWidth = size * 0.08
+  ctx.beginPath(); ctx.moveTo(x - size*0.34, y + size*0.08); ctx.lineTo(x - size*0.24, y - size*0.04); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x + size*0.34, y + size*0.08); ctx.lineTo(x + size*0.24, y - size*0.04); ctx.stroke()
+}
+function drawInfinito(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = size * 0.12; ctx.lineCap = 'round'
+  const w = size * 0.44, h = size * 0.22
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+  ctx.bezierCurveTo(x - w*0.5, y - h*2, x - w, y - h, x - w*0.5, y)
+  ctx.bezierCurveTo(x - w, y + h, x - w*0.5, y + h*2, x, y)
+  ctx.bezierCurveTo(x + w*0.5, y - h*2, x + w, y - h, x + w*0.5, y)
+  ctx.bezierCurveTo(x + w, y + h, x + w*0.5, y + h*2, x, y)
+  ctx.stroke()
+}
+function drawCorona(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  const w = size * 0.52, h = size * 0.38
+  ctx.beginPath()
+  ctx.moveTo(x - w/2, y + h/2)
+  ctx.lineTo(x + w/2, y + h/2)
+  ctx.lineTo(x + w/2,  y - h*0.05)
+  ctx.lineTo(x + w*0.28, y + h*0.12)
+  ctx.lineTo(x + w*0.14, y - h/2)
+  ctx.lineTo(x, y + h*0.08)
+  ctx.lineTo(x - w*0.14, y - h/2)
+  ctx.lineTo(x - w*0.28, y + h*0.12)
+  ctx.lineTo(x - w/2, y - h*0.05)
+  ctx.closePath(); ctx.fill()
+  ;[x + w*0.14, x - w*0.14, x].forEach((px, i) => {
+    const py = i < 2 ? y - h/2 : y + h*0.08
+    ctx.beginPath(); ctx.arc(px, py, size*0.07, 0, Math.PI*2); ctx.fill()
+  })
+}
+
+/* ── Abstracto ── */
 function drawMontania(ctx, x, y, size, color) {
   ctx.fillStyle = color
   ctx.beginPath()
@@ -164,6 +336,102 @@ function drawBrujula(ctx, x, y, size, color) {
   ctx.moveTo(x, y-size*0.32); ctx.lineTo(x-size*0.1, y); ctx.lineTo(x, y+size*0.32)
   ctx.lineTo(x+size*0.1, y); ctx.closePath(); ctx.fill()
 }
+function drawEspiral(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = size * 0.1; ctx.lineCap = 'round'
+  ctx.beginPath()
+  const turns = 2.5, steps = 64
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const a = t * turns * Math.PI * 2
+    const r = size * 0.04 + t * size * 0.34
+    const px = x + r * Math.cos(a), py = y + r * Math.sin(a)
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+  }
+  ctx.stroke()
+}
+function drawZigzag(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = size * 0.1; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  const n = 4, w = size * 0.9, h = size * 0.3
+  ctx.beginPath()
+  for (let i = 0; i <= n; i++) {
+    const px = x - w/2 + (i / n) * w
+    const py = y + (i % 2 === 0 ? h/2 : -h/2)
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+  }
+  ctx.stroke()
+}
+function drawTribal(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  const d = size * 0.4
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4)
+  ctx.beginPath(); ctx.rect(-d/2, -d/2, d, d); ctx.fill()
+  ctx.strokeStyle = adjustHex(color, 55); ctx.lineWidth = 0.8
+  ctx.beginPath()
+  ctx.moveTo(-d/4, 0); ctx.lineTo(0, -d/4); ctx.lineTo(d/4, 0); ctx.lineTo(0, d/4)
+  ctx.closePath(); ctx.stroke()
+  ctx.restore()
+}
+function drawPuntos(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  ctx.beginPath(); ctx.arc(x, y, size * 0.15, 0, Math.PI * 2); ctx.fill()
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2
+    const r = size * 0.3
+    ctx.beginPath()
+    ctx.arc(x + Math.cos(a)*r, y + Math.sin(a)*r, size * 0.11, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + Math.PI/6
+    const r = size * 0.46
+    ctx.beginPath()
+    ctx.arc(x + Math.cos(a)*r, y + Math.sin(a)*r, size * 0.07, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+/* ── Temáticos ── */
+function drawPatas(ctx, x, y, size, color) {
+  ctx.fillStyle = color
+  ctx.beginPath(); ctx.ellipse(x, y + size*0.1, size*0.2, size*0.17, 0, 0, Math.PI*2); ctx.fill()
+  const toes = [
+    { dx: -size*0.22, dy: -size*0.08 },
+    { dx: -size*0.07, dy: -size*0.22 },
+    { dx:  size*0.07, dy: -size*0.22 },
+    { dx:  size*0.22, dy: -size*0.08 },
+  ]
+  toes.forEach(({ dx, dy }) => {
+    ctx.beginPath(); ctx.ellipse(x+dx, y+dy, size*0.1, size*0.09, 0, 0, Math.PI*2); ctx.fill()
+  })
+}
+function drawMusical(ctx, x, y, size, color) {
+  ctx.fillStyle = color; ctx.strokeStyle = color; ctx.lineCap = 'round'
+  // Cabeza de nota izquierda
+  ctx.save(); ctx.translate(x - size*0.14, y + size*0.25); ctx.rotate(-Math.PI/7)
+  ctx.beginPath(); ctx.ellipse(0, 0, size*0.15, size*0.11, 0, 0, Math.PI*2); ctx.fill()
+  ctx.restore()
+  // Palo izquierdo
+  ctx.lineWidth = size * 0.07
+  ctx.beginPath()
+  ctx.moveTo(x - size*0.14 + size*0.11, y + size*0.22)
+  ctx.lineTo(x - size*0.14 + size*0.11, y - size*0.22)
+  ctx.stroke()
+  // Cabeza de nota derecha
+  ctx.save(); ctx.translate(x + size*0.14, y + size*0.3); ctx.rotate(-Math.PI/7)
+  ctx.beginPath(); ctx.ellipse(0, 0, size*0.15, size*0.11, 0, 0, Math.PI*2); ctx.fill()
+  ctx.restore()
+  // Palo derecho
+  ctx.beginPath()
+  ctx.moveTo(x + size*0.14 + size*0.11, y + size*0.27)
+  ctx.lineTo(x + size*0.14 + size*0.11, y - size*0.17)
+  ctx.stroke()
+  // Barra de ligadura
+  ctx.lineWidth = size * 0.07
+  ctx.beginPath()
+  ctx.moveTo(x - size*0.03, y - size*0.22)
+  ctx.lineTo(x + size*0.25, y - size*0.17)
+  ctx.stroke()
+}
 
 // zona: 'full' | 'top' | 'bottom'
 function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, scale = 1, zona = 'full') {
@@ -180,10 +448,22 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
   const zSpan  = zona === 'full'   ?  Math.PI*2 : Math.PI
 
   // Helper: ángulo para elemento i de n, dentro de la zona
-  const ang = (i, n) => zStart + (i / n) * zSpan + offset
+  const ang    = (i, n) => zStart + (i / n) * zSpan + offset
+  // Helper para dibujar n repeticiones de un ícono rotado
+  const repeat = (n, sz, fn) => {
+    for (let i = 0; i < n; i++) {
+      const a = ang(i, n)
+      const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI / 2)
+      fn(ctx, 0, 0, sz, darkColor)
+      ctx.restore()
+    }
+  }
+  const nFull = (nF, nH) => zona === 'full' ? nF : nH
 
+  /* ══ Naturaleza ══ */
   if (diseño === 'estrellas') {
-    const n = zona === 'full' ? 12 : 6
+    const n = nFull(12, 6)
     for (let i = 0; i < n; i++) {
       const a = ang(i, n)
       const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
@@ -193,14 +473,28 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
     }
   }
   if (diseño === 'flores') {
-    const n = zona === 'full' ? 8 : 4
+    const n = nFull(8, 4)
     for (let i = 0; i < n; i++) {
       const a = ang(i, n)
-      drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.28*s, darkColor)
+      drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.3*s, darkColor)
     }
   }
+  if (diseño === 'sol')    repeat(nFull(8,  4), ringW*0.36*s, drawSol)
+  if (diseño === 'luna')   repeat(nFull(7,  4), ringW*0.36*s, drawLuna)
+  if (diseño === 'hoja')   repeat(nFull(10, 5), ringW*0.34*s, drawHoja)
+  if (diseño === 'ola')    repeat(nFull(6,  3), ringW*0.38*s, drawOla)
+  if (diseño === 'copo')   repeat(nFull(7,  4), ringW*0.38*s, drawCopo)
+
+  /* ══ Símbolos ══ */
+  if (diseño === 'corazon')  repeat(nFull(9,  5), ringW*0.36*s, drawCorazon)
+  if (diseño === 'diamante') repeat(nFull(10, 5), ringW*0.34*s, drawDiamante)
+  if (diseño === 'ancla')    repeat(nFull(7,  4), ringW*0.40*s, drawAncla)
+  if (diseño === 'infinito') repeat(nFull(6,  3), ringW*0.36*s, drawInfinito)
+  if (diseño === 'corona')   repeat(nFull(7,  4), ringW*0.38*s, drawCorona)
+
+  /* ══ Abstracto ══ */
   if (diseño === 'geometrico') {
-    const n = zona === 'full' ? 20 : 10
+    const n = nFull(20, 10)
     for (let i = 0; i < n; i++) {
       const a = ang(i, n)
       const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
@@ -211,23 +505,35 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
       ctx.closePath(); ctx.fill()
       ctx.restore()
     }
-    // Bordes sólo en full
     if (zona === 'full') {
       ctx.beginPath(); ctx.arc(cx, cy, innerR+ringW*0.15, 0, Math.PI*2)
       ctx.lineWidth = 1.2; ctx.stroke()
       ctx.beginPath(); ctx.arc(cx, cy, outerR-ringW*0.15, 0, Math.PI*2); ctx.stroke()
     }
   }
+  if (diseño === 'espiral') repeat(nFull(6,  3), ringW*0.38*s, drawEspiral)
+  if (diseño === 'zigzag') {
+    const n = nFull(8, 4)
+    for (let i = 0; i < n; i++) {
+      const a = ang(i, n)
+      const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
+      ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI / 2)
+      drawZigzag(ctx, 0, 0, ringW*0.30*s, darkColor)
+      ctx.restore()
+    }
+  }
+  if (diseño === 'tribal')  repeat(nFull(10, 5), ringW*0.34*s, drawTribal)
+  if (diseño === 'puntos')  repeat(nFull(8,  4), ringW*0.38*s, drawPuntos)
+
+  /* ══ Temáticos ══ */
   if (diseño === 'ruteamos') {
-    // Iconos en la mitad elegida o distribuidos en todo el aro
     const iconosFull = [
       { t: 0.55, fn: drawMontania }, { t: 0.72, fn: drawCarpa    },
       { t: 0.88, fn: drawColectivo}, { t: 1.05, fn: drawBrujula  },
       { t: 1.22, fn: drawMontania }, { t: 1.38, fn: drawCarpa    },
     ]
     const iconosHalf = [
-      { t: 0.2,  fn: drawMontania }, { t: 0.5,  fn: drawColectivo},
-      { t: 0.8,  fn: drawCarpa    },
+      { t: 0.2, fn: drawMontania }, { t: 0.5, fn: drawColectivo }, { t: 0.8, fn: drawCarpa },
     ]
     const iconos = zona === 'full' ? iconosFull : iconosHalf
     iconos.forEach(({ t, fn }) => {
@@ -237,18 +543,16 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
       fn(ctx, 0, 0, ringW*0.35*s, darkColor)
       ctx.restore()
     })
-    const estrellaTs = zona === 'full'
-      ? [0.62, 0.78, 0.95, 1.12, 1.28, 1.44]
-      : [0.35, 0.65]
+    const estrellaTs = zona === 'full' ? [0.62,0.78,0.95,1.12,1.28,1.44] : [0.35,0.65]
     estrellaTs.forEach(t => {
       const a = zStart + t * zSpan + offset + 0.09
-      const rx = cx + (ringMid+ringW*0.1)*Math.cos(a)
-      const ry = cy + (ringMid+ringW*0.1)*Math.sin(a)
-      ctx.save(); ctx.translate(rx, ry)
+      ctx.save(); ctx.translate(cx + (ringMid+ringW*0.1)*Math.cos(a), cy + (ringMid+ringW*0.1)*Math.sin(a))
       drawStar(ctx, 0, 0, ringW*0.08*s, ringW*0.04*s, 4); ctx.fill()
       ctx.restore()
     })
   }
+  if (diseño === 'patas')   repeat(nFull(8,  4), ringW*0.36*s, drawPatas)
+  if (diseño === 'musical') repeat(nFull(7,  4), ringW*0.40*s, drawMusical)
 }
 
 /* ─────────── EFECTO DE GRABADO (canvas offscreen) ─────────── */
@@ -873,13 +1177,28 @@ export default function Personalizar() {
           <div className="ctrl-group">
             <h3>Diseño en virola</h3>
             <p className="ctrl-hint">Elegí un grabado para el aro metálico</p>
-            <div className="ctrl-grid">
-              {DISEÑOS_VIROLA.map(d => (
-                <button key={d.id}
-                  className={`ctrl-chip ${diseño===d.id?'active':''}`}
-                  onClick={() => { setDiseño(d.id); setVista('top') }}>{d.label}</button>
-              ))}
-            </div>
+
+            {/* Opción "Sin diseño" separada */}
+            <button
+              className={`ctrl-chip ${diseño==='ninguno'?'active':''}`}
+              style={{ marginBottom: '0.5rem' }}
+              onClick={() => setDiseño('ninguno')}
+            >Sin diseño</button>
+
+            {/* Categorías */}
+            {['Naturaleza','Símbolos','Abstracto','Temáticos'].map(cat => (
+              <div key={cat}>
+                <p className="ctrl-diseño-cat">{cat}</p>
+                <div className="ctrl-diseño-grid">
+                  {DISEÑOS_VIROLA.filter(d => d.cat === cat).map(d => (
+                    <button key={d.id}
+                      className={`ctrl-diseño-btn ${diseño===d.id?'active':''}`}
+                      onClick={() => { setDiseño(d.id); setVista('top') }}
+                    >{d.label}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="ctrl-group">
@@ -976,20 +1295,25 @@ export default function Personalizar() {
           {textoVirola && (
             <div className="ctrl-group">
               <h3>Fuente del texto</h3>
-              <div className="ctrl-font-grid">
-                {FUENTES.map(f => (
-                  <button key={f.id}
-                    className={`ctrl-font-btn ${textFont === f.font ? 'active' : ''}`}
-                    onClick={() => { setTextFont(f.font); setVista('top') }}
-                  >
-                    <span className="font-preview" style={{ fontFamily: f.font }}>{f.preview}</span>
-                    <span className="font-label">{f.label}</span>
-                  </button>
-                ))}
-              </div>
+              {['Serif','Sans','Script','Display'].map(cat => (
+                <div key={cat}>
+                  <p className="ctrl-font-cat">{cat}</p>
+                  <div className="ctrl-font-grid">
+                    {FUENTES.filter(f => f.cat === cat).map(f => (
+                      <button key={f.id}
+                        className={`ctrl-font-btn ${textFont === f.font ? 'active' : ''}`}
+                        onClick={() => { setTextFont(f.font); setVista('top') }}
+                      >
+                        <span className="font-preview" style={{ fontFamily: f.font }}>{f.preview}</span>
+                        <span className="font-label" style={{ fontFamily: f.font }}>{f.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
               <button
                 className={`ctrl-chip ${textoCompleto ? 'active' : ''}`}
-                style={{ marginTop: '0.6rem' }}
+                style={{ marginTop: '0.75rem' }}
                 onClick={() => { setTextoCompleto(v => !v); setVista('top') }}
               >
                 {textoCompleto ? '◎ Vuelta completa' : '◑ Vuelta completa'}

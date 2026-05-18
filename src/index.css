@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Cinzel:wght@700&family=Cormorant+Garamond:wght@700&family=Montserrat:wght@700&family=Poppins:wght@700&family=Raleway:wght@700&family=Oswald:wght@700&family=Dancing+Script:wght@700&family=Pacifico&family=Great+Vibes&family=Sacramento&family=Caveat:wght@700&family=Bebas+Neue&family=Lobster&family=Abril+Fatface&family=Satisfy&display=swap');
+
 /* ── Variables modo claro ── */
 :root {
   --verde: #9c664d;
@@ -2471,38 +2473,89 @@ button { cursor: pointer; border: none; font-family: inherit; }
 }
 
 /* Selector de fuente */
+.ctrl-font-cat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0.6rem 0 0.35rem;
+}
+.ctrl-font-cat:first-child { margin-top: 0; }
 .ctrl-font-grid {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
 }
 .ctrl-font-btn {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.6rem 0.5rem 0.5rem;
-  border-radius: 12px;
+  gap: 0.2rem;
+  padding: 0.55rem 0.3rem 0.45rem;
+  border-radius: 10px;
   border: 2px solid var(--crema-oscuro);
   background: var(--blanco);
   cursor: pointer;
   transition: all 0.18s;
+  min-width: 0;
 }
 .ctrl-font-btn:hover { border-color: var(--verde); }
 .ctrl-font-btn.active { border-color: var(--verde); background: rgba(74,111,74,0.08); }
 .font-preview {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: bold;
   line-height: 1;
   color: var(--texto);
+  white-space: nowrap;
 }
 .font-label {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--texto-suave);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
+
+/* Grid de diseños con categorías */
+.ctrl-diseño-cat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0.65rem 0 0.35rem;
+}
+.ctrl-diseño-cat:first-child { margin-top: 0; }
+.ctrl-diseño-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+.ctrl-diseño-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 10px;
+  border: 2px solid var(--crema-oscuro);
+  background: var(--blanco);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--texto);
+  transition: all 0.18s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ctrl-diseño-btn:hover { border-color: var(--verde); }
+.ctrl-diseño-btn.active { border-color: var(--verde); background: rgba(74,111,74,0.08); color: var(--verde-oscuro); }
 
 /* Slider de tamaño */
 .tamanio-slider-wrap {
