@@ -1,7 +1,4 @@
-import { useState, useRef, useEffect, Suspense } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
-import * as THREE from 'three'
+import { useState, useRef, useEffect } from 'react'
 
 /* ─────────── CONFIG ─────────── */
 const TIPOS = [
@@ -87,33 +84,6 @@ function adjustHex(hex, amt) {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
 }
 
-/* ─────────── PERFIL LATHE ─────────── */
-function getMateProfile(tipo) {
-  if (tipo === 'calabaza') return [
-    [0.00,-0.95],[0.18,-0.93],[0.50,-0.82],[0.76,-0.60],
-    [0.90,-0.28],[0.94, 0.08],[0.90, 0.42],[0.78, 0.68],
-    [0.60, 0.84],[0.44, 0.93],[0.36, 1.00],[0.34, 1.04],
-    [0.34, 1.10],[0.18, 1.14],[0.00, 1.16],
-  ]
-  if (tipo === 'porongo') return [
-    [0.00,-0.98],[0.22,-0.96],[0.52,-0.82],[0.72,-0.52],
-    [0.82,-0.12],[0.84, 0.22],[0.82, 0.50],[0.76, 0.72],
-    [0.64, 0.86],[0.50, 0.94],[0.40, 1.00],[0.38, 1.06],
-    [0.38, 1.12],[0.20, 1.16],[0.00, 1.18],
-  ]
-  if (tipo === 'ceramica') return [
-    [0.00,-0.96],[0.28,-0.94],[0.58,-0.80],[0.78,-0.50],
-    [0.88,-0.10],[0.88, 0.28],[0.85, 0.58],[0.78, 0.80],
-    [0.64, 0.92],[0.46, 1.00],[0.38, 1.06],[0.38, 1.12],
-    [0.20, 1.16],[0.00, 1.18],
-  ]
-  return [
-    [0.00,-0.95],[0.30,-0.92],[0.60,-0.82],[0.76,-0.62],
-    [0.80,-0.30],[0.80, 0.32],[0.80, 0.62],[0.76, 0.82],
-    [0.62, 0.94],[0.46, 1.02],[0.40, 1.07],[0.40, 1.12],
-    [0.22, 1.16],[0.00, 1.18],
-  ]
-}
 
 /* ═══════════════════════════════════
    DIBUJO DEL CANVAS — funciones
@@ -866,103 +836,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
   )
 }
 
-/* ─────────── MODELO 3D ─────────── */
-function MateModel({ tipo, cuerpo, aro, diseño, autoRotate }) {
-  const groupRef = useRef()
-  useFrame((_, delta) => {
-    if (autoRotate && groupRef.current) groupRef.current.rotation.y += delta * 0.35
-  })
-  const profile   = getMateProfile(tipo)
-  const allPoints = profile.map(([x, y]) => new THREE.Vector2(x, y))
-  const neckY  = profile[profile.length - 5][1]
-  const neckR  = profile[profile.length - 5][0]
-  const bodyColor = new THREE.Color(cuerpo.hex)
-  const aroColor  = new THREE.Color(aro.hex)
-  const darkAro   = new THREE.Color(adjustHex(aro.hex, -40))
 
-  return (
-    <group ref={groupRef} position={[0, -0.15, 0]}>
-      <mesh castShadow receiveShadow>
-        <latheGeometry args={[allPoints, 80]} />
-        <meshStandardMaterial color={bodyColor} roughness={cuerpo.rough} metalness={cuerpo.metal} />
-      </mesh>
-      <mesh position={[0, neckY+0.04, 0]} castShadow>
-        <cylinderGeometry args={[neckR+0.010, neckR+0.007, 0.24, 64]} />
-        <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.2} />
-      </mesh>
-      <mesh position={[0, neckY+0.15, 0]}>
-        <torusGeometry args={[neckR+0.007, 0.024, 20, 64]} />
-        <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.5} />
-      </mesh>
-      <mesh position={[0, neckY-0.09, 0]}>
-        <torusGeometry args={[neckR+0.007, 0.016, 16, 64]} />
-        <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} envMapIntensity={2.5} />
-      </mesh>
-      {diseño === 'estrellas' && Array.from({length:10}).map((_,i) => {
-        const a = (i/10)*Math.PI*2
-        return <mesh key={i} position={[Math.cos(a)*(neckR+0.02), neckY+0.04, Math.sin(a)*(neckR+0.02)]}>
-          <sphereGeometry args={[0.018,6,6]} />
-          <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal*0.7} />
-        </mesh>
-      })}
-      {diseño === 'flores' && Array.from({length:8}).map((_,i) => {
-        const a = (i/8)*Math.PI*2
-        return <mesh key={i} position={[Math.cos(a)*(neckR+0.018), neckY+0.04, Math.sin(a)*(neckR+0.018)]}>
-          <sphereGeometry args={[0.022,8,8]} />
-          <meshStandardMaterial color={darkAro} roughness={0.35} metalness={aro.metal*0.6} />
-        </mesh>
-      })}
-      {diseño === 'geometrico' && [0.05,-0.06].map((yOff,j) => (
-        <mesh key={j} position={[0, neckY+yOff, 0]}>
-          <torusGeometry args={[neckR+0.01, 0.010, 4, 6]} />
-          <meshStandardMaterial color={darkAro} roughness={0.3} metalness={aro.metal*0.8} />
-        </mesh>
-      ))}
-      {diseño === 'ruteamos' && Array.from({length:12}).map((_,i) => {
-        const a = (i/12)*Math.PI*2
-        return <mesh key={i} position={[Math.cos(a)*(neckR+0.018), neckY+(i%2===0?0.05:-0.04), Math.sin(a)*(neckR+0.018)]}>
-          <boxGeometry args={[0.03,0.03,0.01]} />
-          <meshStandardMaterial color={darkAro} roughness={0.25} metalness={aro.metal*0.75} />
-        </mesh>
-      })}
-      <mesh position={[0, neckY+0.02, 0]}>
-        <cylinderGeometry args={[neckR-0.025, neckR-0.025, 0.04, 40]} />
-        <meshStandardMaterial color="#1a0f06" roughness={0.95} metalness={0} />
-      </mesh>
-      <group position={[neckR*0.35, neckY+0.02, 0]} rotation={[0,0,-0.28]}>
-        <mesh>
-          <cylinderGeometry args={[0.022,0.022,1.55,12]} />
-          <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
-        </mesh>
-        <mesh position={[0.04, 0.79, 0]} rotation={[0,0,0.45]}>
-          <cylinderGeometry args={[0.018,0.018,0.28,10]} />
-          <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
-        </mesh>
-        <mesh position={[0,-0.68,0]}>
-          <sphereGeometry args={[0.046,16,16]} />
-          <meshStandardMaterial color={new THREE.Color(adjustHex(aro.hex,-20))} roughness={0.35} metalness={aro.metal} />
-        </mesh>
-      </group>
-    </group>
-  )
-}
-
-function Scene({ tipo, cuerpo, aro, diseño, autoRotate }) {
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5,8,5]}   intensity={1.4} castShadow shadow-mapSize={[2048,2048]} />
-      <directionalLight position={[-4,3,-3]} intensity={0.5} color="#ffeedd" />
-      <directionalLight position={[0,-3,3]}  intensity={0.2} color="#c8d8e8" />
-      <pointLight position={[2,4,3]} intensity={0.6} color="#fff8f0" />
-      <Suspense fallback={null}>
-        <Environment preset="studio" />
-        <MateModel tipo={tipo} cuerpo={cuerpo} aro={aro} diseño={diseño} autoRotate={autoRotate} />
-        <ContactShadows position={[0,-1.15,0]} opacity={0.55} scale={3.5} blur={2.5} far={1.5} />
-      </Suspense>
-    </>
-  )
-}
 
 /* ─────────── PÁGINA ─────────── */
 export default function Personalizar() {
@@ -979,8 +853,6 @@ export default function Personalizar() {
   const [customImageSrc,setCustomImageSrc]= useState(null)
   const [imageRepeat,   setImageRepeat]   = useState(1)
   const [engThreshold,  setEngThreshold]  = useState(148)
-  const [autoRotate,    setAutoRotate]    = useState(true)
-  const [vista,         setVista]         = useState('3d')
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
@@ -1007,7 +879,7 @@ export default function Personalizar() {
     <main className="page-content">
       <section className="inner-hero" style={{ paddingBottom: '2rem' }}>
         <span className="section-pretitle">Tu mate, tu estilo</span>
-        <h1 className="inner-hero-title">Personalizador 3D</h1>
+        <h1 className="inner-hero-title">Personalizador de virola</h1>
         <p className="inner-hero-sub">Elegí cada detalle y consultanos para hacer el tuyo a medida.</p>
       </section>
 
@@ -1015,53 +887,33 @@ export default function Personalizar() {
 
         {/* ── Preview ── */}
         <div className="personalizador-preview">
-          <div className="vista-toggle">
-            <button className={`vista-btn ${vista==='3d'  ? 'active':''}`} onClick={() => setVista('3d')}>Vista 3D</button>
-            <button className={`vista-btn ${vista==='top' ? 'active':''}`} onClick={() => setVista('top')}>Vista superior</button>
-          </div>
-
           <div className="mate-canvas-wrap">
-            {vista === '3d' ? (
-              <>
-                <Canvas
-                  camera={{ position:[0,0.6,3.2], fov:38 }}
-                  shadows
-                  gl={{ antialias:true, toneMapping:THREE.ACESFilmicToneMapping, toneMappingExposure:1.1 }}
-                >
-                  <Scene tipo={tipo} cuerpo={cuerpo} aro={aro} diseño={diseño} autoRotate={autoRotate} />
-                  <OrbitControls enableZoom={false} minPolarAngle={Math.PI/5} maxPolarAngle={Math.PI/1.7}
-                    onStart={() => setAutoRotate(false)} />
-                </Canvas>
-                <p className="canvas-hint">🖱 Arrastrá para girar</p>
-              </>
-            ) : (
-              <div className="virola-top-wrap">
-                <VirolaTopView
-                  aro={aro}
-                  diseño={diseño}
-                  textoVirola={textoVirola}
-                  offset={offset}
-                  onOffsetChange={delta => setOffset(prev => prev + delta)}
-                  scale={designScale}
-                  textFont={textFont}
-                  textoCompleto={textoCompleto}
-                  distribucion={distribucion}
-                  customImageSrc={customImageSrc}
-                  imageRepeat={imageRepeat}
-                  engThreshold={engThreshold}
-                  size={370}
-                />
-                {hasGrabado && (
-                  <p className="canvas-hint" style={{ bottom:14 }}>
-                    ✋ Arrastrá para rotar el grabado
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="virola-top-wrap">
+              <VirolaTopView
+                aro={aro}
+                diseño={diseño}
+                textoVirola={textoVirola}
+                offset={offset}
+                onOffsetChange={delta => setOffset(prev => prev + delta)}
+                scale={designScale}
+                textFont={textFont}
+                textoCompleto={textoCompleto}
+                distribucion={distribucion}
+                customImageSrc={customImageSrc}
+                imageRepeat={imageRepeat}
+                engThreshold={engThreshold}
+                size={370}
+              />
+              {hasGrabado && (
+                <p className="canvas-hint" style={{ bottom:14 }}>
+                  ✋ Arrastrá para rotar el grabado
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Controles de posición y tamaño — solo en vista top con grabado */}
-          {vista === 'top' && hasGrabado && (
+          {/* Controles de posición y tamaño */}
+          {hasGrabado && (
             <div className="posicion-controls">
               <span className="posicion-label">Posición del grabado</span>
               <div className="posicion-btns">
@@ -1193,7 +1045,7 @@ export default function Personalizar() {
                   {DISEÑOS_VIROLA.filter(d => d.cat === cat).map(d => (
                     <button key={d.id}
                       className={`ctrl-diseño-btn ${diseño===d.id?'active':''}`}
-                      onClick={() => { setDiseño(d.id); setVista('top') }}
+                      onClick={() => { setDiseño(d.id) }}
                     >{d.label}</button>
                   ))}
                 </div>
@@ -1209,7 +1061,7 @@ export default function Personalizar() {
                 placeholder='Ej: "Ruta, mates y viajar a cualquier lado con vos"'
                 maxLength={45}
                 value={textoVirola}
-                onChange={e => { setTextoVirola(e.target.value); setVista('top') }}
+                onChange={e => { setTextoVirola(e.target.value) }}
               />
               <span className="ctrl-char-count">{textoVirola.length}/45</span>
             </div>
@@ -1235,7 +1087,7 @@ export default function Personalizar() {
                 }
               }}
             >
-              <input type="file" accept="image/*" hidden onChange={e => { handleImageUpload(e); setVista('top') }} />
+              <input type="file" accept="image/*" hidden onChange={e => { handleImageUpload(e) }} />
               {customImageSrc ? (
                 <img src={customImageSrc} className="upload-preview" alt="diseño" />
               ) : (
@@ -1260,7 +1112,7 @@ export default function Personalizar() {
                     <input type="range" className="tamanio-slider"
                       min={60} max={220} step={8}
                       value={engThreshold}
-                      onChange={e => { setEngThreshold(Number(e.target.value)); setVista('top') }}
+                      onChange={e => { setEngThreshold(Number(e.target.value)) }}
                     />
                     <span className="tamanio-icon" style={{ fontSize: '0.7rem' }}>Intenso</span>
                   </div>
@@ -1280,7 +1132,7 @@ export default function Personalizar() {
                     ].map(({ n, label }) => (
                       <button key={n}
                         className={`ctrl-chip ${imageRepeat === n ? 'active' : ''}`}
-                        onClick={() => { setImageRepeat(n); setVista('top') }}
+                        onClick={() => { setImageRepeat(n) }}
                       >{label}</button>
                     ))}
                   </div>
@@ -1302,7 +1154,7 @@ export default function Personalizar() {
                     {FUENTES.filter(f => f.cat === cat).map(f => (
                       <button key={f.id}
                         className={`ctrl-font-btn ${textFont === f.font ? 'active' : ''}`}
-                        onClick={() => { setTextFont(f.font); setVista('top') }}
+                        onClick={() => { setTextFont(f.font) }}
                       >
                         <span className="font-preview" style={{ fontFamily: f.font }}>{f.preview}</span>
                         <span className="font-label" style={{ fontFamily: f.font }}>{f.label}</span>
@@ -1314,7 +1166,7 @@ export default function Personalizar() {
               <button
                 className={`ctrl-chip ${textoCompleto ? 'active' : ''}`}
                 style={{ marginTop: '0.75rem' }}
-                onClick={() => { setTextoCompleto(v => !v); setVista('top') }}
+                onClick={() => { setTextoCompleto(v => !v) }}
               >
                 {textoCompleto ? '◎ Vuelta completa' : '◑ Vuelta completa'}
               </button>
@@ -1334,19 +1186,10 @@ export default function Personalizar() {
                 ].map(op => (
                   <button key={op.id}
                     className={`ctrl-chip ${distribucion === op.id ? 'active' : ''}`}
-                    onClick={() => { setDistribucion(op.id); setVista('top') }}
+                    onClick={() => { setDistribucion(op.id) }}
                   >{op.label}</button>
                 ))}
               </div>
-            </div>
-          )}
-
-          {vista === '3d' && (
-            <div className="ctrl-group">
-              <button className={`ctrl-chip ${autoRotate?'active':''}`}
-                onClick={() => setAutoRotate(v => !v)}>
-                {autoRotate ? '⏸ Pausar rotación' : '▶ Rotar automático'}
-              </button>
             </div>
           )}
 
