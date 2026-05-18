@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAnalytics } from '../context/AnalyticsContext'
 import FavoriteBtn from './FavoriteBtn'
+import Swal from 'sweetalert2'
 
 export default function ProductCard({ product }) {
   const { addItem, items } = useCart()
@@ -24,7 +25,7 @@ export default function ProductCard({ product }) {
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
   const handleAdd = () => {
-    addItem({
+    const result = addItem({
       cartKey,
       productId: product.id,
       variantId: firstVariant?.id || 'default',
@@ -34,6 +35,17 @@ export default function ProductCard({ product }) {
       image,
       stock,
     })
+    if (!result.ok) {
+      Swal.fire({
+        title: 'Stock insuficiente',
+        text: `Solo hay ${result.stock} unidad${result.stock === 1 ? '' : 'es'} disponibles de este producto.`,
+        icon: 'warning',
+        confirmButtonColor: '#9c664d',
+        confirmButtonText: 'Entendido',
+        background: '#FDF9F0',
+        color: '#1a1209',
+      })
+    }
   }
 
   return (

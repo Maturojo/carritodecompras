@@ -11,16 +11,22 @@ function cartReducer(state, action) {
     case 'ADD_ITEM': {
       const key = itemKey(action.product)
       const existing = state.find(i => itemKey(i) === key)
+      const stock = action.product.stock ?? 999
       if (existing) {
+        if (existing.quantity >= stock) return state // bloqueado por stock
         return state.map(i => itemKey(i) === key ? { ...i, quantity: i.quantity + 1 } : i)
       }
       return [...state, { ...action.product, cartKey: key, quantity: 1 }]
     }
     case 'REMOVE_ITEM':
       return state.filter(i => itemKey(i) !== action.cartKey)
-    case 'UPDATE_QUANTITY':
+    case 'UPDATE_QUANTITY': {
       if (action.quantity <= 0) return state.filter(i => itemKey(i) !== action.cartKey)
-      return state.map(i => itemKey(i) === action.cartKey ? { ...i, quantity: action.quantity } : i)
+      const item = state.find(i => itemKey(i) === action.cartKey)
+      const stock = item?.stock ?? 999
+      const qty = Math.min(action.quantity, stock)
+      return state.map(i => itemKey(i) === action.cartKey ? { ...i, quantity: qty } : i)
+    }
     case 'CLEAR':
       return []
     default:
@@ -42,9 +48,18 @@ export function CartProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
   }, [items])
 
-  const addItem        = (product)          => dispatch({ type: 'ADD_ITEM', product })
-  const removeItem     = (cartKey)          => dispatch({ type: 'REMOVE_ITEM', cartKey })
-  const updateQuantity = (cartKey, quantity) => dispatch({ type: 'UPDATE_QUANTITY', cartKey, quantity })
+  const addItem = (product) => {
+    const key   = product.cartKey || String(product.id)
+    const stock = product.stock ?? 999
+    const existing = items.find(i => (i.cartKey || String(i.id)) === key)
+    if (existing && existing.quantity >= stock) {
+      return { ok: false, stock }
+    }
+    dispatch({ type: 'ADD_ITEM', product })
+    return { ok: true }
+  }
+  const removeItem     = (cartKey)           => dispatch({ type: 'REMOVE_ITEM', cartKey })
+  const updateQuantity = (cartKey, quantity)  => dispatch({ type: 'UPDATE_QUANTITY', cartKey, quantity })
   const clearCart      = ()                 => dispatch({ type: 'CLEAR' })
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)

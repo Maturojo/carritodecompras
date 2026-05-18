@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import CartSuggestions from '../components/CartSuggestions'
+import Swal from 'sweetalert2'
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCart()
@@ -38,7 +39,22 @@ export default function Cart() {
               <div className="cart-item-controls">
                 <button className="qty-btn" onClick={() => updateQuantity(item.cartKey || String(item.id), item.quantity - 1)}>−</button>
                 <span className="qty-value">{item.quantity}</span>
-                <button className="qty-btn" onClick={() => updateQuantity(item.cartKey || String(item.id), item.quantity + 1)}>+</button>
+                <button className="qty-btn" onClick={() => {
+                  const stock = item.stock ?? 999
+                  if (item.quantity >= stock) {
+                    Swal.fire({
+                      title: 'Stock insuficiente',
+                      text: `Solo hay ${stock} unidad${stock === 1 ? '' : 'es'} disponibles de este producto.`,
+                      icon: 'warning',
+                      confirmButtonColor: '#9c664d',
+                      confirmButtonText: 'Entendido',
+                      background: '#FDF9F0',
+                      color: '#1a1209',
+                    })
+                  } else {
+                    updateQuantity(item.cartKey || String(item.id), item.quantity + 1)
+                  }
+                }}>+</button>
               </div>
               <div className="cart-item-subtotal">
                 {formatPrice(item.price * item.quantity)}
