@@ -23,6 +23,23 @@ export const DEFAULT_CONTENT = {
     storyText1:   'Todo comenzó un domingo de 2022. Nuestra fundadora estaba cebando unos mates con una calabaza heredada de su abuela y se preguntó por qué era tan difícil encontrar mates de calidad sin tener que ir a una feria artesanal. Ese mismo día empezó a llamar artesanos.',
     storyText2:   'Lo que empezó como una venta entre amigos se convirtió rápidamente en algo más grande. Hoy trabajamos con más de 30 artesanos de distintas provincias, cada uno con su técnica y materiales propios.',
     storyText3:   'Nuestra misión es simple: acercar el trabajo de los artesanos argentinos a la mesa de cada familia. Que cada mate tenga historia, que cada bombilla tenga alma.',
+    timeline: [
+      { year: '2022', event: 'Primera venta desde la cocina de casa con 5 mates artesanales.' },
+      { year: '2023', event: 'Sumamos 10 artesanos de Misiones, Corrientes y Entre Ríos.' },
+      { year: '2024', event: 'Lanzamos la línea de yerbas seleccionadas y superamos los 300 clientes.' },
+      { year: '2025', event: 'Abrimos Mate&Co online para llegar a todo el país.' },
+    ],
+    team: [
+      { name: 'Sofía Martínez', role: 'Fundadora & Curadora', emoji: '👩‍🌾' },
+      { name: 'Tomás Herrera', role: 'Artesano principal', emoji: '🧑‍🎨' },
+      { name: 'Paula Gómez', role: 'Logística & Envíos', emoji: '👩‍💼' },
+    ],
+    values: [
+      { icon: '🌿', title: 'Autenticidad', desc: 'Solo vendemos lo que nosotros mismos usaríamos.' },
+      { icon: '🤝', title: 'Comunidad', desc: 'Apoyamos a artesanos locales y al comercio justo.' },
+      { icon: '♻️', title: 'Sustentabilidad', desc: 'Embalajes reciclables y materiales naturales siempre que es posible.' },
+      { icon: '💬', title: 'Cercanía', desc: 'Respondemos cada consulta como si fuera la de un amigo.' },
+    ],
   },
   contacto: {
     email:    'hola@mateandcomdp.com.ar',
@@ -31,6 +48,12 @@ export const DEFAULT_CONTENT = {
     horario:  'Lunes a viernes de 9 a 18 hs',
     instagram: 'https://www.instagram.com/by.mateandco/',
     tiktok:    'https://www.tiktok.com/@by.mateandco',
+    faq: [
+      { q: '¿Cuánto tarda el envío?', a: 'Enviamos en 24-48 hs hábiles desde Mar del Plata. Una vez despachado, Andreani tarda entre 2 y 5 días según la provincia.' },
+      { q: '¿Los mates vienen curados?', a: 'Los mates de calabaza vienen sin curar para que cada uno lo personalice a su gusto. Incluimos una guía de curado.' },
+      { q: '¿Hacen envíos al exterior?', a: 'Por ahora solo enviamos dentro de Argentina. ¡Estamos trabajando para ampliar pronto!' },
+      { q: '¿Puedo devolver un producto?', a: 'Sí. Tenés 15 días desde la recepción para solicitar un cambio o devolución sin ningún costo adicional.' },
+    ],
   },
 }
 
@@ -45,9 +68,9 @@ export function ContentProvider({ children }) {
       fetch('/api/content?key=contacto').then(r => r.json()),
     ]).then(([landing, nosotros, contacto]) => {
       setContent({
-        landing:  Object.keys(landing).length  > 1 ? landing  : DEFAULT_CONTENT.landing,
-        nosotros: Object.keys(nosotros).length > 1 ? nosotros : DEFAULT_CONTENT.nosotros,
-        contacto: Object.keys(contacto).length > 1 ? contacto : DEFAULT_CONTENT.contacto,
+        landing:  { ...DEFAULT_CONTENT.landing,  ...(Object.keys(landing).length  > 1 ? landing  : {}) },
+        nosotros: { ...DEFAULT_CONTENT.nosotros, ...(Object.keys(nosotros).length > 1 ? nosotros : {}) },
+        contacto: { ...DEFAULT_CONTENT.contacto, ...(Object.keys(contacto).length > 1 ? contacto : {}) },
       })
     }).catch(() => {}).finally(() => setLoaded(true))
   }, [])

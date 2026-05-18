@@ -187,13 +187,8 @@ export default function Contacto() {
       <section className="faq-section">
         <h2 className="section-title centered">Preguntas frecuentes</h2>
         <div className="faq-grid">
-          {[
-            { q: '¿Cuánto tarda el envío?', a: 'Enviamos en 24-48 hs hábiles desde Mar del Plata. Una vez despachado, Andreani tarda entre 2 y 5 días según la provincia.' },
-            { q: '¿Los mates vienen curados?', a: 'Los mates de calabaza vienen sin curar para que cada uno lo personalice a su gusto. Incluimos una guía de curado.' },
-            { q: '¿Hacen envíos al exterior?', a: 'Por ahora solo enviamos dentro de Argentina. ¡Estamos trabajando para ampliar pronto!' },
-            { q: '¿Puedo devolver un producto?', a: 'Sí. Tenés 15 días desde la recepción para solicitar un cambio o devolución sin ningún costo adicional.' },
-          ].map(f => (
-            <div key={f.q} className="faq-card">
+          {c.faq.map((f, i) => (
+            <div key={i} className="faq-card">
               <h3>{f.q}</h3>
               <p>{f.a}</p>
             </div>

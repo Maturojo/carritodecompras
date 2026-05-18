@@ -17,6 +17,17 @@ export default function AdminContent() {
   const set = (page, field, value) =>
     setForm(f => ({ ...f, [page]: { ...f[page], [field]: value } }))
 
+  const setArr = (page, field, index, key, value) =>
+    setForm(f => ({
+      ...f,
+      [page]: {
+        ...f[page],
+        [field]: f[page][field].map((item, i) =>
+          i === index ? { ...item, [key]: value } : item
+        ),
+      },
+    }))
+
   const handleSave = async (page) => {
     setSaving(true)
     try {
@@ -154,6 +165,56 @@ export default function AdminContent() {
             <textarea rows={3} value={form.nosotros.storyText3} onChange={e => set('nosotros','storyText3', e.target.value)} />
           </div>
 
+          <h3>Línea de tiempo</h3>
+          {form.nosotros.timeline.map((item, i) => (
+            <div key={i} className="content-row" style={{ alignItems: 'flex-end', gap: '12px' }}>
+              <div className="content-field" style={{ flex: '0 0 90px' }}>
+                <label>Año {i + 1}</label>
+                <input value={item.year} onChange={e => setArr('nosotros', 'timeline', i, 'year', e.target.value)} />
+              </div>
+              <div className="content-field">
+                <label>Evento</label>
+                <input value={item.event} onChange={e => setArr('nosotros', 'timeline', i, 'event', e.target.value)} />
+              </div>
+            </div>
+          ))}
+
+          <h3>El equipo</h3>
+          {form.nosotros.team.map((m, i) => (
+            <div key={i} className="content-row" style={{ alignItems: 'flex-end', gap: '12px' }}>
+              <div className="content-field" style={{ flex: '0 0 60px' }}>
+                <label>Emoji</label>
+                <input value={m.emoji} onChange={e => setArr('nosotros', 'team', i, 'emoji', e.target.value)} />
+              </div>
+              <div className="content-field">
+                <label>Nombre</label>
+                <input value={m.name} onChange={e => setArr('nosotros', 'team', i, 'name', e.target.value)} />
+              </div>
+              <div className="content-field">
+                <label>Rol</label>
+                <input value={m.role} onChange={e => setArr('nosotros', 'team', i, 'role', e.target.value)} />
+              </div>
+            </div>
+          ))}
+
+          <h3>Nuestros valores</h3>
+          {form.nosotros.values.map((v, i) => (
+            <div key={i} className="content-row" style={{ alignItems: 'flex-end', gap: '12px' }}>
+              <div className="content-field" style={{ flex: '0 0 60px' }}>
+                <label>Ícono</label>
+                <input value={v.icon} onChange={e => setArr('nosotros', 'values', i, 'icon', e.target.value)} />
+              </div>
+              <div className="content-field" style={{ flex: '0 0 140px' }}>
+                <label>Título</label>
+                <input value={v.title} onChange={e => setArr('nosotros', 'values', i, 'title', e.target.value)} />
+              </div>
+              <div className="content-field">
+                <label>Descripción</label>
+                <input value={v.desc} onChange={e => setArr('nosotros', 'values', i, 'desc', e.target.value)} />
+              </div>
+            </div>
+          ))}
+
           <button className="admin-btn-primary" onClick={() => handleSave('nosotros')} disabled={saving}>
             {saving ? 'Guardando...' : '💾 Guardar cambios'}
           </button>
@@ -190,6 +251,16 @@ export default function AdminContent() {
             <label>TikTok (URL completa)</label>
             <input value={form.contacto.tiktok} onChange={e => set('contacto','tiktok', e.target.value)} />
           </div>
+
+          <h3>Preguntas frecuentes (FAQ)</h3>
+          {form.contacto.faq.map((f, i) => (
+            <div key={i} className="content-field">
+              <label>Pregunta {i + 1}</label>
+              <input value={f.q} onChange={e => setArr('contacto', 'faq', i, 'q', e.target.value)} />
+              <label style={{ marginTop: '6px' }}>Respuesta</label>
+              <textarea rows={2} value={f.a} onChange={e => setArr('contacto', 'faq', i, 'a', e.target.value)} />
+            </div>
+          ))}
 
           <button className="admin-btn-primary" onClick={() => handleSave('contacto')} disabled={saving}>
             {saving ? 'Guardando...' : '💾 Guardar cambios'}
