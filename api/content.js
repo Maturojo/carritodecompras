@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     // PUT → guardar contenido
     if (req.method === 'PUT') {
-      const { key, ...data } = req.body
+      const { key, _id, ...data } = req.body   // _id se descarta — no se puede modificar en MongoDB
       if (!key) return res.status(400).json({ error: 'Falta key' })
       await col.updateOne({ key }, { $set: { key, ...data } }, { upsert: true })
       return res.status(200).json({ ok: true })
