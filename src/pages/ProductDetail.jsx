@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
 import Lightbox from '../components/Lightbox'
+import SEO from '../components/SEO'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -71,7 +72,35 @@ export default function ProductDetail() {
     .filter(p => p.category === product.category && String(p.id) !== String(id))
     .slice(0, 3)
 
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: images[0] || '',
+    brand: { '@type': 'Brand', name: 'Mate&Co' },
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: minPrice,
+      highPrice: maxPrice,
+      priceCurrency: 'ARS',
+      availability: variant.stock > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'Mate&Co' },
+    },
+  }
+
   return (
+    <>
+    <SEO
+      title={product.name}
+      canonical={`/tienda/${product.id}`}
+      description={`${product.name} — ${product.description} Comprá online con envío a todo Argentina.`}
+      image={images[0] || undefined}
+      type="product"
+      schema={productSchema}
+    />
     <main className="page-content">
 
       {/* Breadcrumb */}
@@ -254,5 +283,6 @@ export default function ProductDetail() {
         </section>
       )}
     </main>
+    </>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SEO from '../components/SEO'
 
 const WA_URL  = 'https://wa.me/5492236359767?text=' + encodeURIComponent('Hola! Tengo una consulta 🧉')
 const IG_URL  = 'https://www.instagram.com/by.mateandco/'
@@ -52,6 +53,12 @@ export default function Contacto() {
   }
 
   return (
+    <>
+    <SEO
+      title="Contacto — Escribinos"
+      canonical="/contacto"
+      description="Contactate con Mate&Co por WhatsApp, Instagram o email. Respondemos en el día. Mar del Plata, Argentina."
+    />
     <main className="page-content">
 
       {/* ── Hero ── */}
@@ -191,5 +198,6 @@ export default function Contacto() {
       </section>
 
     </main>
+    </>
   )
 }

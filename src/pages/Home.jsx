@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import ProductCard from '../components/ProductCard'
 import { useStore } from '../context/StoreContext'
 import { categories } from '../data/products'
+import SEO from '../components/SEO'
 
 const SORT_OPTIONS = [
   { value: 'default',    label: 'Destacados' },
@@ -59,6 +60,12 @@ export default function Home() {
   const hasActiveFilters = activeCategory !== 'todos' || priceMin !== globalMin || priceMax !== globalMax || sort !== 'default'
 
   return (
+    <>
+    <SEO
+      title="Tienda de Mates — Mates artesanales, bombillas y yerbas"
+      canonical="/tienda"
+      description="Comprá mates artesanales de calabaza, porongo, cerámica y acero. Bombillas de alpaca, yerbas seleccionadas y accesorios. Envíos a todo Argentina."
+    />
     <main className="home">
       <section className="hero">
         <div className="hero-content">
@@ -162,5 +169,6 @@ export default function Home() {
         )}
       </section>
     </main>
+    </>
   )
 }

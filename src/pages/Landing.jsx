@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
 import { useContent } from '../context/ContentContext'
 import ProductCard from '../components/ProductCard'
+import SEO from '../components/SEO'
 
 const features = [
   { icon: '🌿', title: 'Productos naturales', desc: 'Seleccionamos los mejores mates artesanales y yerbas de origen controlado.' },
@@ -21,7 +22,25 @@ export default function Landing() {
   const { content } = useContent()
   const c = content.landing
   const featured = products.slice(0, 4)
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Mate&Co',
+    url: 'https://www.mateandcomdp.com.ar',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://www.mateandcomdp.com.ar/tienda?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
+    <>
+    <SEO
+      canonical="/"
+      description="Mates artesanales y personalizados con grabado a medida. Bombillas de alpaca, yerbas seleccionadas y envíos a todo Argentina. Hacé tu mate único con Mate&Co."
+      schema={schema}
+    />
     <main className="landing">
 
       {/* ── Hero ── */}
@@ -127,5 +146,6 @@ export default function Landing() {
       </section>
 
     </main>
+    </>
   )
 }

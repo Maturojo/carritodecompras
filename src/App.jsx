@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HelmetProvider }    from 'react-helmet-async'
 import { CartProvider }      from './context/CartContext'
 import { AnalyticsProvider } from './context/AnalyticsContext'
 import { StoreProvider }     from './context/StoreContext'
@@ -49,6 +50,7 @@ function PublicSite() {
 
 export default function App() {
   return (
+    <HelmetProvider>
     <ThemeProvider>
       <ContentProvider>
       <AnalyticsProvider>
@@ -69,5 +71,6 @@ export default function App() {
       </AnalyticsProvider>
       </ContentProvider>
     </ThemeProvider>
+    </HelmetProvider>
   )
 }

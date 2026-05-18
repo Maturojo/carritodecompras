@@ -11,8 +11,16 @@ const timeline = [
   { year: '2025', event: 'Abrimos Mate&Co online para llegar a todo el país.' },
 ]
 
+import SEO from '../components/SEO'
+
 export default function Nosotros() {
   return (
+    <>
+    <SEO
+      title="Nosotros — La historia de Mate&Co"
+      canonical="/nosotros"
+      description="Somos una tienda de mates artesanales fundada en 2022. Trabajamos con artesanos de Misiones, Corrientes y Entre Ríos para traerte los mejores mates del país."
+    />
     <main className="page-content">
 
       <section className="inner-hero nosotros-hero" style={{ backgroundImage: 'url(/nosotros.jpeg)' }}>
@@ -86,5 +94,6 @@ export default function Nosotros() {
       </section>
 
     </main>
+    </>
   )
 }
