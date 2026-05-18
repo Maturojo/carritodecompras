@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import SEO from '../components/SEO'
-
-const WA_URL  = 'https://wa.me/5492236359767?text=' + encodeURIComponent('Hola! Tengo una consulta 🧉')
-const IG_URL  = 'https://www.instagram.com/by.mateandco/'
+import { useContent } from '../context/ContentContext'
 
 /* ── SVG Icons ── */
 const IconMail = () => (
@@ -40,6 +38,12 @@ const IconTikTok = () => (
 )
 
 export default function Contacto() {
+  const { content } = useContent()
+  const c = content.contacto
+
+  const WA_URL = `https://wa.me/${c.whatsapp}?text=` + encodeURIComponent('Hola! Tengo una consulta 🧉')
+  const IG_URL = c.instagram
+
   const [form, setForm]   = useState({ nombre: '', email: '', asunto: '', mensaje: '' })
   const [sent, setSent]   = useState(false)
   const [loading, setLoading] = useState(false)
@@ -77,11 +81,11 @@ export default function Contacto() {
           <h2>Información de contacto</h2>
           <div className="contact-items">
 
-            <a href={`mailto:hola@mateandcomdp.com.ar`} className="contact-item contact-item-link">
+            <a href={`mailto:${c.email}`} className="contact-item contact-item-link">
               <span className="contact-icon"><IconMail /></span>
               <div>
                 <strong>Email</strong>
-                <p>hola@mateandcomdp.com.ar</p>
+                <p>{c.email}</p>
               </div>
             </a>
 
@@ -97,7 +101,7 @@ export default function Contacto() {
               <span className="contact-icon"><IconPin /></span>
               <div>
                 <strong>Ubicación</strong>
-                <p>Mar del Plata, Buenos Aires<br />(envíos a todo el país)</p>
+                <p>{c.ciudad}<br />(envíos a todo el país)</p>
               </div>
             </div>
 
@@ -105,7 +109,7 @@ export default function Contacto() {
               <span className="contact-icon"><IconClock /></span>
               <div>
                 <strong>Horario de atención</strong>
-                <p>Lunes a viernes de 9 a 18 hs</p>
+                <p>{c.horario}</p>
               </div>
             </div>
 
@@ -121,7 +125,7 @@ export default function Contacto() {
               <a href={WA_URL} target="_blank" rel="noopener noreferrer" className="social-btn social-wa">
                 <IconWhatsApp /> WhatsApp
               </a>
-              <a href="https://www.tiktok.com/@by.mateandco" target="_blank" rel="noopener noreferrer" className="social-btn social-tk">
+              <a href={c.tiktok} target="_blank" rel="noopener noreferrer" className="social-btn social-tk">
                 <IconTikTok /> TikTok
               </a>
             </div>

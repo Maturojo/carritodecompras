@@ -12,8 +12,12 @@ const timeline = [
 ]
 
 import SEO from '../components/SEO'
+import { useContent } from '../context/ContentContext'
 
 export default function Nosotros() {
+  const { content } = useContent()
+  const c = content.nosotros
+
   return (
     <>
     <SEO
@@ -23,29 +27,21 @@ export default function Nosotros() {
     />
     <main className="page-content">
 
-      <section className="inner-hero nosotros-hero" style={{ backgroundImage: 'url(/nosotros.jpeg)' }}>
+      <section className="inner-hero nosotros-hero" style={{ backgroundImage: `url(${c.heroImage || '/nosotros.jpeg'})` }}>
         <div className="inner-hero-overlay" />
         <div className="inner-hero-content">
           <span className="section-pretitle">Quiénes somos</span>
-          <h1 className="inner-hero-title">Una historia de mates<br />y pasión artesanal</h1>
-          <p className="inner-hero-sub">
-            Somos un equipo chico con un amor enorme por la cultura del mate. Creemos que un buen mate empieza con los productos correctos.
-          </p>
+          <h1 className="inner-hero-title">{c.heroTitle || 'Una historia de mates y pasión artesanal'}</h1>
+          <p className="inner-hero-sub">{c.heroSubtitle}</p>
         </div>
       </section>
 
       <section className="nosotros-story">
         <div className="story-content">
-          <h2>¿Cómo empezó todo?</h2>
-          <p>
-            Todo comenzó un domingo de 2022. Sofía, nuestra fundadora, estaba cebando unos mates con una calabaza heredada de su abuela y se preguntó por qué era tan difícil encontrar mates de calidad sin tener que ir a una feria artesanal. Ese mismo día empezó a llamar artesanos.
-          </p>
-          <p>
-            Lo que empezó como una venta entre amigos se convirtió rápidamente en algo más grande. Hoy trabajamos con más de 30 artesanos de distintas provincias, cada uno con su técnica y materiales propios.
-          </p>
-          <p>
-            Nuestra misión es simple: acercar el trabajo de los artesanos argentinos a la mesa de cada familia. Que cada mate tenga historia, que cada bombilla tenga alma.
-          </p>
+          <h2>{c.storyTitle || '¿Cómo empezó todo?'}</h2>
+          <p>{c.storyText1}</p>
+          <p>{c.storyText2}</p>
+          <p>{c.storyText3}</p>
         </div>
       </section>
 
