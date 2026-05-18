@@ -254,7 +254,8 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
 /* ─────────── COMPONENTE VISTA SUPERIOR INTERACTIVO ─────────── */
 function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
                          scale = 1, textFont = 'Georgia, serif',
-                         textoCompleto = false, distribucion = 'auto', size = 400 }) {
+                         textoCompleto = false, distribucion = 'auto',
+                         customImage = null, imageRepeat = 1, size = 400 }) {
   const canvasRef  = useRef()
   const isDragging = useRef(false)
   const lastAngle  = useRef(0)
@@ -362,8 +363,34 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
     ctx.fillStyle = '#fff'; ctx.fill()
     ctx.restore()
 
+    /* ── Imagen propia sobre el aro ── */
+    if (customImage) {
+      const imgSz   = ringW * 1.5 * scale          // tamaño = ancho del aro × escala
+      const ringMidR = (outerR + innerR) / 2
+
+      ctx.save()
+      // Recortar al anillo (donut clip)
+      ctx.beginPath()
+      ctx.arc(cx, cy, outerR - 1, 0, Math.PI * 2)
+      ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2, true)
+      ctx.clip()
+
+      for (let i = 0; i < imageRepeat; i++) {
+        const a = offset - Math.PI / 2 + (i / imageRepeat) * Math.PI * 2
+        const ix = cx + ringMidR * Math.cos(a)
+        const iy = cy + ringMidR * Math.sin(a)
+        ctx.save()
+        ctx.translate(ix, iy)
+        ctx.rotate(a + Math.PI / 2)
+        ctx.globalAlpha = 0.9
+        ctx.drawImage(customImage, -imgSz / 2, -imgSz / 2, imgSz, imgSz)
+        ctx.restore()
+      }
+      ctx.restore()
+    }
+
     /* Indicador de posición — pequeño triángulo en el "frente" del diseño */
-    if (diseño !== 'ninguno' || textoVirola.trim()) {
+    if (diseño !== 'ninguno' || textoVirola.trim() || customImage) {
       const indicAngle = offset - Math.PI/2  // arriba por defecto
       const indR = outerR + 12
       const ix = cx + indR * Math.cos(indicAngle)
@@ -376,7 +403,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
       ctx.restore()
     }
 
-  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, size])
+  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, customImage, imageRepeat, size])
 
   /* ── Helpers para calcular ángulo ── */
   const getAngle = (clientX, clientY) => {
@@ -548,18 +575,36 @@ function Scene({ tipo, cuerpo, aro, diseño, autoRotate }) {
 
 /* ─────────── PÁGINA ─────────── */
 export default function Personalizar() {
-  const [tipo,         setTipo]         = useState('calabaza')
-  const [cuerpo,       setCuerpo]       = useState(CUERPOS[0])
-  const [aro,          setAro]          = useState(AROS[0])
-  const [diseño,       setDiseño]       = useState('ninguno')
-  const [textoVirola,  setTextoVirola]  = useState('')
-  const [offset,       setOffset]       = useState(0)
-  const [designScale,  setDesignScale]  = useState(1)
-  const [textFont,     setTextFont]     = useState(FUENTES[0].font)
-  const [textoCompleto,setTextoCompleto]= useState(false)
-  const [distribucion, setDistribucion] = useState('auto') // 'auto'|'diseño-arriba'|'texto-arriba'
-  const [autoRotate,   setAutoRotate]   = useState(true)
-  const [vista,        setVista]        = useState('3d')
+  const [tipo,          setTipo]          = useState('calabaza')
+  const [cuerpo,        setCuerpo]        = useState(CUERPOS[0])
+  const [aro,           setAro]           = useState(AROS[0])
+  const [diseño,        setDiseño]        = useState('ninguno')
+  const [textoVirola,   setTextoVirola]   = useState('')
+  const [offset,        setOffset]        = useState(0)
+  const [designScale,   setDesignScale]   = useState(1)
+  const [textFont,      setTextFont]      = useState(FUENTES[0].font)
+  const [textoCompleto, setTextoCompleto] = useState(false)
+  const [distribucion,  setDistribucion]  = useState('auto')
+  const [customImageSrc,setCustomImageSrc]= useState(null)
+  const [customImageObj,setCustomImageObj]= useState(null)
+  const [imageRepeat,   setImageRepeat]   = useState(1)
+  const [autoRotate,    setAutoRotate]    = useState(true)
+  const [vista,         setVista]         = useState('3d')
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const src = ev.target.result
+      setCustomImageSrc(src)
+      const img = new Image()
+      img.onload = () => setCustomImageObj(img)
+      img.src = src
+    }
+    reader.readAsDataURL(file)
+  }
+  const clearImage = () => { setCustomImageSrc(null); setCustomImageObj(null) }
 
   const waMsg = encodeURIComponent(
     `Hola! Me interesa un mate personalizado:\n` +
@@ -567,10 +612,11 @@ export default function Personalizar() {
     `• Material: ${cuerpo.label}\n` +
     `• Aro: ${aro.label}\n` +
     `• Grabado: ${DISEÑOS_VIROLA.find(d => d.id === diseño)?.label}` +
-    (textoVirola ? `\n• Texto: "${textoVirola}"` : '')
+    (textoVirola ? `\n• Texto: "${textoVirola}"` : '') +
+    (customImageSrc ? `\n• Imagen propia: sí (te la envío aparte)` : '')
   )
 
-  const hasGrabado = diseño !== 'ninguno' || textoVirola.trim()
+  const hasGrabado = diseño !== 'ninguno' || textoVirola.trim() || !!customImageSrc
 
   return (
     <main className="page-content">
@@ -615,6 +661,8 @@ export default function Personalizar() {
                   textFont={textFont}
                   textoCompleto={textoCompleto}
                   distribucion={distribucion}
+                  customImage={customImageObj}
+                  imageRepeat={imageRepeat}
                   size={370}
                 />
                 {hasGrabado && (
@@ -676,6 +724,15 @@ export default function Personalizar() {
               <div className="design-summary-row">
                 <span>Texto</span>
                 <strong style={{fontSize:'0.8rem',maxWidth:'60%',textAlign:'right'}}>"{textoVirola}"</strong>
+              </div>
+            )}
+            {customImageSrc && (
+              <div className="design-summary-row">
+                <span>Imagen propia</span>
+                <div style={{display:'flex',alignItems:'center',gap:'0.4rem'}}>
+                  <img src={customImageSrc} alt="" style={{width:28,height:28,objectFit:'contain',borderRadius:4,border:'1px solid var(--crema-oscuro)'}} />
+                  <strong style={{fontSize:'0.8rem'}}>{imageRepeat > 1 ? `× ${imageRepeat}` : 'Una vez'}</strong>
+                </div>
               </div>
             )}
           </div>
@@ -758,6 +815,58 @@ export default function Personalizar() {
             {textoVirola && (
               <button className="ctrl-chip" style={{ marginTop:'0.5rem' }}
                 onClick={() => setTextoVirola('')}>✕ Borrar texto</button>
+            )}
+          </div>
+
+          {/* ── Tu diseño propio ── */}
+          <div className="ctrl-group">
+            <h3>Tu propio diseño</h3>
+            <p className="ctrl-hint">Subí una imagen (PNG, JPG, SVG) y aparece grabada en el aro</p>
+
+            <label className="upload-zone" onDragOver={e => e.preventDefault()}
+              onDrop={e => {
+                e.preventDefault()
+                const file = e.dataTransfer.files[0]
+                if (file && file.type.startsWith('image/')) {
+                  const fake = { target: { files: [file] } }
+                  handleImageUpload(fake)
+                  setVista('top')
+                }
+              }}
+            >
+              <input type="file" accept="image/*" hidden onChange={e => { handleImageUpload(e); setVista('top') }} />
+              {customImageSrc ? (
+                <img src={customImageSrc} className="upload-preview" alt="diseño" />
+              ) : (
+                <div className="upload-placeholder">
+                  <span className="upload-icon">🖼</span>
+                  <span className="upload-text">Hacé clic o arrastrá tu imagen aquí</span>
+                  <span className="upload-hint">PNG, JPG, SVG · Fondo transparente recomendado</span>
+                </div>
+              )}
+            </label>
+
+            {customImageSrc && (
+              <>
+                <div style={{ marginTop: '0.75rem' }}>
+                  <p className="ctrl-hint" style={{ marginBottom: '0.4rem' }}>Repeticiones en el aro</p>
+                  <div className="ctrl-grid">
+                    {[
+                      { n: 1, label: 'Una vez' },
+                      { n: 2, label: '× 2' },
+                      { n: 4, label: '× 4' },
+                      { n: 6, label: '× 6' },
+                    ].map(({ n, label }) => (
+                      <button key={n}
+                        className={`ctrl-chip ${imageRepeat === n ? 'active' : ''}`}
+                        onClick={() => { setImageRepeat(n); setVista('top') }}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+                <button className="ctrl-chip" style={{ marginTop: '0.6rem', borderColor: '#c0392b', color: '#c0392b' }}
+                  onClick={clearImage}>✕ Eliminar imagen</button>
+              </>
             )}
           </div>
 
