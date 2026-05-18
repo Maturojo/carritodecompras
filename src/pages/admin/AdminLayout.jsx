@@ -4,13 +4,15 @@ import AdminProducts from './AdminProducts'
 import AdminOrders from './AdminOrders'
 import AdminAnalytics from './AdminAnalytics'
 import AdminClientes from './AdminClientes'
+import AdminContent from './AdminContent'
 
 const SECTIONS = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'products', label: 'Productos', icon: '📦' },
-  { id: 'orders', label: 'Pedidos', icon: '🛒' },
-  { id: 'analytics', label: 'Analytics', icon: '📈' },
-  { id: 'clientes', label: 'Clientes', icon: '👥' },
+  { id: 'dashboard', label: 'Dashboard',  icon: '📊' },
+  { id: 'products',  label: 'Productos',  icon: '📦' },
+  { id: 'orders',    label: 'Pedidos',    icon: '🛒' },
+  { id: 'analytics', label: 'Analytics',  icon: '📈' },
+  { id: 'clientes',  label: 'Clientes',   icon: '👥' },
+  { id: 'content',   label: 'Contenido',  icon: '✏️' },
 ]
 
 export default function AdminLayout({ onLogout }) {
@@ -23,7 +25,8 @@ export default function AdminLayout({ onLogout }) {
       case 'products': return <AdminProducts />
       case 'orders': return <AdminOrders />
       case 'analytics': return <AdminAnalytics />
-      case 'clientes': return <AdminClientes />
+      case 'clientes':  return <AdminClientes />
+      case 'content':   return <AdminContent />
       default: return null
     }
   }

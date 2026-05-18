@@ -4,6 +4,7 @@ import { AnalyticsProvider } from './context/AnalyticsContext'
 import { StoreProvider }     from './context/StoreContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 import { ThemeProvider }     from './context/ThemeContext'
+import { ContentProvider }   from './context/ContentContext'
 import { AuthProvider }      from './context/AuthContext'
 import Navbar          from './components/Navbar'
 import Footer          from './components/Footer'
@@ -47,6 +48,7 @@ function PublicSite() {
 export default function App() {
   return (
     <ThemeProvider>
+      <ContentProvider>
       <AnalyticsProvider>
         <StoreProvider>
           <AuthProvider>
@@ -63,6 +65,7 @@ export default function App() {
           </AuthProvider>
         </StoreProvider>
       </AnalyticsProvider>
+      </ContentProvider>
     </ThemeProvider>
   )
 }

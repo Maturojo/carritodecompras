@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
+import { useContent } from '../context/ContentContext'
 import ProductCard from '../components/ProductCard'
 
 const features = [
@@ -17,22 +18,21 @@ const testimonials = [
 
 export default function Landing() {
   const { products } = useStore()
-  const featured = products.filter(p => [1, 2, 8, 9].includes(p.id)).slice(0, 4)
+  const { content } = useContent()
+  const c = content.landing
+  const featured = products.slice(0, 4)
   return (
     <main className="landing">
 
       {/* ── Hero ── */}
-      <section className="landing-hero" style={{ backgroundImage: 'url(/hero.jpeg)' }}>
+      <section className="landing-hero" style={{ backgroundImage: `url(${c.heroImage || '/hero.jpeg'})` }}>
         <div className="landing-hero-overlay" />
         <div className="landing-hero-content">
-          <span className="hero-pretitle">Industria Argentina</span>
+          <span className="hero-pretitle">{c.heroPretitle}</span>
           <h1 className="landing-hero-title">
-            El mate perfecto<br />empieza acá
+            {c.heroTitle?.split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br/>}</span>)}
           </h1>
-          <p className="landing-hero-subtitle">
-            Mates artesanales, bombillas de alpaca, yerbas seleccionadas y termos premium.
-            Todo lo que necesitás para tu ritual del mate.
-          </p>
+          <p className="landing-hero-subtitle">{c.heroSubtitle}</p>
           <div className="hero-cta-group">
             <Link to="/tienda" className="btn-primary btn-large">Ver tienda</Link>
             <a href="#nosotros-section" className="btn-outline btn-large">Conocernos</a>
@@ -59,27 +59,23 @@ export default function Landing() {
         <div className="about-inner">
           <div className="about-text">
             <span className="section-pretitle">Nuestra historia</span>
-            <h2 className="section-title">Más que una tienda,<br />una pasión</h2>
-            <p>
-              Mate&amp;Co nació de una mesa familiar un domingo a la tarde, con mate en mano y la pregunta de siempre: ¿dónde conseguir buenos mates artesanales sin tener que ir hasta una feria?
-            </p>
-            <p>
-              Hoy trabajamos con artesanos de todo el país para traerte productos únicos que respetan la tradición mateadora. Cada pieza que vendemos la elegimos como si fuera para nuestra propia mesa.
-            </p>
+            <h2 className="section-title">{c.aboutTitle}</h2>
+            <p>{c.aboutText1}</p>
+            <p>{c.aboutText2}</p>
             <Link to="/nosotros" className="btn-secondary">Leer más sobre nosotros</Link>
           </div>
           <div className="about-visual">
             <div className="about-card-stack">
               <div className="about-stat">
-                <span className="stat-number">+500</span>
+                <span className="stat-number">{c.statClientes}</span>
                 <span className="stat-label">Clientes felices</span>
               </div>
               <div className="about-stat">
-                <span className="stat-number">30+</span>
+                <span className="stat-number">{c.statArtesanos}</span>
                 <span className="stat-label">Artesanos asociados</span>
               </div>
               <div className="about-stat">
-                <span className="stat-number">3</span>
+                <span className="stat-number">{c.statAnios}</span>
                 <span className="stat-label">Años en el mercado</span>
               </div>
             </div>
