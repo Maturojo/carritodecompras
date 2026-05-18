@@ -33,6 +33,11 @@ const DISEÑOS_VIROLA = [
   { id: 'geometrico', label: '◈ Étnico'     },
   { id: 'estrellas',  label: '✦ Estrellas'  },
 ]
+const FUENTES = [
+  { id: 'serif',  label: 'Clásica',  font: 'Georgia, serif',              preview: 'Ag' },
+  { id: 'sans',   label: 'Moderna',  font: '"Helvetica Neue", sans-serif', preview: 'Ag' },
+  { id: 'script', label: 'Cursiva',  font: '"Brush Script MT", "Comic Sans MS", cursive', preview: 'Ag' },
+]
 
 /* ─────────── UTILIDADES ─────────── */
 function adjustHex(hex, amt) {
@@ -160,18 +165,27 @@ function drawBrujula(ctx, x, y, size, color) {
   ctx.lineTo(x+size*0.1, y); ctx.closePath(); ctx.fill()
 }
 
-function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, scale = 1) {
+// zona: 'full' | 'top' | 'bottom'
+function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, scale = 1, zona = 'full') {
   const ringMid = (innerR + outerR) / 2
   const ringW   = outerR - innerR
-  const s       = scale          // alias corto
+  const s       = scale
   const darkColor = adjustHex(aroHex, -65)
   ctx.fillStyle   = darkColor
   ctx.strokeStyle = darkColor
   ctx.lineWidth   = 1.5
 
+  // Rango angular según zona
+  const zStart = zona === 'bottom' ?  0         : (zona === 'top' ? -Math.PI : 0)
+  const zSpan  = zona === 'full'   ?  Math.PI*2 : Math.PI
+
+  // Helper: ángulo para elemento i de n, dentro de la zona
+  const ang = (i, n) => zStart + (i / n) * zSpan + offset
+
   if (diseño === 'estrellas') {
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2 + offset
+    const n = zona === 'full' ? 12 : 6
+    for (let i = 0; i < n; i++) {
+      const a = ang(i, n)
       const rx = cx + ringMid * Math.cos(a), ry = cy + ringMid * Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a)
       drawStar(ctx, 0, 0, ringW*0.22*s, ringW*0.10*s, 6); ctx.fill()
@@ -179,14 +193,16 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
     }
   }
   if (diseño === 'flores') {
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2 + offset
+    const n = zona === 'full' ? 8 : 4
+    for (let i = 0; i < n; i++) {
+      const a = ang(i, n)
       drawFlor(ctx, cx + ringMid*Math.cos(a), cy + ringMid*Math.sin(a), ringW*0.28*s, darkColor)
     }
   }
   if (diseño === 'geometrico') {
-    for (let i = 0; i < 20; i++) {
-      const a = (i / 20) * Math.PI * 2 + offset
+    const n = zona === 'full' ? 20 : 10
+    for (let i = 0; i < n; i++) {
+      const a = ang(i, n)
       const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/4)
       const sz = ringW * 0.22 * s
@@ -195,28 +211,37 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
       ctx.closePath(); ctx.fill()
       ctx.restore()
     }
-    ctx.beginPath(); ctx.arc(cx, cy, innerR+ringW*0.15, 0, Math.PI*2)
-    ctx.lineWidth = 1.2; ctx.stroke()
-    ctx.beginPath(); ctx.arc(cx, cy, outerR-ringW*0.15, 0, Math.PI*2); ctx.stroke()
+    // Bordes sólo en full
+    if (zona === 'full') {
+      ctx.beginPath(); ctx.arc(cx, cy, innerR+ringW*0.15, 0, Math.PI*2)
+      ctx.lineWidth = 1.2; ctx.stroke()
+      ctx.beginPath(); ctx.arc(cx, cy, outerR-ringW*0.15, 0, Math.PI*2); ctx.stroke()
+    }
   }
   if (diseño === 'ruteamos') {
-    const iconos = [
-      { t: 0.55, fn: drawMontania },
-      { t: 0.72, fn: drawCarpa    },
-      { t: 0.88, fn: drawColectivo},
-      { t: 1.05, fn: drawBrujula  },
-      { t: 1.22, fn: drawMontania },
-      { t: 1.38, fn: drawCarpa    },
+    // Iconos en la mitad elegida o distribuidos en todo el aro
+    const iconosFull = [
+      { t: 0.55, fn: drawMontania }, { t: 0.72, fn: drawCarpa    },
+      { t: 0.88, fn: drawColectivo}, { t: 1.05, fn: drawBrujula  },
+      { t: 1.22, fn: drawMontania }, { t: 1.38, fn: drawCarpa    },
     ]
+    const iconosHalf = [
+      { t: 0.2,  fn: drawMontania }, { t: 0.5,  fn: drawColectivo},
+      { t: 0.8,  fn: drawCarpa    },
+    ]
+    const iconos = zona === 'full' ? iconosFull : iconosHalf
     iconos.forEach(({ t, fn }) => {
-      const a = t * Math.PI + offset
+      const a = zStart + t * zSpan + offset
       const rx = cx + ringMid*Math.cos(a), ry = cy + ringMid*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(a + Math.PI/2)
       fn(ctx, 0, 0, ringW*0.35*s, darkColor)
       ctx.restore()
     })
-    ;[0.62, 0.78, 0.95, 1.12, 1.28, 1.44].forEach(t => {
-      const a = t * Math.PI + offset + 0.09
+    const estrellaTs = zona === 'full'
+      ? [0.62, 0.78, 0.95, 1.12, 1.28, 1.44]
+      : [0.35, 0.65]
+    estrellaTs.forEach(t => {
+      const a = zStart + t * zSpan + offset + 0.09
       const rx = cx + (ringMid+ringW*0.1)*Math.cos(a)
       const ry = cy + (ringMid+ringW*0.1)*Math.sin(a)
       ctx.save(); ctx.translate(rx, ry)
@@ -227,7 +252,9 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
 }
 
 /* ─────────── COMPONENTE VISTA SUPERIOR INTERACTIVO ─────────── */
-function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, scale = 1, size = 400 }) {
+function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange,
+                         scale = 1, textFont = 'Georgia, serif',
+                         textoCompleto = false, distribucion = 'auto', size = 400 }) {
   const canvasRef  = useRef()
   const isDragging = useRef(false)
   const lastAngle  = useRef(0)
@@ -283,25 +310,44 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, scal
     ctx.beginPath(); ctx.arc(cx, cy, outerR-3, 0, Math.PI*2)
     ctx.strokeStyle = adjustHex(aro.hex, -35); ctx.lineWidth = 2.5; ctx.stroke()
 
+    /* ── Calcular zonas según distribución ── */
+    const hayDiseño = diseño !== 'ninguno'
+    const hayTexto  = textoVirola.trim().length > 0
+    let zonaD = 'full', textStart, textEnd
+
+    if (hayDiseño && hayTexto && distribucion !== 'auto') {
+      // Segundo grabado: diseño y texto en mitades opuestas
+      if (distribucion === 'diseño-arriba') {
+        zonaD     = 'top'            // diseño en mitad superior
+        textStart = offset           // texto en mitad inferior
+        textEnd   = offset + Math.PI
+      } else {                       // 'texto-arriba'
+        zonaD     = 'bottom'         // diseño en mitad inferior
+        textStart = offset - Math.PI // texto en mitad superior
+        textEnd   = offset
+      }
+    } else if (hayDiseño && hayTexto) {
+      // Auto: texto arriba, diseño llena todo el aro
+      zonaD     = 'full'
+      textStart = -Math.PI * 1.15 + offset
+      textEnd   =  Math.PI * 0.15 + offset
+    } else {
+      // Solo texto, sin diseño
+      textStart = textoCompleto ? (offset - Math.PI) : (-Math.PI * 1.15 + offset)
+      textEnd   = textoCompleto ? (offset + Math.PI) : ( Math.PI * 0.15 + offset)
+    }
+
     /* Diseños */
-    drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex, offset, scale)
+    if (hayDiseño) drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aro.hex, offset, scale, zonaD)
 
     /* Texto circular */
-    if (textoVirola.trim()) {
+    if (hayTexto) {
       const textR    = ringMid + (outerR-innerR)*0.1
       const fontSize = Math.max(W * 0.037 * scale, 9)
-      ctx.font = `bold ${fontSize}px Georgia, serif`
+      ctx.font      = `bold ${fontSize}px ${textFont}`
       ctx.fillStyle = adjustHex(aro.hex, -78)
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-
-      const hasDesignBelow = ['ruteamos','flores','estrellas','geometrico'].includes(diseño)
-      // Posición base del texto + offset de rotación
-      const baseStart = hasDesignBelow ? -Math.PI*1.15 : -Math.PI
-      const baseEnd   = hasDesignBelow ?  Math.PI*0.15 :  Math.PI
-      drawCircularText(ctx, textoVirola, cx, cy, textR,
-        baseStart + offset,
-        baseEnd   + offset
-      )
+      drawCircularText(ctx, textoVirola, cx, cy, textR, textStart, textEnd)
     }
 
     /* Interior del mate */
@@ -330,7 +376,7 @@ function VirolaTopView({ aro, diseño, textoVirola, offset, onOffsetChange, scal
       ctx.restore()
     }
 
-  }, [aro, diseño, textoVirola, offset, scale, size])
+  }, [aro, diseño, textoVirola, offset, scale, textFont, textoCompleto, distribucion, size])
 
   /* ── Helpers para calcular ángulo ── */
   const getAngle = (clientX, clientY) => {
@@ -502,15 +548,18 @@ function Scene({ tipo, cuerpo, aro, diseño, autoRotate }) {
 
 /* ─────────── PÁGINA ─────────── */
 export default function Personalizar() {
-  const [tipo,        setTipo]        = useState('calabaza')
-  const [cuerpo,      setCuerpo]      = useState(CUERPOS[0])
-  const [aro,         setAro]         = useState(AROS[0])
-  const [diseño,      setDiseño]      = useState('ninguno')
-  const [textoVirola, setTextoVirola] = useState('')
-  const [offset,      setOffset]      = useState(0)
-  const [designScale, setDesignScale] = useState(1)
-  const [autoRotate,  setAutoRotate]  = useState(true)
-  const [vista,       setVista]       = useState('3d')
+  const [tipo,         setTipo]         = useState('calabaza')
+  const [cuerpo,       setCuerpo]       = useState(CUERPOS[0])
+  const [aro,          setAro]          = useState(AROS[0])
+  const [diseño,       setDiseño]       = useState('ninguno')
+  const [textoVirola,  setTextoVirola]  = useState('')
+  const [offset,       setOffset]       = useState(0)
+  const [designScale,  setDesignScale]  = useState(1)
+  const [textFont,     setTextFont]     = useState(FUENTES[0].font)
+  const [textoCompleto,setTextoCompleto]= useState(false)
+  const [distribucion, setDistribucion] = useState('auto') // 'auto'|'diseño-arriba'|'texto-arriba'
+  const [autoRotate,   setAutoRotate]   = useState(true)
+  const [vista,        setVista]        = useState('3d')
 
   const waMsg = encodeURIComponent(
     `Hola! Me interesa un mate personalizado:\n` +
@@ -563,6 +612,9 @@ export default function Personalizar() {
                   offset={offset}
                   onOffsetChange={delta => setOffset(prev => prev + delta)}
                   scale={designScale}
+                  textFont={textFont}
+                  textoCompleto={textoCompleto}
+                  distribucion={distribucion}
                   size={370}
                 />
                 {hasGrabado && (
@@ -708,6 +760,51 @@ export default function Personalizar() {
                 onClick={() => setTextoVirola('')}>✕ Borrar texto</button>
             )}
           </div>
+
+          {/* Fuente del texto */}
+          {textoVirola && (
+            <div className="ctrl-group">
+              <h3>Fuente del texto</h3>
+              <div className="ctrl-font-grid">
+                {FUENTES.map(f => (
+                  <button key={f.id}
+                    className={`ctrl-font-btn ${textFont === f.font ? 'active' : ''}`}
+                    onClick={() => { setTextFont(f.font); setVista('top') }}
+                  >
+                    <span className="font-preview" style={{ fontFamily: f.font }}>{f.preview}</span>
+                    <span className="font-label">{f.label}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                className={`ctrl-chip ${textoCompleto ? 'active' : ''}`}
+                style={{ marginTop: '0.6rem' }}
+                onClick={() => { setTextoCompleto(v => !v); setVista('top') }}
+              >
+                {textoCompleto ? '◎ Vuelta completa' : '◑ Vuelta completa'}
+              </button>
+            </div>
+          )}
+
+          {/* Distribución — segundo grabado */}
+          {diseño !== 'ninguno' && textoVirola && (
+            <div className="ctrl-group">
+              <h3>Distribución</h3>
+              <p className="ctrl-hint">Ubicá diseño y texto en zonas distintas del aro</p>
+              <div className="ctrl-grid">
+                {[
+                  { id: 'auto',         label: 'Automático' },
+                  { id: 'diseño-arriba',label: '↑ Diseño / ↓ Texto' },
+                  { id: 'texto-arriba', label: '↑ Texto / ↓ Diseño' },
+                ].map(op => (
+                  <button key={op.id}
+                    className={`ctrl-chip ${distribucion === op.id ? 'active' : ''}`}
+                    onClick={() => { setDistribucion(op.id); setVista('top') }}
+                  >{op.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {vista === '3d' && (
             <div className="ctrl-group">
