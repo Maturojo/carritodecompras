@@ -1,268 +1,544 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useRef, Suspense } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { OrbitControls, Environment, ContactShadows, Lathe } from '@react-three/drei'
+import * as THREE from 'three'
 
+/* ─────────── CONFIGURACIÓN ─────────── */
 const TIPOS = [
-  { id: 'calabaza',  label: 'Calabaza',  emoji: '🟤' },
-  { id: 'madera',    label: 'Madera',    emoji: '🪵' },
-  { id: 'ceramica',  label: 'Cerámica',  emoji: '⚪' },
-  { id: 'acero',     label: 'Acero',     emoji: '⚙️' },
+  { id: 'calabaza', label: 'Calabaza' },
+  { id: 'porongo',  label: 'Porongo'  },
+  { id: 'ceramica', label: 'Cerámica' },
+  { id: 'acero',    label: 'Acero'    },
 ]
 
-const COLORES = [
-  { id: 'natural',  label: 'Natural',   hex: '#8B5E3C' },
-  { id: 'oscuro',   label: 'Oscuro',    hex: '#3D1F0D' },
-  { id: 'claro',    label: 'Claro',     hex: '#D4A574' },
-  { id: 'verde',    label: 'Verde',     hex: '#4A7C59' },
-  { id: 'azul',     label: 'Azul',      hex: '#2C5F8A' },
-  { id: 'rojo',     label: 'Rojo',      hex: '#8B2020' },
-  { id: 'negro',    label: 'Negro',     hex: '#1A1A1A' },
-  { id: 'blanco',   label: 'Blanco',    hex: '#F5F0E8' },
+const CUERPOS = [
+  { id: 'natural',   label: 'Madera natural',   hex: '#B5723A', hex2: '#8B5E3C', rough: 0.85, metal: 0.0 },
+  { id: 'oscuro',    label: 'Madera oscura',     hex: '#3B1F0A', hex2: '#2E1503', rough: 0.8,  metal: 0.0 },
+  { id: 'negro',     label: 'Cuero negro',       hex: '#1A1A1A', hex2: '#111111', rough: 0.7,  metal: 0.0 },
+  { id: 'marron',    label: 'Cuero marrón',      hex: '#5C3317', hex2: '#3D200A', rough: 0.75, metal: 0.0 },
+  { id: 'ceramica_b',label: 'Cerámica blanca',   hex: '#F0EDE4', hex2: '#DDD9CE', rough: 0.35, metal: 0.0 },
+  { id: 'ceramica_g',label: 'Cerámica gris',     hex: '#9B9B9B', hex2: '#7A7A7A', rough: 0.4,  metal: 0.0 },
+  { id: 'verde',     label: 'Verde mate',        hex: '#3A5E3A', hex2: '#2A4A2A', rough: 0.7,  metal: 0.0 },
+  { id: 'azul',      label: 'Azul cobalto',      hex: '#1E3A72', hex2: '#162B55', rough: 0.65, metal: 0.0 },
 ]
 
-const BOMBILLAS = [
-  { id: 'alpaca',   label: 'Alpaca',    color: '#C0C0C0' },
-  { id: 'oro',      label: 'Dorada',    color: '#DAA520' },
-  { id: 'acero',    label: 'Acero',     color: '#708090' },
-  { id: 'cana',     label: 'Caña',      color: '#D2B48C' },
+const AROS = [
+  { id: 'alpaca',  label: 'Alpaca',      hex: '#D4D4D4', rough: 0.25, metal: 0.85 },
+  { id: 'dorado',  label: 'Dorado',      hex: '#CFB53B', rough: 0.2,  metal: 1.0  },
+  { id: 'acero',   label: 'Acero',       hex: '#8A9AA8', rough: 0.2,  metal: 0.95 },
+  { id: 'plata',   label: 'Plata lisa',  hex: '#E8E8E8', rough: 0.15, metal: 1.0  },
 ]
 
 const GRABADOS = [
-  { id: 'ninguno',  label: 'Sin grabado' },
-  { id: 'flores',   label: '🌸 Flores' },
-  { id: 'geometrico', label: '◈ Geométrico' },
-  { id: 'nombre',   label: '✏️ Nombre' },
-  { id: 'inicial',  label: 'A Inicial' },
+  { id: 'ninguno',    label: 'Sin grabado'  },
+  { id: 'ruta',       label: '🛣 Ruteamos'   },
+  { id: 'flores',     label: '🌸 Flores'     },
+  { id: 'geometrico', label: '◈ Étnico'      },
+  { id: 'lineas',     label: '— Líneas'      },
 ]
 
-// SVG del mate que cambia dinámicamente
-function MateSVG({ tipo, color, bombillaColor, grabado, texto }) {
-  const bodyColor   = color.hex
-  const rimColor    = adjustColor(color.hex, -30)
-  const shadowColor = adjustColor(color.hex, -50)
+/* ─────────── PERFILES DEL MATE (formas reales) ─────────── */
+function getMateProfile(tipo) {
+  // Puntos [radio, altura] — formas cortas y anchas como los mates reales
+  if (tipo === 'calabaza') return [
+    [0.00, -0.95],
+    [0.18, -0.93],
+    [0.50, -0.82],
+    [0.76, -0.60],
+    [0.90, -0.28],
+    [0.94,  0.08],
+    [0.90,  0.42],
+    [0.78,  0.68],
+    [0.60,  0.84],
+    [0.44,  0.93],
+    [0.36,  1.00],
+    [0.34,  1.04],
+    [0.34,  1.10],
+    [0.18,  1.14],
+    [0.00,  1.16],
+  ]
+  if (tipo === 'porongo') return [
+    [0.00, -0.98],
+    [0.22, -0.96],
+    [0.52, -0.82],
+    [0.72, -0.52],
+    [0.82, -0.12],
+    [0.84,  0.22],
+    [0.82,  0.50],
+    [0.76,  0.72],
+    [0.64,  0.86],
+    [0.50,  0.94],
+    [0.40,  1.00],
+    [0.38,  1.06],
+    [0.38,  1.12],
+    [0.20,  1.16],
+    [0.00,  1.18],
+  ]
+  if (tipo === 'ceramica') return [
+    [0.00, -0.96],
+    [0.28, -0.94],
+    [0.58, -0.80],
+    [0.78, -0.50],
+    [0.88, -0.10],
+    [0.88,  0.28],
+    [0.85,  0.58],
+    [0.78,  0.80],
+    [0.64,  0.92],
+    [0.46,  1.00],
+    [0.38,  1.06],
+    [0.38,  1.12],
+    [0.20,  1.16],
+    [0.00,  1.18],
+  ]
+  // acero — cilíndrico recto
+  return [
+    [0.00, -0.95],
+    [0.30, -0.92],
+    [0.60, -0.82],
+    [0.76, -0.62],
+    [0.80, -0.30],
+    [0.80,  0.32],
+    [0.80,  0.62],
+    [0.76,  0.82],
+    [0.62,  0.94],
+    [0.46,  1.02],
+    [0.40,  1.07],
+    [0.40,  1.12],
+    [0.22,  1.16],
+    [0.00,  1.18],
+  ]
+}
+
+/* ─────────── UTILIDADES ─────────── */
+function adjustHex(hex, amt) {
+  const n = parseInt(hex.replace('#', ''), 16)
+  const r = Math.min(255, Math.max(0, (n >> 16) + amt))
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amt))
+  const b = Math.min(255, Math.max(0, (n & 0xff) + amt))
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
+/* ─────────── MODELO 3D DEL MATE ─────────── */
+function MateModel({ tipo, cuerpo, aro, grabado, autoRotate }) {
+  const groupRef = useRef()
+
+  useFrame((_, delta) => {
+    if (autoRotate && groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.35
+    }
+  })
+
+  const profile = getMateProfile(tipo)
+  const scale = 1.0
+
+  // Puntos del cuerpo (sin la parte superior del aro)
+  const bodyPoints = profile.slice(0, -4).map(([x, y]) =>
+    new THREE.Vector2(x * scale, y * scale)
+  )
+  // Puntos del aro superior
+  const rimPoints = profile.slice(-6).map(([x, y]) =>
+    new THREE.Vector2(x * scale, y * scale)
+  )
+
+  const allPoints = profile.map(([x, y]) => new THREE.Vector2(x * scale, y * scale))
+
+  // Punto más ancho para referencia del grabado
+  const maxR = Math.max(...profile.map(([x]) => x)) * scale
+  // Altura del cuello (punto de transición al aro)
+  const neckY = profile[profile.length - 5][1] * scale
+
+  const bodyColor  = new THREE.Color(cuerpo.hex)
+  const bodyColor2 = new THREE.Color(cuerpo.hex2)
+  const aroColor   = new THREE.Color(aro.hex)
 
   return (
-    <svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" className="mate-svg">
-      <defs>
-        <radialGradient id="bodyGrad" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stopColor={adjustColor(bodyColor, 30)} />
-          <stop offset="60%" stopColor={bodyColor} />
-          <stop offset="100%" stopColor={shadowColor} />
-        </radialGradient>
-        <radialGradient id="rimGrad" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor={adjustColor(rimColor, 20)} />
-          <stop offset="100%" stopColor={rimColor} />
-        </radialGradient>
-        <filter id="shadow">
-          <feDropShadow dx="3" dy="6" stdDeviation="6" floodColor="rgba(0,0,0,0.3)" />
-        </filter>
-      </defs>
+    <group ref={groupRef} position={[0, -0.15, 0]}>
 
-      {/* Sombra base */}
-      <ellipse cx="100" cy="245" rx="45" ry="8" fill="rgba(0,0,0,0.15)" />
+      {/* ── Cuerpo principal del mate ── */}
+      <mesh castShadow receiveShadow>
+        <latheGeometry args={[allPoints, 80]} />
+        <meshStandardMaterial
+          color={bodyColor}
+          roughness={cuerpo.rough}
+          metalness={cuerpo.metal}
+        />
+      </mesh>
 
-      {/* Cuerpo del mate */}
-      {tipo === 'calabaza' && (
-        <>
-          <path d="M55 180 Q45 140 50 110 Q55 75 100 65 Q145 75 150 110 Q155 140 145 180 Q130 210 100 215 Q70 210 55 180Z"
-            fill="url(#bodyGrad)" filter="url(#shadow)" />
-          {/* Líneas de la calabaza */}
-          <path d="M70 90 Q68 130 67 175" stroke={shadowColor} strokeWidth="1.5" fill="none" opacity="0.4"/>
-          <path d="M100 67 Q98 130 98 212" stroke={shadowColor} strokeWidth="1.5" fill="none" opacity="0.4"/>
-          <path d="M130 90 Q132 130 133 175" stroke={shadowColor} strokeWidth="1.5" fill="none" opacity="0.4"/>
-        </>
-      )}
-      {tipo === 'madera' && (
-        <>
-          <path d="M60 190 Q50 150 52 110 Q56 72 100 65 Q144 72 148 110 Q150 150 140 190 Q128 215 100 218 Q72 215 60 190Z"
-            fill="url(#bodyGrad)" filter="url(#shadow)" />
-          {/* Veta de madera */}
-          <path d="M70 85 Q80 120 75 170" stroke={shadowColor} strokeWidth="2" fill="none" opacity="0.25"/>
-          <path d="M90 68 Q95 130 92 208" stroke={shadowColor} strokeWidth="1.5" fill="none" opacity="0.2"/>
-          <path d="M115 70 Q118 130 115 205" stroke={shadowColor} strokeWidth="1.5" fill="none" opacity="0.2"/>
-          <path d="M135 85 Q130 120 133 168" stroke={shadowColor} strokeWidth="2" fill="none" opacity="0.25"/>
-        </>
-      )}
-      {tipo === 'ceramica' && (
-        <>
-          <path d="M58 185 Q48 148 50 108 Q55 70 100 63 Q145 70 150 108 Q152 148 142 185 Q130 213 100 216 Q70 213 58 185Z"
-            fill="url(#bodyGrad)" filter="url(#shadow)" />
-          {/* Brillo cerámica */}
-          <ellipse cx="80" cy="100" rx="12" ry="18" fill="white" opacity="0.15" transform="rotate(-20,80,100)"/>
-        </>
-      )}
-      {tipo === 'acero' && (
-        <>
-          <path d="M62 188 Q54 150 56 110 Q60 73 100 66 Q140 73 144 110 Q146 150 138 188 Q126 214 100 217 Q74 214 62 188Z"
-            fill="url(#bodyGrad)" filter="url(#shadow)" />
-          {/* Líneas acero */}
-          <path d="M65 90 L65 190" stroke="white" strokeWidth="1" opacity="0.1"/>
-          <path d="M135 90 L135 190" stroke="white" strokeWidth="1" opacity="0.1"/>
-          <ellipse cx="82" cy="105" rx="8" ry="14" fill="white" opacity="0.12" transform="rotate(-15,82,105)"/>
-        </>
+      {/* ── Franja inferior más oscura (efecto de profundidad) ── */}
+      {(tipo !== 'acero') && (
+        <mesh position={[0, -0.55, 0]}>
+          <cylinderGeometry args={[maxR * 0.72, maxR * 0.55, 0.35, 48, 1, true]} />
+          <meshStandardMaterial
+            color={bodyColor2}
+            roughness={cuerpo.rough + 0.05}
+            metalness={cuerpo.metal}
+            side={THREE.FrontSide}
+            transparent
+            opacity={0.5}
+          />
+        </mesh>
       )}
 
-      {/* Borde superior (aro) */}
-      <ellipse cx="100" cy="75" rx="28" ry="10" fill="url(#rimGrad)" />
-      <ellipse cx="100" cy="70" rx="26" ry="8" fill={adjustColor(rimColor, 15)} />
+      {/* ── Aro superior de alpaca/metal ── */}
+      {/* Banda ancha del aro */}
+      <mesh position={[0, neckY + 0.04, 0]} castShadow>
+        <cylinderGeometry args={[
+          profile[profile.length - 5][0] * scale + 0.008,
+          profile[profile.length - 5][0] * scale + 0.005,
+          0.22, 64
+        ]} />
+        <meshStandardMaterial
+          color={aroColor}
+          roughness={aro.rough}
+          metalness={aro.metal}
+          envMapIntensity={2}
+        />
+      </mesh>
 
-      {/* Grabado decorativo */}
-      {grabado === 'flores' && (
-        <g opacity="0.5" transform="translate(100,145)">
-          <circle r="3" fill={adjustColor(bodyColor, -60)} />
-          {[0,60,120,180,240,300].map(a => (
-            <ellipse key={a} cx={Math.cos(a*Math.PI/180)*10} cy={Math.sin(a*Math.PI/180)*10}
-              rx="4" ry="6" fill={adjustColor(bodyColor, -40)}
-              transform={`rotate(${a},${Math.cos(a*Math.PI/180)*10},${Math.sin(a*Math.PI/180)*10})`} />
-          ))}
-        </g>
-      )}
-      {grabado === 'geometrico' && (
-        <g opacity="0.4" transform="translate(100,145)">
-          <polygon points="0,-18 15,9 -15,9" stroke={adjustColor(bodyColor,-60)} strokeWidth="2" fill="none"/>
-          <polygon points="0,18 15,-9 -15,-9" stroke={adjustColor(bodyColor,-60)} strokeWidth="2" fill="none"/>
-        </g>
-      )}
-      {grabado === 'nombre' && texto && (
-        <text x="100" y="152" textAnchor="middle" fontSize="12" fontFamily="serif"
-          fill={adjustColor(bodyColor, -60)} opacity="0.65" fontStyle="italic">
-          {texto.slice(0,10)}
-        </text>
-      )}
-      {grabado === 'inicial' && texto && (
-        <text x="100" y="158" textAnchor="middle" fontSize="32" fontFamily="serif"
-          fill={adjustColor(bodyColor, -60)} opacity="0.5" fontWeight="bold">
-          {texto[0]?.toUpperCase()}
-        </text>
-      )}
+      {/* Borde superior del aro (más grueso) */}
+      <mesh position={[0, neckY + 0.14, 0]} castShadow>
+        <torusGeometry args={[
+          profile[profile.length - 5][0] * scale + 0.005,
+          0.022, 20, 64
+        ]} />
+        <meshStandardMaterial
+          color={aroColor}
+          roughness={aro.rough}
+          metalness={aro.metal}
+          envMapIntensity={2.5}
+        />
+      </mesh>
 
-      {/* Bombilla */}
-      <line x1="100" y1="68" x2="118" y2="10" stroke={bombillaColor} strokeWidth="4" strokeLinecap="round"/>
-      <line x1="118" y1="10" x2="122" y2="2" stroke={bombillaColor} strokeWidth="3" strokeLinecap="round"/>
-      {/* Filtro bombilla */}
-      <ellipse cx="100" cy="75" rx="5" ry="4" fill={adjustColor(bombillaColor, -20)} />
-      {/* Detalle bombilla */}
-      <line x1="103" y1="55" x2="117" y2="18" stroke={adjustColor(bombillaColor, 30)} strokeWidth="1.5" opacity="0.4" strokeLinecap="round"/>
-    </svg>
+      {/* Borde inferior del aro */}
+      <mesh position={[0, neckY - 0.08, 0]} castShadow>
+        <torusGeometry args={[
+          profile[profile.length - 5][0] * scale + 0.005,
+          0.016, 16, 64
+        ]} />
+        <meshStandardMaterial
+          color={aroColor}
+          roughness={aro.rough}
+          metalness={aro.metal}
+          envMapIntensity={2.5}
+        />
+      </mesh>
+
+      {/* ── Grabados / decoraciones ── */}
+      {/* Líneas horizontales */}
+      {grabado === 'lineas' && [0.1, 0.3, 0.5].map((t, i) => {
+        const idx = Math.floor(t * (profile.length - 6))
+        const r = profile[idx][0] * scale + 0.008
+        const y = profile[idx][1] * scale
+        return (
+          <mesh key={i} position={[0, y, 0]}>
+            <torusGeometry args={[r, 0.01, 8, 72]} />
+            <meshStandardMaterial
+              color={adjustHex(aro.hex, -30)}
+              roughness={aro.rough + 0.1}
+              metalness={aro.metal * 0.7}
+            />
+          </mesh>
+        )
+      })}
+
+      {/* Patrón étnico — bandas con hexágonos */}
+      {grabado === 'geometrico' && [0.25, 0.55].map((t, i) => {
+        const idx = Math.floor(t * (profile.length - 6))
+        const r = profile[idx][0] * scale + 0.009
+        const y = profile[idx][1] * scale
+        return (
+          <mesh key={i} position={[0, y, 0]}>
+            <torusGeometry args={[r, 0.015, 6, 6]} />
+            <meshStandardMaterial
+              color={adjustHex(aro.hex, -20)}
+              roughness={0.3}
+              metalness={aro.metal * 0.8}
+            />
+          </mesh>
+        )
+      })}
+
+      {/* Flores — pequeñas esferas decorativas */}
+      {grabado === 'flores' && Array.from({ length: 8 }).map((_, i) => {
+        const angle = (i / 8) * Math.PI * 2
+        const idx = Math.floor(0.38 * (profile.length - 6))
+        const r = profile[idx][0] * scale + 0.02
+        const y = profile[idx][1] * scale
+        return (
+          <mesh key={i} position={[
+            Math.cos(angle) * r,
+            y,
+            Math.sin(angle) * r
+          ]}>
+            <sphereGeometry args={[0.035, 10, 10]} />
+            <meshStandardMaterial
+              color={adjustHex(aro.hex, 20)}
+              roughness={0.3}
+              metalness={aro.metal * 0.6}
+            />
+          </mesh>
+        )
+      })}
+
+      {/* Ruteamos — banda con relieves */}
+      {grabado === 'ruta' && Array.from({ length: 16 }).map((_, i) => {
+        const angle = (i / 16) * Math.PI * 2
+        const idx = Math.floor(0.3 * (profile.length - 6))
+        const r = profile[idx][0] * scale + 0.015
+        const y = profile[idx][1] * scale + (i % 2 === 0 ? 0.04 : -0.04)
+        return (
+          <mesh key={i} position={[
+            Math.cos(angle) * r,
+            y,
+            Math.sin(angle) * r
+          ]}>
+            <boxGeometry args={[0.04, 0.04, 0.015]} />
+            <meshStandardMaterial
+              color={adjustHex(aro.hex, -10)}
+              roughness={0.25}
+              metalness={aro.metal * 0.75}
+            />
+          </mesh>
+        )
+      })}
+
+      {/* ── Interior visible (fondo oscuro) ── */}
+      <mesh position={[0, neckY + 0.02, 0]}>
+        <cylinderGeometry args={[
+          profile[profile.length - 5][0] * scale - 0.025,
+          profile[profile.length - 5][0] * scale - 0.025,
+          0.04, 40
+        ]} />
+        <meshStandardMaterial color="#1a0f06" roughness={0.95} metalness={0} />
+      </mesh>
+
+      {/* ── Base plana ── */}
+      <mesh position={[0, -0.95 * scale, 0]} rotation={[Math.PI, 0, 0]}>
+        <circleGeometry args={[0.16 * scale, 32]} />
+        <meshStandardMaterial color={adjustHex(cuerpo.hex, -30)} roughness={0.9} />
+      </mesh>
+
+      {/* ── Bombilla ── */}
+      <group position={[0.14, neckY + 0.02, 0]} rotation={[0, 0, -0.28]}>
+        {/* Tubo principal */}
+        <mesh>
+          <cylinderGeometry args={[0.022, 0.022, 1.5, 12]} />
+          <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
+        </mesh>
+        {/* Extremo curvado */}
+        <mesh position={[0.04, 0.78, 0]} rotation={[0, 0, 0.45]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.28, 10]} />
+          <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
+        </mesh>
+        {/* Filtro (base esférica) */}
+        <mesh position={[0, -0.68, 0]}>
+          <sphereGeometry args={[0.048, 16, 16]} />
+          <meshStandardMaterial
+            color={adjustHex(aro.hex, -15)}
+            roughness={0.35}
+            metalness={aro.metal}
+          />
+        </mesh>
+        {/* Aro decorativo del filtro */}
+        <mesh position={[0, -0.5, 0]}>
+          <torusGeometry args={[0.028, 0.009, 8, 32]} />
+          <meshStandardMaterial color={aroColor} roughness={aro.rough} metalness={aro.metal} />
+        </mesh>
+      </group>
+    </group>
   )
 }
 
-// Ajustar brillo de color hex
-function adjustColor(hex, amount) {
-  const num = parseInt(hex.replace('#',''), 16)
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount))
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount))
-  const b = Math.min(255, Math.max(0, (num & 0xff) + amount))
-  return `#${((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}`
+/* ─────────── ESCENA 3D ─────────── */
+function Scene({ tipo, cuerpo, aro, grabado, autoRotate }) {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 8, 5]}  intensity={1.4} castShadow shadow-mapSize={[2048, 2048]} />
+      <directionalLight position={[-4, 3, -3]} intensity={0.5} color="#ffeedd" />
+      <directionalLight position={[0, -3, 3]}  intensity={0.2} color="#c8d8e8" />
+      <pointLight position={[2, 4, 3]} intensity={0.6} color="#fff8f0" />
+      <Suspense fallback={null}>
+        <Environment preset="studio" />
+        <MateModel
+          tipo={tipo}
+          cuerpo={cuerpo}
+          aro={aro}
+          grabado={grabado}
+          autoRotate={autoRotate}
+        />
+        <ContactShadows
+          position={[0, -1.15, 0]}
+          opacity={0.55}
+          scale={3.5}
+          blur={2.5}
+          far={1.5}
+        />
+      </Suspense>
+    </>
+  )
 }
 
+/* ─────────── PÁGINA PRINCIPAL ─────────── */
 export default function Personalizar() {
-  const [tipo,     setTipo]     = useState('calabaza')
-  const [color,    setColor]    = useState(COLORES[0])
-  const [bombilla, setBombilla] = useState(BOMBILLAS[0])
-  const [grabado,  setGrabado]  = useState('ninguno')
-  const [texto,    setTexto]    = useState('')
+  const [tipo,       setTipo]       = useState('calabaza')
+  const [cuerpo,     setCuerpo]     = useState(CUERPOS[0])
+  const [aro,        setAro]        = useState(AROS[0])
+  const [grabado,    setGrabado]    = useState('ninguno')
+  const [autoRotate, setAutoRotate] = useState(true)
 
-  const resumen = `${TIPOS.find(t=>t.id===tipo)?.label} ${color.label} con bombilla ${bombilla.label}${grabado !== 'ninguno' ? ` y grabado ${GRABADOS.find(g=>g.id===grabado)?.label}` : ''}`
+  const waMsg = encodeURIComponent(
+    `Hola! Me interesa un mate personalizado:\n` +
+    `• Forma: ${TIPOS.find(t => t.id === tipo)?.label}\n` +
+    `• Material: ${cuerpo.label}\n` +
+    `• Aro: ${aro.label}\n` +
+    `• Grabado: ${GRABADOS.find(g => g.id === grabado)?.label}`
+  )
 
   return (
     <main className="page-content">
-      <section className="inner-hero" style={{paddingBottom:'2rem'}}>
-        <span className="section-pretitle">Diseñá tu mate</span>
-        <h1 className="inner-hero-title">Personalizador<br />de mates</h1>
-        <p className="inner-hero-sub">Elegí cada detalle y mirá cómo queda antes de pedir el tuyo.</p>
+      <section className="inner-hero" style={{ paddingBottom: '2rem' }}>
+        <span className="section-pretitle">Tu mate, tu estilo</span>
+        <h1 className="inner-hero-title">Personalizador 3D</h1>
+        <p className="inner-hero-sub">
+          Elegí cada detalle y consultanos para hacer el tuyo a medida.
+        </p>
       </section>
 
       <div className="personalizador-layout">
 
-        {/* ── Preview ── */}
+        {/* ── Canvas 3D ── */}
         <div className="personalizador-preview">
-          <div className="mate-preview-card">
-            <MateSVG tipo={tipo} color={color} bombillaColor={bombilla.color} grabado={grabado} texto={texto} />
-            <p className="mate-preview-desc">{resumen}</p>
+          <div className="mate-canvas-wrap">
+            <Canvas
+              camera={{ position: [0, 0.6, 3.2], fov: 38 }}
+              shadows
+              gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+            >
+              <Scene
+                tipo={tipo}
+                cuerpo={cuerpo}
+                aro={aro}
+                grabado={grabado}
+                autoRotate={autoRotate}
+              />
+              <OrbitControls
+                enableZoom={false}
+                minPolarAngle={Math.PI / 5}
+                maxPolarAngle={Math.PI / 1.7}
+                onStart={() => setAutoRotate(false)}
+              />
+            </Canvas>
+            <p className="canvas-hint">🖱 Arrastrá para girar</p>
           </div>
-          <Link
-            to={`/contacto`}
+
+          {/* Resumen del diseño */}
+          <div className="design-summary">
+            <div className="design-summary-row">
+              <span>Forma</span>
+              <strong>{TIPOS.find(t => t.id === tipo)?.label}</strong>
+            </div>
+            <div className="design-summary-row">
+              <span>Material</span>
+              <strong>{cuerpo.label}</strong>
+            </div>
+            <div className="design-summary-row">
+              <span>Aro</span>
+              <strong>{aro.label}</strong>
+            </div>
+            <div className="design-summary-row">
+              <span>Grabado</span>
+              <strong>{GRABADOS.find(g => g.id === grabado)?.label}</strong>
+            </div>
+          </div>
+
+          <a
+            href={`https://wa.me/5492236359767?text=${waMsg}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn-primary full-width"
-            style={{marginTop:'1rem', display:'block', textAlign:'center'}}
+            style={{ display: 'block', textAlign: 'center', marginTop: '1rem' }}
           >
-            Consultar este diseño por WhatsApp
-          </Link>
+            💬 Consultar este diseño por WhatsApp
+          </a>
         </div>
 
         {/* ── Controles ── */}
         <div className="personalizador-controls">
 
-          {/* Tipo */}
           <div className="ctrl-group">
-            <h3>Tipo de mate</h3>
+            <h3>Forma del mate</h3>
             <div className="ctrl-grid">
               {TIPOS.map(t => (
-                <button key={t.id}
+                <button
+                  key={t.id}
                   className={`ctrl-chip ${tipo === t.id ? 'active' : ''}`}
                   onClick={() => setTipo(t.id)}
-                >
-                  <span>{t.emoji}</span> {t.label}
-                </button>
+                >{t.label}</button>
               ))}
             </div>
           </div>
 
-          {/* Color */}
           <div className="ctrl-group">
-            <h3>Color</h3>
+            <h3>Material del cuerpo</h3>
             <div className="ctrl-colors">
-              {COLORES.map(c => (
-                <button key={c.id}
-                  className={`ctrl-color-btn ${color.id === c.id ? 'active' : ''}`}
+              {CUERPOS.map(c => (
+                <button
+                  key={c.id}
+                  className={`ctrl-color-btn ${cuerpo.id === c.id ? 'active' : ''}`}
                   style={{ background: c.hex }}
                   title={c.label}
-                  onClick={() => setColor(c)}
+                  onClick={() => setCuerpo(c)}
                 >
-                  {color.id === c.id && <span className="color-check">✓</span>}
+                  {cuerpo.id === c.id && <span className="color-check">✓</span>}
                 </button>
               ))}
             </div>
-            <p className="ctrl-selected">Seleccionado: <strong>{color.label}</strong></p>
+            <p className="ctrl-selected">Seleccionado: <strong>{cuerpo.label}</strong></p>
           </div>
 
-          {/* Bombilla */}
           <div className="ctrl-group">
-            <h3>Bombilla</h3>
+            <h3>Aro y bombilla</h3>
             <div className="ctrl-grid">
-              {BOMBILLAS.map(b => (
-                <button key={b.id}
-                  className={`ctrl-chip ${bombilla.id === b.id ? 'active' : ''}`}
-                  onClick={() => setBombilla(b)}
+              {AROS.map(a => (
+                <button
+                  key={a.id}
+                  className={`ctrl-chip ${aro.id === a.id ? 'active' : ''}`}
+                  onClick={() => setAro(a)}
                 >
-                  <span style={{width:12,height:12,borderRadius:'50%',background:b.color,display:'inline-block',border:'1px solid rgba(0,0,0,0.2)'}}/>
-                  {b.label}
+                  <span style={{
+                    width: 12, height: 12, borderRadius: '50%',
+                    background: a.hex,
+                    display: 'inline-block',
+                    border: '1px solid rgba(0,0,0,0.25)',
+                    boxShadow: '0 0 3px rgba(255,255,255,0.5)'
+                  }} />
+                  {a.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Grabado */}
           <div className="ctrl-group">
             <h3>Grabado</h3>
             <div className="ctrl-grid">
               {GRABADOS.map(g => (
-                <button key={g.id}
+                <button
+                  key={g.id}
                   className={`ctrl-chip ${grabado === g.id ? 'active' : ''}`}
                   onClick={() => setGrabado(g.id)}
-                >
-                  {g.label}
-                </button>
+                >{g.label}</button>
               ))}
             </div>
-            {(grabado === 'nombre' || grabado === 'inicial') && (
-              <input
-                className="ctrl-text-input"
-                placeholder={grabado === 'nombre' ? 'Escribí el nombre...' : 'Escribí la inicial...'}
-                value={texto}
-                onChange={e => setTexto(e.target.value)}
-                maxLength={grabado === 'inicial' ? 1 : 10}
-              />
-            )}
+          </div>
+
+          <div className="ctrl-group">
+            <button
+              className={`ctrl-chip ${autoRotate ? 'active' : ''}`}
+              onClick={() => setAutoRotate(v => !v)}
+            >
+              {autoRotate ? '⏸ Pausar rotación' : '▶ Rotar automático'}
+            </button>
           </div>
 
         </div>
