@@ -252,44 +252,66 @@ function drawDesignOnRing(ctx, cx, cy, innerR, outerR, diseño, aroHex, offset, 
 }
 
 /* ─────────── EFECTO DE GRABADO (canvas offscreen) ─────────── */
-function applyEngravingEffect(img, engravingHex, threshold = 148) {
-  const S    = 320   // tamaño del canvas offscreen
-  const ofc  = document.createElement('canvas')
-  ofc.width  = S; ofc.height = S
+function applyEngravingEffect(img, engravingHex, sensitivity = 148) {
+  const S   = 360
+  const ofc = document.createElement('canvas')
+  ofc.width = ofc.height = S
   const octx = ofc.getContext('2d', { willReadFrequently: true })
-
-  // Dibujar imagen original
   octx.drawImage(img, 0, 0, S, S)
-
   const imageData = octx.getImageData(0, 0, S, S)
   const d = imageData.data
 
-  // Color del grabado: versión oscura del metal
-  const hex = engravingHex.replace('#', '')
-  const eR  = parseInt(hex.slice(0, 2), 16)
-  const eG  = parseInt(hex.slice(2, 4), 16)
-  const eB  = parseInt(hex.slice(4, 6), 16)
+  /* ── 1. Detectar color de fondo muestreando esquinas y bordes ── */
+  const sampleIdxs = []
+  const edge = 6  // píxeles desde el borde
+  for (let e = 0; e < edge; e++) {
+    sampleIdxs.push((e * S + e) * 4)               // top-left diagonal
+    sampleIdxs.push((e * S + (S - 1 - e)) * 4)    // top-right diagonal
+    sampleIdxs.push(((S-1-e) * S + e) * 4)         // bottom-left diagonal
+    sampleIdxs.push(((S-1-e) * S + (S-1-e)) * 4)  // bottom-right diagonal
+  }
 
+  let bgR = 0, bgG = 0, bgB = 0, bgN = 0
+  sampleIdxs.forEach(idx => {
+    if (idx >= 0 && idx < d.length - 3 && d[idx + 3] > 200) {
+      bgR += d[idx]; bgG += d[idx + 1]; bgB += d[idx + 2]; bgN++
+    }
+  })
+  if (bgN === 0) { bgR = bgG = bgB = 255 }   // default blanco
+  else { bgR /= bgN; bgG /= bgN; bgB /= bgN }
+
+  /* Tolerancia dinámica según sensibilidad del slider (60 → 220) */
+  const bgTol = 18 + (sensitivity / 220) * 55   // 18–73
+
+  /* ── 2. Color del grabado ── */
+  const hx = engravingHex.replace('#', '')
+  const eR = parseInt(hx.slice(0, 2), 16)
+  const eG = parseInt(hx.slice(2, 4), 16)
+  const eB = parseInt(hx.slice(4, 6), 16)
+
+  /* ── 3. Procesar píxel a píxel ── */
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3]
+    if (a < 20) { d[i + 3] = 0; continue }
 
-    // Píxeles ya transparentes → dejar
-    if (a < 25) { d[i + 3] = 0; continue }
+    // Distancia Euclidiana al color de fondo detectado
+    const dr = r - bgR, dg = g - bgG, db = b - bgB
+    const distBg = Math.sqrt(dr * dr + dg * dg + db * db)
 
-    // Luminosidad perceptual
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b
+    if (distBg < bgTol) {
+      // Píxel similar al fondo → totalmente transparente
+      d[i + 3] = 0
+    } else {
+      // Píxel del sujeto → convertir a grabado
+      const lum      = 0.299 * r + 0.587 * g + 0.114 * b
+      const presence = Math.min(1, (distBg - bgTol) / 40)   // fade de borde suave
+      const darkness = lum < 230 ? Math.pow(1 - lum / 230, 0.65) : 0
+      const intensity = presence * Math.max(darkness, 0.25)  // mínimo para contornos claros
 
-    if (lum < threshold) {
-      // Píxel oscuro → marca de grabado con intensidad proporcional
-      const intensity = Math.pow(1 - lum / threshold, 0.85)
       d[i]     = eR
       d[i + 1] = eG
       d[i + 2] = eB
-      d[i + 3] = Math.min(255, Math.round(intensity * 240 * (a / 255)))
-    } else {
-      // Píxel claro → fondo transparente (background removal)
-      const fade = Math.max(0, 1 - (lum - threshold) / (255 - threshold))
-      d[i + 3] = Math.round(fade * fade * 80 * (a / 255))
+      d[i + 3] = Math.min(255, Math.round(intensity * 245 * (a / 255)))
     }
   }
 
