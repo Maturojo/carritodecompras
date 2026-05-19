@@ -6,54 +6,36 @@ const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 async function notificarDueno(order) {
-  const resendKey = process.env.RESEND_API_KEY
-  const ownerEmail = process.env.OWNER_EMAIL || 'hola@mateandcomdp.com.ar'
-  if (!resendKey) return
+  const apiKey     = process.env.CALLMEBOT_API_KEY
+  const ownerPhone = process.env.OWNER_PHONE || '5492236359767'
+  if (!apiKey) return
 
   const esLocal = isMdp(order.codigoPostal)
-  const itemsHtml = order.items
-    .map(i => `<tr><td style="padding:4px 8px">${i.name}</td><td style="padding:4px 8px">x${i.quantity}</td><td style="padding:4px 8px">${formatARS(i.price * i.quantity)}</td></tr>`)
-    .join('')
 
-  const html = `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
-      <div style="background:#9c664d;padding:20px 24px;border-radius:10px 10px 0 0">
-        <h2 style="color:#fff;margin:0">🧉 Nueva venta — Mate&Co</h2>
-        ${esLocal ? '<p style="color:#ffe0c8;margin:6px 0 0;font-size:14px">📍 Cliente de Mar del Plata — coordinar entrega</p>' : ''}
-      </div>
-      <div style="border:1px solid #e8dfd4;border-top:none;padding:20px 24px;border-radius:0 0 10px 10px">
-        <h3 style="color:#5c3317;margin:0 0 12px">Datos del cliente</h3>
-        <p style="margin:4px 0"><b>Nombre:</b> ${order.nombre}</p>
-        <p style="margin:4px 0"><b>Email:</b> ${order.email}</p>
-        <p style="margin:4px 0"><b>Teléfono:</b> ${order.telefono}</p>
-        <p style="margin:4px 0"><b>Dirección:</b> ${order.direccion}, ${order.ciudad} (CP ${order.codigoPostal})</p>
+  const productos = order.items
+    .map(i => `  • ${i.name} x${i.quantity} — ${formatARS(i.price * i.quantity)}`)
+    .join('\n')
 
-        <h3 style="color:#5c3317;margin:20px 0 12px">Productos</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <thead><tr style="background:#f8f4ef"><th style="padding:6px 8px;text-align:left">Producto</th><th style="padding:6px 8px">Cant.</th><th style="padding:6px 8px">Subtotal</th></tr></thead>
-          <tbody>${itemsHtml}</tbody>
-        </table>
+  const mensaje = [
+    '🧉 *Nueva venta en Mate&Co*',
+    esLocal ? '📍 *Cliente de Mar del Plata — coordinar entrega*' : '',
+    '',
+    `*Cliente:* ${order.nombre}`,
+    `*Tel:* ${order.telefono}`,
+    `*Email:* ${order.email}`,
+    `*Dirección:* ${order.direccion}, ${order.ciudad} (CP ${order.codigoPostal})`,
+    '',
+    '*Productos:*',
+    productos,
+    '',
+    `*Envío:* ${order.envio?.nombre || '—'} ${order.envio?.precio > 0 ? formatARS(order.envio.precio) : '(a convenir)'}`,
+    `*Total: ${formatARS(order.total)}*`,
+    '',
+    `_Pedido #${order.orderId}_`,
+  ].filter(l => l !== null).join('\n')
 
-        <div style="margin-top:16px;padding:12px 16px;background:#f8f4ef;border-radius:8px">
-          <p style="margin:4px 0"><b>Envío:</b> ${order.envio?.nombre || '—'} ${order.envio?.precio > 0 ? formatARS(order.envio.precio) : '(a convenir)'}</p>
-          <p style="margin:4px 0;font-size:18px"><b>Total:</b> ${formatARS(order.total)}</p>
-        </div>
-
-        <p style="margin-top:16px;font-size:12px;color:#999">Pedido #${order.orderId}</p>
-      </div>
-    </div>
-  `
-
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: 'Mate&Co Ventas <ventas@mateandcomdp.com.ar>',
-      to: [ownerEmail],
-      subject: `🧉 Nueva venta${esLocal ? ' 📍 MdP — coordinar entrega' : ''} — ${order.nombre}`,
-      html,
-    }),
-  }).catch(e => console.error('[notificarDueno]', e))
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${ownerPhone}&text=${encodeURIComponent(mensaje)}&apikey=${apiKey}`
+  await fetch(url).catch(e => console.error('[notificarDueno]', e))
 }
 
 const CORS = {
