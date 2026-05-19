@@ -6,9 +6,10 @@ const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 async function notificarDueno(order) {
-  const apiKey     = process.env.CALLMEBOT_API_KEY
+  const instanceId = process.env.ULTRAMSG_INSTANCE
+  const token      = process.env.ULTRAMSG_TOKEN
   const ownerPhone = process.env.OWNER_PHONE || '5492236359767'
-  if (!apiKey) return
+  if (!instanceId || !token) return
 
   const esLocal = isMdp(order.codigoPostal)
 
@@ -32,10 +33,13 @@ async function notificarDueno(order) {
     `*Total: ${formatARS(order.total)}*`,
     '',
     `_Pedido #${order.orderId}_`,
-  ].filter(l => l !== null).join('\n')
+  ].filter(Boolean).join('\n')
 
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${ownerPhone}&text=${encodeURIComponent(mensaje)}&apikey=${apiKey}`
-  await fetch(url).catch(e => console.error('[notificarDueno]', e))
+  await fetch(`https://api.ultramsg.com/${instanceId}/messages/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token, to: ownerPhone, body: mensaje }),
+  }).catch(e => console.error('[notificarDueno]', e))
 }
 
 const CORS = {
