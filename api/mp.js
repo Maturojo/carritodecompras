@@ -6,39 +6,51 @@ const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 async function notificarDueno(order) {
-  const instanceId = process.env.ULTRAMSG_INSTANCE
-  const token      = process.env.ULTRAMSG_TOKEN
-  const ownerPhone = process.env.OWNER_PHONE || '5492236359767'
-  if (!instanceId || !token) return
+  const resendKey  = process.env.RESEND_API_KEY
+  const ownerEmail = process.env.OWNER_EMAIL || 'hola@mateandcomdp.com.ar'
+  if (!resendKey) return
 
-  const esLocal = isMdp(order.codigoPostal)
+  const esLocal  = isMdp(order.codigoPostal)
+  const itemsHtml = order.items
+    .map(i => `<tr><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4">${i.name}</td><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4;text-align:center">x${i.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4;text-align:right">${formatARS(i.price * i.quantity)}</td></tr>`)
+    .join('')
 
-  const productos = order.items
-    .map(i => `  • ${i.name} x${i.quantity} — ${formatARS(i.price * i.quantity)}`)
-    .join('\n')
+  const html = `
+  <div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#2d1a0e">
+    <div style="background:#9c664d;padding:22px 24px;border-radius:10px 10px 0 0">
+      <h2 style="color:#fff;margin:0;font-size:20px">🧉 Nueva venta — Mate&Co</h2>
+      ${esLocal ? '<p style="color:#ffe0c8;margin:6px 0 0;font-size:13px">📍 Cliente de Mar del Plata — coordinar entrega</p>' : ''}
+    </div>
+    <div style="border:1px solid #e8dfd4;border-top:none;padding:22px 24px;border-radius:0 0 10px 10px;background:#fff">
+      <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#9c664d;margin:0 0 12px">Datos del cliente</h3>
+      <p style="margin:5px 0"><b>Nombre:</b> ${order.nombre}</p>
+      <p style="margin:5px 0"><b>Teléfono:</b> ${order.telefono}</p>
+      <p style="margin:5px 0"><b>Email:</b> ${order.email}</p>
+      <p style="margin:5px 0"><b>Dirección:</b> ${order.direccion}, ${order.ciudad} (CP ${order.codigoPostal})</p>
 
-  const mensaje = [
-    '🧉 *Nueva venta en Mate&Co*',
-    esLocal ? '📍 *Cliente de Mar del Plata — coordinar entrega*' : '',
-    '',
-    `*Cliente:* ${order.nombre}`,
-    `*Tel:* ${order.telefono}`,
-    `*Email:* ${order.email}`,
-    `*Dirección:* ${order.direccion}, ${order.ciudad} (CP ${order.codigoPostal})`,
-    '',
-    '*Productos:*',
-    productos,
-    '',
-    `*Envío:* ${order.envio?.nombre || '—'} ${order.envio?.precio > 0 ? formatARS(order.envio.precio) : '(a convenir)'}`,
-    `*Total: ${formatARS(order.total)}*`,
-    '',
-    `_Pedido #${order.orderId}_`,
-  ].filter(Boolean).join('\n')
+      <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#9c664d;margin:20px 0 12px">Productos</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="background:#f8f4ef"><th style="padding:8px 10px;text-align:left">Producto</th><th style="padding:8px 10px">Cant.</th><th style="padding:8px 10px;text-align:right">Subtotal</th></tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
 
-  await fetch(`https://api.ultramsg.com/${instanceId}/messages/chat`, {
+      <div style="margin-top:16px;padding:14px 16px;background:#f8f4ef;border-radius:8px">
+        <p style="margin:4px 0"><b>Envío:</b> ${order.envio?.nombre || '—'} ${order.envio?.precio > 0 ? formatARS(order.envio.precio) : '(a convenir)'}</p>
+        <p style="margin:8px 0 0;font-size:18px;font-weight:700">Total: ${formatARS(order.total)}</p>
+      </div>
+      <p style="margin-top:16px;font-size:11px;color:#aaa">Pedido #${order.orderId}</p>
+    </div>
+  </div>`
+
+  await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ token, to: ownerPhone, body: mensaje }),
+    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Mate&Co Ventas <ventas@mateandcomdp.com.ar>',
+      to: [ownerEmail],
+      subject: `🧉 Nueva venta${esLocal ? ' 📍 MdP' : ''} — ${order.nombre} · ${formatARS(order.total)}`,
+      html,
+    }),
   }).catch(e => console.error('[notificarDueno]', e))
 }
 

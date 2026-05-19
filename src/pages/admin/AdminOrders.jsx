@@ -1,22 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useStore } from '../../context/StoreContext'
 import { useShipping } from '../../hooks/useShipping'
 import { exportToExcel } from '../../utils/excel'
 
-const STATUSES = ['pendiente', 'enviado', 'entregado', 'cancelado']
+const STATUSES = ['pendiente_pago', 'pendiente', 'enviado', 'entregado', 'cancelado', 'rechazado']
 const STATUS_LABEL = {
-  pendiente:  { label: '🟡 Pendiente',  cls: 'status-pending' },
-  enviado:    { label: '🔵 Enviado',    cls: 'status-sent' },
-  entregado:  { label: '🟢 Entregado', cls: 'status-done' },
-  cancelado:  { label: '🔴 Cancelado', cls: 'status-cancelled' },
+  pendiente_pago: { label: '⏳ Pago pendiente', cls: 'status-waiting' },
+  pagado:         { label: '💚 Pagado',         cls: 'status-paid' },
+  pendiente:      { label: '🟡 Pendiente',      cls: 'status-pending' },
+  enviado:        { label: '🔵 Enviado',        cls: 'status-sent' },
+  entregado:      { label: '🟢 Entregado',      cls: 'status-done' },
+  cancelado:      { label: '🔴 Cancelado',      cls: 'status-cancelled' },
+  rechazado:      { label: '❌ Rechazado',      cls: 'status-cancelled' },
+  en_proceso:     { label: '🔄 En proceso',     cls: 'status-pending' },
 }
+
+const isMdp = (cp) => /^760\d$/.test(cp?.trim())
+const isNew  = (date) => Date.now() - new Date(date).getTime() < 24 * 60 * 60 * 1000
 
 export default function AdminOrders() {
   const { orders, updateOrderStatus } = useStore()
   const { trackEnvio } = useShipping()
-  const [filter, setFilter] = useState('todos')
+  const [filter, setFilter]     = useState('todos')
   const [expanded, setExpanded] = useState(null)
-  const [tracking, setTracking] = useState({}) // { [orderId]: { loading, data } }
+  const [tracking, setTracking] = useState({})
+  const [dbOrders, setDbOrders] = useState([])
+  const [lastSeen, setLastSeen] = useState(() => Date.now())
+
+  // Auto-refresh desde MongoDB cada 30 seg
+  const fetchOrders = useCallback(async () => {
+    const res = await fetch('/api/orders').catch(() => null)
+    if (!res?.ok) return
+    const data = await res.json()
+    setDbOrders(Array.isArray(data) ? data : [])
+  }, [])
+
+  useEffect(() => {
+    fetchOrders()
+    const id = setInterval(fetchOrders, 30_000)
+    return () => clearInterval(id)
+  }, [fetchOrders])
+
+  // Mezclar pedidos del context + DB (DB tiene prioridad)
+  const allOrders = dbOrders.length > 0 ? dbOrders : orders
+  const newCount  = allOrders.filter(o => isNew(o.date) && (o.status === 'pagado' || o.status === 'pendiente_pago')).length
 
   const handleExportCSV = () => {
     const rows = orders.map(o => ({
@@ -46,10 +73,17 @@ export default function AdminOrders() {
   const formatDate = (iso) =>
     new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-  const filtered = filter === 'todos' ? orders : orders.filter(o => o.status === filter)
+  const filtered = filter === 'todos' ? allOrders : allOrders.filter(o => o.status === filter)
 
   return (
     <div className="admin-orders">
+      {/* Banner nuevos pedidos */}
+      {newCount > 0 && (
+        <div className="new-orders-banner" onClick={() => { setFilter('todos'); setLastSeen(Date.now()) }}>
+          🔔 {newCount} pedido{newCount > 1 ? 's' : ''} nuevo{newCount > 1 ? 's' : ''} — hacé clic para ver
+        </div>
+      )}
+
       {/* Filter tabs + export */}
       <div className="orders-toolbar">
         <div className="order-filters">
@@ -59,7 +93,7 @@ export default function AdminOrders() {
               className={`filter-tab ${filter === s ? 'active' : ''}`}
               onClick={() => setFilter(s)}
             >
-              {s === 'todos' ? `Todos (${orders.length})` : `${STATUS_LABEL[s].label} (${orders.filter(o => o.status === s).length})`}
+              {s === 'todos' ? `Todos (${allOrders.length})` : `${STATUS_LABEL[s]?.label} (${allOrders.filter(o => o.status === s).length})`}
             </button>
           ))}
         </div>
@@ -74,26 +108,31 @@ export default function AdminOrders() {
         </div>
       ) : (
         <div className="orders-list">
-          {filtered.map(order => (
-            <div key={order.id} className="order-card">
+          {filtered.map(order => {
+            const esNuevo = isNew(order.date) && (order.status === 'pagado' || order.status === 'pendiente_pago')
+            const esLocal = isMdp(order.codigoPostal)
+            return (
+            <div key={order.id || order.orderId} className={`order-card ${esNuevo ? 'order-card-new' : ''}`}>
               <div
                 className="order-card-header"
-                onClick={() => setExpanded(expanded === order.id ? null : order.id)}
+                onClick={() => setExpanded(expanded === (order.id || order.orderId) ? null : (order.id || order.orderId))}
               >
                 <div className="order-info">
-                  <span className="order-id">#{String(order.id).slice(-6)}</span>
+                  <span className="order-id">#{String(order.orderId || order.id).slice(-6)}</span>
+                  {esNuevo && <span className="order-badge-new">NUEVO</span>}
+                  {esLocal && <span className="order-badge-local">📍 MdP</span>}
                   <span className="order-name">{order.nombre}</span>
                   <span className="order-date">{formatDate(order.date)}</span>
                 </div>
                 <div className="order-right">
                   <span className="order-total">{formatPrice(order.total)}</span>
                   <select
-                    className={`status-select ${STATUS_LABEL[order.status]?.cls}`}
+                    className={`status-select ${STATUS_LABEL[order.status]?.cls || ''}`}
                     value={order.status}
                     onChange={e => { e.stopPropagation(); updateOrderStatus(order.id, e.target.value) }}
                     onClick={e => e.stopPropagation()}
                   >
-                    {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s].label}</option>)}
+                    {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s]?.label}</option>)}
                   </select>
                   <span className="order-chevron">{expanded === order.id ? '▲' : '▼'}</span>
                 </div>
@@ -162,7 +201,7 @@ export default function AdminOrders() {
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

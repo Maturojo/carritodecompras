@@ -412,8 +412,17 @@
   background: var(--surface2);
   color: var(--text);
 }
-.status-select.status-pending { border-color: var(--warn); }
-.status-select.status-sent { border-color: var(--blue); }
+.status-select.status-pending  { border-color: var(--warn); }
+.status-select.status-waiting  { border-color: #f59e0b; }
+.status-select.status-paid     { border-color: #22c55e; }
+.status-select.status-sent     { border-color: var(--blue); }
+
+/* Nuevos pedidos */
+.new-orders-banner { background: #22c55e; color: #fff; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; margin-bottom: 1rem; animation: pulse-green 2s infinite; }
+@keyframes pulse-green { 0%,100% { opacity:1 } 50% { opacity:.8 } }
+.order-card-new { border-left: 3px solid #22c55e !important; }
+.order-badge-new { background: #22c55e; color: #fff; font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.05em; }
+.order-badge-local { background: #9c664d; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
 .status-select.status-done { border-color: var(--accent); }
 .status-select.status-cancelled { border-color: var(--danger); }
 .order-detail {
