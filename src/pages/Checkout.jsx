@@ -31,7 +31,7 @@ export default function Checkout() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/mp-preferencia', {
+      const res = await fetch('/api/mp?action=preferencia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
