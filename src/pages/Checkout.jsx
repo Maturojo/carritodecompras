@@ -1,19 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { useStore } from '../context/StoreContext'
-import { useShipping } from '../hooks/useShipping'
 import ShippingQuote from '../components/ShippingQuote'
 
 export default function Checkout() {
-  const { items, totalPrice, clearCart } = useCart()
-  const { addOrder } = useStore()
-  const { crearEnvio } = useShipping()
+  const { items, totalPrice } = useCart()
 
-  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [numeroEnvio, setNumeroEnvio] = useState(null)
   const [selectedShipping, setSelectedShipping] = useState(null)
+  const [error, setError] = useState(null)
 
   const [form, setForm] = useState({
     nombre: '', email: '', telefono: '',
@@ -34,67 +29,37 @@ export default function Checkout() {
       return
     }
     setLoading(true)
+    setError(null)
     try {
-      // Crear el envío en el proveedor elegido
-      const envioResult = await crearEnvio({
-        orden: { ...form, total: totalConEnvio },
-        servicio: selectedShipping.nombre,
+      const res = await fetch('/api/mp-preferencia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          items,
+          envio:    selectedShipping,
+          subtotal: totalPrice,
+          total:    totalConEnvio,
+        }),
       })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al conectar con MercadoPago')
 
-      // Guardar pedido con número de seguimiento
-      addOrder({
-        ...form,
-        items,
-        total: totalConEnvio,
-        subtotal: totalPrice,
-        envio: selectedShipping,
-        numeroEnvio: envioResult.numeroEnvio,
-      })
-
-      setNumeroEnvio(envioResult.numeroEnvio)
-      setSubmitted(true)
-      clearCart()
+      // Redirigir al checkout de MercadoPago
+      window.location.href = data.init_point
     } catch (err) {
-      alert('Hubo un error al procesar el pedido. Intentá de nuevo.')
-    } finally {
+      setError(err.message)
       setLoading(false)
     }
   }
 
-  if (items.length === 0 && !submitted) {
+  if (items.length === 0) {
     return (
       <main className="checkout-page">
         <div className="empty-cart">
           <span className="empty-icon">🧉</span>
           <h2>No tenés productos en el carrito</h2>
           <Link to="/tienda" className="btn-primary">Ver productos</Link>
-        </div>
-      </main>
-    )
-  }
-
-  if (submitted) {
-    return (
-      <main className="checkout-page">
-        <div className="order-success">
-          <span className="success-icon">✅</span>
-          <h2>¡Pedido confirmado!</h2>
-          <p>Gracias por tu compra, <strong>{form.nombre}</strong>. Te enviamos la confirmación a <strong>{form.email}</strong>.</p>
-          {numeroEnvio && (
-            <div className="tracking-box">
-              <p className="tracking-label">Tu número de seguimiento Andreani:</p>
-              <span className="tracking-number">{numeroEnvio}</span>
-              <a
-                href={`https://www.andreani.com/#!/informacionEnvio/${numeroEnvio}`}
-                target="_blank"
-                rel="noreferrer"
-                className="tracking-link"
-              >
-                Seguir mi envío →
-              </a>
-            </div>
-          )}
-          <Link to="/tienda" className="btn-primary">Volver a la tienda</Link>
         </div>
       </main>
     )
@@ -174,15 +139,24 @@ export default function Checkout() {
                 <p>Tarjeta de crédito/débito, transferencia o efectivo</p>
               </div>
             </div>
-            <p className="mp-note">La integración con Mercado Pago se conecta aquí.</p>
           </div>
+
+          {error && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '12px 16px', color: '#dc2626', fontSize: '0.9rem' }}>
+              ⚠️ {error}
+            </div>
+          )}
 
           <button
             type="submit"
             className="btn-primary full-width btn-large"
             disabled={loading || !selectedShipping}
           >
-            {loading ? 'Procesando...' : !selectedShipping ? 'Seleccioná un envío para continuar' : 'Confirmar pedido'}
+            {loading
+              ? 'Redirigiendo a MercadoPago...'
+              : !selectedShipping
+              ? 'Seleccioná un envío para continuar'
+              : '🔒 Pagar con MercadoPago'}
           </button>
         </form>
 
