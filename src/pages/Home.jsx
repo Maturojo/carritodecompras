@@ -30,7 +30,12 @@ export default function Home() {
   const filtered = useMemo(() => {
     let list = products.filter(p => {
       const precio = getPrice(p)
-      const matchCat    = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase() || (p.category || '').toLowerCase() === (categories.find(c => c.id === activeCategory)?.slug || '').toLowerCase()
+      // Buscar la categoría activa por slug o id para comparar de ambas formas
+      const activeCat   = categories.find(c => (c.slug || c.id) === activeCategory)
+      const matchCat    = activeCategory === 'todos'
+        || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
+        || (activeCat && (p.category || '').toLowerCase() === (activeCat.slug || '').toLowerCase())
+        || (activeCat && (p.category || '').toLowerCase() === activeCat.id.toLowerCase())
       const matchSearch = (p.name || '').toLowerCase().includes(search.toLowerCase())
       const matchPrice  = precio >= priceMin && precio <= priceMax
       return matchCat && matchSearch && matchPrice
@@ -78,8 +83,14 @@ export default function Home() {
         <div className="catalog-toolbar">
           <div className="catalog-toolbar-left">
             <div className="categories">
-              {categories.map(cat => {
-                const val = cat.slug || cat.id   // usar slug si existe, sino id (categorias por defecto)
+              <button
+                className={activeCategory === 'todos' ? 'cat-btn active' : 'cat-btn'}
+                onClick={() => setActiveCategory('todos')}
+              >
+                Todos
+              </button>
+              {categories.filter(c => c.id !== 'todos').map(cat => {
+                const val = cat.slug || cat.id
                 return (
                   <button
                     key={cat.id}
