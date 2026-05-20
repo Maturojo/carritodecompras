@@ -369,7 +369,7 @@ export default function AdminProducts() {
                   </>
                 ) : (
                   <>
-                    <span style={{ flex: 1 }}>{c.label} <span style={{ fontSize: '0.75rem', color: '#888' }}>({c.id})</span></span>
+                    <span style={{ flex: 1 }}>{c.label} {c.slug && <span style={{ fontSize: '0.75rem', color: '#888' }}>({c.slug})</span>}</span>
                     <button className="action-btn edit" onClick={() => setEditingCat({ id: c.id, label: c.label })}>✏️</button>
                     <button className="action-btn delete" onClick={() => handleDeleteCat(c.id)}>🗑️</button>
                   </>
@@ -429,7 +429,7 @@ export default function AdminProducts() {
               <div className="admin-form-group">
                 <label>Categoría *</label>
                 <select name="category" value={form.category} onChange={handleChange} className="admin-input">
-                  {catOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  {catOptions.map(c => <option key={c.id} value={c.slug || c.id}>{c.label}</option>)}
                 </select>
               </div>
             </div>

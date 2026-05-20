@@ -31,16 +31,18 @@ export default async function handler(req, res) {
         const cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
         return res.status(200).json(
           cats.length > 0
-            ? cats.map(c => ({ ...c, id: c._id.toString(), _id: undefined }))
+            // id = ObjectId (para edit/delete), slug = texto legible (para filtros)
+            ? cats.map(c => ({ id: c._id.toString(), slug: c.id || '', label: c.label }))
             : DEFAULT_CATS
         )
       }
       if (req.method === 'POST') {
         const { label } = req.body
         if (!label?.trim()) return res.status(400).json({ error: 'Falta el nombre' })
-        const id = label.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
-        const result = await col.insertOne({ id, label: label.trim(), order: Date.now() })
-        return res.status(201).json({ id: result.insertedId.toString(), _id: id, label: label.trim() })
+        const slug = label.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+        const result = await col.insertOne({ id: slug, label: label.trim(), order: Date.now() })
+        // id = ObjectId para operaciones, slug = texto legible
+        return res.status(201).json({ id: result.insertedId.toString(), slug, label: label.trim() })
       }
       if (req.method === 'PUT') {
         const { _id, label } = req.body
