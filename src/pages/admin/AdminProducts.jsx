@@ -273,6 +273,28 @@ export default function AdminProducts() {
   const handleCancel = () => { setForm(emptyForm()); setEditingId(null); setShowForm(false) }
   const handleDelete = (id) => { deleteProduct(id); setConfirmDelete(null) }
 
+  /* ── Asignar SKU a productos sin código ── */
+  const handleAsignarSkus = async () => {
+    const sinSku = products.filter(p => !p.sku?.trim())
+    if (!sinSku.length) { setImportMsg('✅ Todos los productos ya tienen código.'); setTimeout(() => setImportMsg(null), 3000); return }
+
+    setImportMsg(`⏳ Asignando códigos a ${sinSku.length} productos...`)
+
+    const usedSkus = new Set(products.map(p => (p.sku || '').toUpperCase()).filter(Boolean))
+
+    for (const p of sinSku) {
+      const sku = generateSku(p.name, p.category, [], null).replace(/-\d+$/, '')
+      let n = 1
+      let newSku = `${sku}-${String(n).padStart(3, '0')}`
+      while (usedSkus.has(newSku)) { n++; newSku = `${sku}-${String(n).padStart(3, '0')}` }
+      usedSkus.add(newSku)
+      await updateProduct(p.id, { ...p, sku: newSku })
+    }
+
+    setImportMsg(`✅ ${sinSku.length} productos actualizados con código.`)
+    setTimeout(() => setImportMsg(null), 4000)
+  }
+
   const catOptions = categories.filter(c => c.id !== 'todos')
   const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
 
@@ -289,6 +311,11 @@ export default function AdminProducts() {
             ⬆️ Importar
             <input type="file" accept=".xlsx,.xls,.json" onChange={handleImport} style={{ display: 'none' }} />
           </label>
+          {products.some(p => !p.sku?.trim()) && (
+            <button className="admin-btn-secondary" onClick={handleAsignarSkus} title="Generar códigos para productos que no tienen">
+              🏷️ Asignar códigos faltantes ({products.filter(p => !p.sku?.trim()).length})
+            </button>
+          )}
           <button className="admin-btn-primary" onClick={() => { setForm(emptyForm()); setEditingId(null); setOpenVariant(0); setShowForm(true) }}>
             + Nuevo producto
           </button>
