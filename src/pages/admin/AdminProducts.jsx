@@ -95,6 +95,7 @@ export default function AdminProducts() {
       const variants = p.variants?.length ? p.variants : [{ name: 'Única', price: p.price, stock: p.stock, images: [p.image] }]
       return variants.map(v => ({
         'Nombre':       p.name,
+        'Código':       p.sku || '',
         'Descripción':  p.description,
         'Categoría':    p.category,
         'Variante':     v.name,
@@ -112,6 +113,7 @@ export default function AdminProducts() {
     setImportMsg('⏳ Importando productos...')
     try {
       const rows = await importFromExcel(file)
+
       // Agrupar filas por nombre de producto
       const map = new Map()
       rows.forEach(r => {
@@ -120,6 +122,7 @@ export default function AdminProducts() {
         if (!map.has(nombre)) {
           map.set(nombre, {
             name:        nombre,
+            skuFromExcel: String(r['Código'] || '').trim().toUpperCase(), // SKU opcional desde Excel
             description: r['Descripción'] || '',
             category:    (r['Categoría'] || 'otros').toLowerCase().trim(),
             variants:    [],
@@ -133,8 +136,38 @@ export default function AdminProducts() {
           images: r['Imágenes'] ? String(r['Imágenes']).split(' | ').map(s => s.trim()).filter(Boolean) : [],
         })
       })
-      // Guardar TODOS en MongoDB esperando cada uno
-      const productos = Array.from(map.values())
+
+      // Asignar SKU único a cada producto
+      // usedSkus = los ya existentes en BD + los que vamos generando en este lote
+      const usedSkus = new Set(products.map(p => (p.sku || '').toUpperCase()).filter(Boolean))
+
+      const getUniqueSku = (name, category, preferred) => {
+        // Si vino un código del Excel y no está repetido, usarlo
+        if (preferred && !usedSkus.has(preferred)) return preferred
+
+        // Generar base: CAT-NOM
+        const prefix = (cat) => {
+          const MAP = { mates:'MAT', bombillas:'BOM', yerbas:'YER', termos:'TER', kits:'KIT' }
+          return MAP[cat] || (cat||'PRO').replace(/[^a-zA-Z]/g,'').slice(0,3).toUpperCase()
+        }
+        const nameSlug = (name||'').trim().split(/\s+/)[0]
+          .normalize('NFD').replace(/[̀-ͯ]/g,'')
+          .replace(/[^a-zA-Z]/g,'').slice(0,3).toUpperCase() || 'PRO'
+        const base = `${prefix(category)}-${nameSlug}`
+
+        let n = 1
+        let sku = `${base}-${String(n).padStart(3,'0')}`
+        while (usedSkus.has(sku)) { n++; sku = `${base}-${String(n).padStart(3,'0')}` }
+        return sku
+      }
+
+      const productos = Array.from(map.values()).map(({ skuFromExcel, ...p }) => {
+        const sku = getUniqueSku(p.name, p.category, skuFromExcel)
+        usedSkus.add(sku) // reservar para los siguientes del lote
+        return { ...p, sku }
+      })
+
+      // Guardar TODOS en MongoDB
       await Promise.all(productos.map(p => addProduct(p)))
       setImportMsg(`✅ ${productos.length} productos importados correctamente`)
     } catch (err) {
