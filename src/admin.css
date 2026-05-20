@@ -709,3 +709,15 @@
   .editor-preview-pane { position: static; }
   .preview-pane-body { max-height: 500px; }
 }
+
+/* ── SKU field ── */
+.admin-input.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.25);
+}
+.sku-error-msg {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--danger);
+  margin-top: 3px;
+}

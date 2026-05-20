@@ -1,6 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../../context/StoreContext'
 import { exportToExcel, importFromExcel } from '../../utils/excel'
+
+// ── Generador de SKU ──────────────────────────────────────────────
+// Formato: [CAT]-[NOM]-[NNN]  ej: MAT-CAL-001, BOM-SIL-003
+function generateSku(name, category, products, editingId) {
+  const prefix = (cat) => {
+    const MAP = {
+      mates: 'MAT', bombillas: 'BOM', yerbas: 'YER',
+      termos: 'TER', kits: 'KIT',
+    }
+    return MAP[cat] || (cat || 'PRO').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase()
+  }
+  const nameSlug = (name || '')
+    .trim()
+    .split(/\s+/)[0]                     // primera palabra
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // sin tildes
+    .replace(/[^a-zA-Z]/g, '')
+    .slice(0, 3)
+    .toUpperCase() || 'PRO'
+
+  const base = `${prefix(category)}-${nameSlug}`
+
+  const existingSkus = new Set(
+    products
+      .filter(p => p.id !== editingId)
+      .map(p => (p.sku || '').toUpperCase())
+      .filter(Boolean)
+  )
+
+  let n = 1
+  let sku = `${base}-${String(n).padStart(3, '0')}`
+  while (existingSkus.has(sku)) {
+    n++
+    sku = `${base}-${String(n).padStart(3, '0')}`
+  }
+  return sku
+}
+
+function skuIsDuplicate(sku, products, editingId) {
+  if (!sku?.trim()) return false
+  return products
+    .filter(p => p.id !== editingId)
+    .some(p => (p.sku || '').toUpperCase() === sku.trim().toUpperCase())
+}
 
 const newVariant = () => ({
   id: Date.now().toString() + Math.random().toString(36).slice(2),
@@ -30,6 +73,17 @@ export default function AdminProducts() {
   const [showCats, setShowCats]           = useState(false)
   const [newCatLabel, setNewCatLabel]     = useState('')
   const [editingCat, setEditingCat]       = useState(null) // { id, label }
+  const [skuError, setSkuError]           = useState('')
+
+  // Validar SKU en tiempo real cuando cambia el form
+  useEffect(() => {
+    if (!form.sku?.trim()) { setSkuError(''); return }
+    if (skuIsDuplicate(form.sku, products, editingId)) {
+      setSkuError('⚠️ Este código ya está en uso por otro producto.')
+    } else {
+      setSkuError('')
+    }
+  }, [form.sku, products, editingId])
 
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
@@ -162,6 +216,7 @@ export default function AdminProducts() {
   /* ── Submit ── */
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (skuError) return
     const cleanVariants = form.variants.map(v => ({
       ...v,
       price:  Number(v.price),
@@ -256,7 +311,33 @@ export default function AdminProducts() {
               </div>
               <div className="admin-form-group">
                 <label>Código / SKU</label>
-                <input name="sku" value={form.sku} onChange={handleChange} className="admin-input" placeholder="MAT-001" />
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <input
+                    name="sku"
+                    value={form.sku}
+                    onChange={handleChange}
+                    className={`admin-input${skuError ? ' input-error' : ''}`}
+                    placeholder="MAT-CAL-001"
+                    style={{ flex: 1, textTransform: 'uppercase' }}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn-secondary small"
+                    title="Generar código automático"
+                    onClick={() => {
+                      const sku = generateSku(form.name, form.category, products, editingId)
+                      setForm(f => ({ ...f, sku }))
+                    }}
+                  >
+                    ✨ Generar
+                  </button>
+                </div>
+                {skuError && <span className="sku-error-msg">{skuError}</span>}
+                {!skuError && form.sku && (
+                  <span style={{ fontSize: '0.72rem', color: '#16a34a', marginTop: '2px', display: 'block' }}>
+                    ✓ Código disponible
+                  </span>
+                )}
               </div>
               <div className="admin-form-group">
                 <label>Categoría *</label>
@@ -335,7 +416,9 @@ export default function AdminProducts() {
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="admin-btn-primary">{editingId ? 'Guardar cambios' : 'Agregar producto'}</button>
+              <button type="submit" className="admin-btn-primary" disabled={!!skuError}>
+                {editingId ? 'Guardar cambios' : 'Agregar producto'}
+              </button>
               <button type="button" className="admin-btn-secondary" onClick={handleCancel}>Cancelar</button>
             </div>
           </form>
