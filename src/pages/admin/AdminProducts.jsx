@@ -254,6 +254,10 @@ export default function AdminProducts() {
     if (!confirm('¿Eliminar esta categoría?')) return
     await deleteCategory(id)
   }
+  const handleDeleteAllCats = async () => {
+    if (!confirm(`¿Borrar TODAS las categorías (${catOptions.length})? No se puede deshacer.`)) return
+    for (const c of catOptions) await deleteCategory(c.id)
+  }
 
   /* ── Edit ── */
   const handleEdit = (product) => {
@@ -355,7 +359,14 @@ export default function AdminProducts() {
       <div className="admin-card" style={{ marginBottom: '1rem' }}>
         <div className="cat-manager-header" onClick={() => setShowCats(v => !v)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ margin: 0, fontSize: '0.95rem' }}>🏷️ Categorías</h3>
-          <span>{showCats ? '▲' : '▼'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={e => e.stopPropagation()}>
+            {catOptions.length > 0 && (
+              <button className="admin-btn-danger small" onClick={handleDeleteAllCats} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                🗑️ Borrar todas
+              </button>
+            )}
+            <span>{showCats ? '▲' : '▼'}</span>
+          </div>
         </div>
         {showCats && (
           <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
