@@ -23,7 +23,7 @@ export function StoreProvider({ children }) {
     Promise.all([
       fetch(`${API}/products`).then(r => r.json()),
       fetch(`${API}/orders`).then(r => r.json()),
-      fetch(`${API}/categories`).then(r => r.json()),
+      fetch(`${API}/products?resource=categories`).then(r => r.json()),
     ]).then(([prods, ords, cats]) => {
       setProducts(Array.isArray(prods) ? prods : [])
       setOrders(Array.isArray(ords) ? ords : [])
@@ -66,7 +66,7 @@ export function StoreProvider({ children }) {
 
   // ── Categories CRUD ──
   const addCategory = useCallback(async (label) => {
-    const res = await fetch(`${API}/categories`, {
+    const res = await fetch(`${API}/products?resource=categories`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ label }),
     })
@@ -76,7 +76,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const updateCategory = useCallback(async (id, label) => {
-    await fetch(`${API}/categories`, {
+    await fetch(`${API}/products?resource=categories`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ _id: id, label }),
     })
@@ -84,7 +84,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const deleteCategory = useCallback(async (id) => {
-    await fetch(`${API}/categories?id=${id}`, { method: 'DELETE' })
+    await fetch(`${API}/products?resource=categories&id=${id}`, { method: 'DELETE' })
     setCategories(prev => prev.filter(c => c.id !== id))
   }, [])
 

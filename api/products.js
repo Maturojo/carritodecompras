@@ -7,9 +7,58 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+const DEFAULT_CATS = [
+  { id: 'mates',     label: 'Mates' },
+  { id: 'bombillas', label: 'Bombillas' },
+  { id: 'yerbas',    label: 'Yerbas' },
+  { id: 'termos',    label: 'Termos' },
+  { id: 'kits',      label: 'Kits' },
+]
+
 export default async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v))
   if (req.method === 'OPTIONS') return res.status(200).end()
+
+  const { resource } = req.query
+
+  // ── CATEGORÍAS: /api/products?resource=categories ──
+  if (resource === 'categories') {
+    try {
+      const db  = await getDb()
+      const col = db.collection('categories')
+
+      if (req.method === 'GET') {
+        const cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
+        return res.status(200).json(
+          cats.length > 0
+            ? cats.map(c => ({ ...c, id: c._id.toString(), _id: undefined }))
+            : DEFAULT_CATS
+        )
+      }
+      if (req.method === 'POST') {
+        const { label } = req.body
+        if (!label?.trim()) return res.status(400).json({ error: 'Falta el nombre' })
+        const id = label.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+        const result = await col.insertOne({ id, label: label.trim(), order: Date.now() })
+        return res.status(201).json({ id: result.insertedId.toString(), _id: id, label: label.trim() })
+      }
+      if (req.method === 'PUT') {
+        const { _id, label } = req.body
+        if (!_id) return res.status(400).json({ error: 'Falta el id' })
+        await col.updateOne({ _id: new ObjectId(_id) }, { $set: { label } })
+        return res.status(200).json({ ok: true })
+      }
+      if (req.method === 'DELETE') {
+        const { id } = req.query
+        if (!id) return res.status(400).json({ error: 'Falta el id' })
+        await col.deleteOne({ _id: new ObjectId(id) })
+        return res.status(200).json({ ok: true })
+      }
+    } catch (err) {
+      console.error('[categories]', err)
+      return res.status(500).json({ error: err.message })
+    }
+  }
 
   try {
     const db  = await getDb()
