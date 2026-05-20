@@ -29,11 +29,11 @@ export default async function handler(req, res) {
 
       if (req.method === 'GET') {
         let cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
-        // Si la colección está vacía, sembrar las categorías por defecto en MongoDB
-        if (cats.length === 0) {
-          await col.insertMany(
-            DEFAULT_CATS.map((c, i) => ({ id: c.id, label: c.label, order: i }))
-          )
+        // Asegurar que las categorías base siempre existen en la BD
+        const existingSlugs = new Set(cats.map(c => c.id))
+        const missing = DEFAULT_CATS.filter(c => !existingSlugs.has(c.id))
+        if (missing.length > 0) {
+          await col.insertMany(missing.map((c, i) => ({ id: c.id, label: c.label, order: i })))
           cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
         }
         return res.status(200).json(
