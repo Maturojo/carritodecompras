@@ -4,19 +4,30 @@ const StoreContext = createContext(null)
 
 const API = '/api'
 
+const DEFAULT_CATS = [
+  { id: 'mates',     label: 'Mates' },
+  { id: 'bombillas', label: 'Bombillas' },
+  { id: 'yerbas',    label: 'Yerbas' },
+  { id: 'termos',    label: 'Termos' },
+  { id: 'kits',      label: 'Kits' },
+]
+
 export function StoreProvider({ children }) {
-  const [products, setProducts] = useState([])
-  const [orders, setOrders]     = useState([])
-  const [loading, setLoading]   = useState(true)
+  const [products,   setProducts]   = useState([])
+  const [orders,     setOrders]     = useState([])
+  const [categories, setCategories] = useState(DEFAULT_CATS)
+  const [loading,    setLoading]    = useState(true)
 
   // ── Carga inicial desde MongoDB ──
   useEffect(() => {
     Promise.all([
       fetch(`${API}/products`).then(r => r.json()),
       fetch(`${API}/orders`).then(r => r.json()),
-    ]).then(([prods, ords]) => {
+      fetch(`${API}/categories`).then(r => r.json()),
+    ]).then(([prods, ords, cats]) => {
       setProducts(Array.isArray(prods) ? prods : [])
       setOrders(Array.isArray(ords) ? ords : [])
+      setCategories(Array.isArray(cats) && cats.length ? cats : DEFAULT_CATS)
     }).catch(err => console.error('Error cargando datos:', err))
       .finally(() => setLoading(false))
   }, [])
@@ -53,6 +64,30 @@ export function StoreProvider({ children }) {
     setProducts(prev => prev.filter(p => p.id !== id))
   }, [])
 
+  // ── Categories CRUD ──
+  const addCategory = useCallback(async (label) => {
+    const res = await fetch(`${API}/categories`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label }),
+    })
+    const cat = await res.json()
+    setCategories(prev => [...prev, cat])
+    return cat
+  }, [])
+
+  const updateCategory = useCallback(async (id, label) => {
+    await fetch(`${API}/categories`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _id: id, label }),
+    })
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, label } : c))
+  }, [])
+
+  const deleteCategory = useCallback(async (id) => {
+    await fetch(`${API}/categories?id=${id}`, { method: 'DELETE' })
+    setCategories(prev => prev.filter(c => c.id !== id))
+  }, [])
+
   // ── Orders ──
   const addOrder = useCallback(async (order) => {
     const res = await fetch(`${API}/orders`, {
@@ -78,6 +113,7 @@ export function StoreProvider({ children }) {
     <StoreContext.Provider value={{
       products, addProduct, updateProduct, deleteProduct,
       orders, addOrder, updateOrderStatus,
+      categories, addCategory, updateCategory, deleteCategory,
       loading,
     }}>
       {children}

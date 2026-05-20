@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useStore } from '../../context/StoreContext'
-import { categories } from '../../data/products'
 import { exportToExcel, importFromExcel } from '../../utils/excel'
 
 const newVariant = () => ({
@@ -11,22 +10,26 @@ const newVariant = () => ({
   images: [''],
 })
 
-const emptyForm = () => ({
+const emptyForm = (firstCat = 'mates') => ({
   name: '',
+  sku: '',
   description: '',
-  category: 'mates',
+  category: firstCat,
   variants: [newVariant()],
 })
 
 export default function AdminProducts() {
-  const { products, addProduct, updateProduct, deleteProduct } = useStore()
-  const [showForm, setShowForm]       = useState(false)
-  const [editingId, setEditingId]     = useState(null)
-  const [form, setForm]               = useState(emptyForm())
-  const [search, setSearch]           = useState('')
+  const { products, addProduct, updateProduct, deleteProduct, categories, addCategory, updateCategory, deleteCategory } = useStore()
+  const [showForm, setShowForm]           = useState(false)
+  const [editingId, setEditingId]         = useState(null)
+  const [form, setForm]                   = useState(emptyForm())
+  const [search, setSearch]               = useState('')
   const [confirmDelete, setConfirmDelete] = useState(null)
-  const [importMsg, setImportMsg]     = useState(null)
-  const [openVariant, setOpenVariant] = useState(0)
+  const [importMsg, setImportMsg]         = useState(null)
+  const [openVariant, setOpenVariant]     = useState(0)
+  const [showCats, setShowCats]           = useState(false)
+  const [newCatLabel, setNewCatLabel]     = useState('')
+  const [editingCat, setEditingCat]       = useState(null) // { id, label }
 
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
@@ -122,6 +125,22 @@ export default function AdminProducts() {
       ),
     }))
 
+  /* ── Categories ── */
+  const handleAddCat = async () => {
+    if (!newCatLabel.trim()) return
+    await addCategory(newCatLabel.trim())
+    setNewCatLabel('')
+  }
+  const handleSaveCat = async () => {
+    if (!editingCat?.label?.trim()) return
+    await updateCategory(editingCat.id, editingCat.label)
+    setEditingCat(null)
+  }
+  const handleDeleteCat = async (id) => {
+    if (!confirm('¿Eliminar esta categoría?')) return
+    await deleteCategory(id)
+  }
+
   /* ── Edit ── */
   const handleEdit = (product) => {
     const variants = product.variants?.length
@@ -133,7 +152,7 @@ export default function AdminProducts() {
         }))
       : [{ ...newVariant(), name: 'Única', price: String(product.price || ''), stock: String(product.stock || ''), images: [product.image || ''] }]
 
-    setForm({ name: product.name, description: product.description || '', category: product.category || 'mates', variants })
+    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', variants })
     setEditingId(product.id)
     setOpenVariant(0)
     setShowForm(true)
@@ -167,7 +186,7 @@ export default function AdminProducts() {
   const handleDelete = (id) => { deleteProduct(id); setConfirmDelete(null) }
 
   const catOptions = categories.filter(c => c.id !== 'todos')
-  const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()))
+  const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div className="admin-products">
@@ -190,6 +209,39 @@ export default function AdminProducts() {
 
       {importMsg && <div className="import-msg">{importMsg}</div>}
 
+      {/* ── Gestor de categorías ── */}
+      <div className="admin-card" style={{ marginBottom: '1rem' }}>
+        <div className="cat-manager-header" onClick={() => setShowCats(v => !v)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0, fontSize: '0.95rem' }}>🏷️ Categorías</h3>
+          <span>{showCats ? '▲' : '▼'}</span>
+        </div>
+        {showCats && (
+          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {catOptions.map(c => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {editingCat?.id === c.id ? (
+                  <>
+                    <input className="admin-input" style={{ flex: 1 }} value={editingCat.label} onChange={e => setEditingCat(ec => ({ ...ec, label: e.target.value }))} />
+                    <button className="admin-btn-primary small" onClick={handleSaveCat}>Guardar</button>
+                    <button className="admin-btn-secondary small" onClick={() => setEditingCat(null)}>Cancelar</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1 }}>{c.label} <span style={{ fontSize: '0.75rem', color: '#888' }}>({c.id})</span></span>
+                    <button className="action-btn edit" onClick={() => setEditingCat({ id: c.id, label: c.label })}>✏️</button>
+                    <button className="action-btn delete" onClick={() => handleDeleteCat(c.id)}>🗑️</button>
+                  </>
+                )}
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <input className="admin-input" style={{ flex: 1 }} placeholder="Nueva categoría..." value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCat()} />
+              <button className="admin-btn-primary" onClick={handleAddCat}>+ Agregar</button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Formulario ── */}
       {showForm && (
         <div className="admin-card form-card">
@@ -201,6 +253,10 @@ export default function AdminProducts() {
               <div className="admin-form-group">
                 <label>Nombre *</label>
                 <input name="name" value={form.name} onChange={handleChange} required className="admin-input" placeholder="Mate de calabaza..." />
+              </div>
+              <div className="admin-form-group">
+                <label>Código / SKU</label>
+                <input name="sku" value={form.sku} onChange={handleChange} className="admin-input" placeholder="MAT-001" />
               </div>
               <div className="admin-form-group">
                 <label>Categoría *</label>
@@ -292,7 +348,7 @@ export default function AdminProducts() {
         <div className="products-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Variantes</th><th>Precio desde</th><th>Acciones</th></tr>
+              <tr><th>Imagen</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Variantes</th><th>Precio desde</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {filtered.map(p => {
@@ -303,6 +359,7 @@ export default function AdminProducts() {
                   <tr key={p.id}>
                     <td><img src={img || 'https://placehold.co/48x48/e8e0d5/888?text=?'} alt={p.name} className="table-product-img" /></td>
                     <td className="product-name-cell">{p.name}</td>
+                    <td><span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#9c664d' }}>{p.sku || '—'}</span></td>
                     <td><span className="cat-tag">{p.category}</span></td>
                     <td><span className="variant-badge">{p.variants?.length || 1} variante{(p.variants?.length || 1) !== 1 ? 's' : ''}</span></td>
                     <td className="price-cell">{formatPrice(minPrice)}</td>
