@@ -327,6 +327,12 @@ export default function AdminProducts() {
   }
 
   const catOptions = categories.filter(c => c.id !== 'todos')
+
+  // Categorías usadas por productos pero que no están registradas en la BD
+  const registeredSlugs = new Set(catOptions.map(c => (c.slug || c.id).toLowerCase()))
+  const orphanCats = [...new Set(products.map(p => p.category).filter(Boolean))]
+    .filter(cat => !registeredSlugs.has(cat.toLowerCase()))
+    .map(cat => ({ slug: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ') }))
   const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
 
   return (
@@ -387,6 +393,20 @@ export default function AdminProducts() {
                 )}
               </div>
             ))}
+            {/* Categorías usadas en productos pero no registradas */}
+            {orphanCats.length > 0 && (
+              <div style={{ marginTop: '0.75rem', padding: '0.6rem 0.75rem', background: 'rgba(244,162,97,0.1)', borderRadius: '8px', border: '1px solid rgba(244,162,97,0.3)' }}>
+                <p style={{ margin: '0 0 0.4rem', fontSize: '0.75rem', color: '#f4a261' }}>⚠️ Usadas en productos pero no registradas:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {orphanCats.map(c => (
+                    <button key={c.slug} className="admin-btn-secondary small" onClick={() => addCategory(c.label)} style={{ fontSize: '0.75rem' }}>
+                      + Registrar "{c.label}"
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <input className="admin-input" style={{ flex: 1 }} placeholder="Nueva categoría..." value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCat()} />
               <button className="admin-btn-primary" onClick={handleAddCat}>+ Agregar</button>
