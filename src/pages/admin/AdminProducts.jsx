@@ -161,15 +161,42 @@ export default function AdminProducts() {
         return sku
       }
 
-      const productos = Array.from(map.values()).map(({ skuFromExcel, ...p }) => {
-        const sku = getUniqueSku(p.name, p.category, skuFromExcel)
-        usedSkus.add(sku) // reservar para los siguientes del lote
-        return { ...p, sku }
+      // Separar en nuevos vs existentes (compara por nombre, sin distinción de mayúsculas)
+      const existingByName = new Map(
+        products.map(p => [p.name.trim().toLowerCase(), p])
+      )
+
+      const toCreate = []
+      const toUpdate = []
+
+      Array.from(map.values()).forEach(({ skuFromExcel, ...p }) => {
+        const existing = existingByName.get(p.name.trim().toLowerCase())
+        if (existing) {
+          // Ya existe → actualizar solo si cambió algo
+          const changed = {}
+          if (p.description && p.description !== existing.description) changed.description = p.description
+          if (p.category   && p.category   !== existing.category)    changed.category    = p.category
+          if (p.variants?.length) changed.variants = p.variants
+          // SKU: si el Excel trae uno y el producto no tenía, asignarlo
+          if (skuFromExcel && !existing.sku) changed.sku = skuFromExcel
+          if (Object.keys(changed).length) toUpdate.push({ id: existing.id, data: { ...existing, ...changed } })
+        } else {
+          // Nuevo → generar SKU único
+          const sku = getUniqueSku(p.name, p.category, skuFromExcel)
+          usedSkus.add(sku)
+          toCreate.push({ ...p, sku })
+        }
       })
 
-      // Guardar TODOS en MongoDB
-      await Promise.all(productos.map(p => addProduct(p)))
-      setImportMsg(`✅ ${productos.length} productos importados correctamente`)
+      await Promise.all([
+        ...toCreate.map(p  => addProduct(p)),
+        ...toUpdate.map(({ id, data }) => updateProduct(id, data)),
+      ])
+
+      const partes = []
+      if (toCreate.length) partes.push(`${toCreate.length} creado${toCreate.length !== 1 ? 's' : ''}`)
+      if (toUpdate.length) partes.push(`${toUpdate.length} actualizado${toUpdate.length !== 1 ? 's' : ''}`)
+      setImportMsg(`✅ ${partes.join(' · ')}${!partes.length ? 'Sin cambios detectados' : ''}`)
     } catch (err) {
       console.error('Error importando:', err)
       setImportMsg('❌ Error al importar. Revisá el archivo Excel.')
