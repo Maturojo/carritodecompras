@@ -13,6 +13,15 @@ const SORT_OPTIONS = [
 
 export default function Home() {
   const { products, categories } = useStore()
+
+  // Categorías visibles = las de la BD + las que usan los productos pero no están en la BD
+  const visibleCategories = useMemo(() => {
+    const dbSlugs = new Set(categories.map(c => (c.slug || c.id).toLowerCase()))
+    const fromProducts = [...new Set(products.map(p => p.category).filter(Boolean))]
+      .filter(cat => !dbSlugs.has(cat.toLowerCase()))
+      .map(cat => ({ id: cat, slug: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ') }))
+    return [...categories.filter(c => c.id !== 'todos'), ...fromProducts]
+  }, [categories, products])
   const [activeCategory, setActiveCategory] = useState('todos')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('default')
@@ -89,7 +98,7 @@ export default function Home() {
               >
                 Todos
               </button>
-              {categories.filter(c => c.id !== 'todos').map(cat => {
+              {visibleCategories.map(cat => {
                 const val = cat.slug || cat.id
                 return (
                   <button
