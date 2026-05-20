@@ -28,12 +28,16 @@ export default async function handler(req, res) {
       const col = db.collection('categories')
 
       if (req.method === 'GET') {
-        const cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
+        let cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
+        // Si la colección está vacía, sembrar las categorías por defecto en MongoDB
+        if (cats.length === 0) {
+          await col.insertMany(
+            DEFAULT_CATS.map((c, i) => ({ id: c.id, label: c.label, order: i }))
+          )
+          cats = await col.find({}).sort({ order: 1, label: 1 }).toArray()
+        }
         return res.status(200).json(
-          cats.length > 0
-            // id = ObjectId (para edit/delete), slug = texto legible (para filtros)
-            ? cats.map(c => ({ id: c._id.toString(), slug: c.id || '', label: c.label }))
-            : DEFAULT_CATS
+          cats.map(c => ({ id: c._id.toString(), slug: c.id || '', label: c.label }))
         )
       }
       if (req.method === 'POST') {
