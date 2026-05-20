@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import ProductCard from '../components/ProductCard'
 import { useStore } from '../context/StoreContext'
-import { categories } from '../data/products'
 import SEO from '../components/SEO'
 
 const SORT_OPTIONS = [
@@ -13,7 +12,7 @@ const SORT_OPTIONS = [
 ]
 
 export default function Home() {
-  const { products } = useStore()
+  const { products, categories } = useStore()
   const [activeCategory, setActiveCategory] = useState('todos')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('default')
@@ -31,7 +30,7 @@ export default function Home() {
   const filtered = useMemo(() => {
     let list = products.filter(p => {
       const precio = getPrice(p)
-      const matchCat    = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
+      const matchCat    = activeCategory === 'todos' || (p.category || '').toLowerCase() === activeCategory.toLowerCase() || (p.category || '').toLowerCase() === (categories.find(c => c.id === activeCategory)?.slug || '').toLowerCase()
       const matchSearch = (p.name || '').toLowerCase().includes(search.toLowerCase())
       const matchPrice  = precio >= priceMin && precio <= priceMax
       return matchCat && matchSearch && matchPrice
@@ -79,15 +78,18 @@ export default function Home() {
         <div className="catalog-toolbar">
           <div className="catalog-toolbar-left">
             <div className="categories">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  className={activeCategory === cat.id ? 'cat-btn active' : 'cat-btn'}
-                  onClick={() => setActiveCategory(cat.id)}
-                >
-                  {cat.label}
-                </button>
-              ))}
+              {categories.map(cat => {
+                const val = cat.slug || cat.id   // usar slug si existe, sino id (categorias por defecto)
+                return (
+                  <button
+                    key={cat.id}
+                    className={activeCategory === val ? 'cat-btn active' : 'cat-btn'}
+                    onClick={() => setActiveCategory(val)}
+                  >
+                    {cat.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="catalog-toolbar-right">
