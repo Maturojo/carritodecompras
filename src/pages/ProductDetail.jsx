@@ -124,7 +124,7 @@ export default function ProductDetail() {
               : <div className="gallery-placeholder">Sin imagen</div>
             }
             {variant.stock <= 5 && variant.stock > 0 && (
-              <span className="stock-badge">¡Últimas {variant.stock} unidades!</span>
+              <span className="stock-badge">¡{variant.stock === 1 ? 'Última unidad' : `Últimas ${variant.stock} unidades`}!</span>
             )}
             {variant.stock === 0 && (
               <span className="stock-badge out">Sin stock</span>
@@ -210,7 +210,7 @@ export default function ProductDetail() {
               <div>
                 <span className="chip-label">Stock</span>
                 <span className={`chip-value ${variant.stock <= 5 ? 'low' : ''}`}>
-                  {variant.stock} unidades
+                  {variant.stock} {variant.stock === 1 ? 'unidad' : 'unidades'}
                 </span>
               </div>
             </div>
