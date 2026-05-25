@@ -70,22 +70,6 @@ export default function Landing() {
             <p>{c.aboutText2}</p>
             <Link to="/nosotros" className="btn-secondary">Leer más sobre nosotros</Link>
           </div>
-          <div className="about-visual">
-            <div className="about-card-stack">
-              <div className="about-stat">
-                <span className="stat-number">{c.statClientes}</span>
-                <span className="stat-label">Clientes felices</span>
-              </div>
-              <div className="about-stat">
-                <span className="stat-number">{c.statArtesanos}</span>
-                <span className="stat-label">Artesanos asociados</span>
-              </div>
-              <div className="about-stat">
-                <span className="stat-number">{c.statAnios}</span>
-                <span className="stat-label">Años en el mercado</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
