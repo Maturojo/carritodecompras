@@ -697,17 +697,17 @@
 .content-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 
 /* ── Editor split layout ── */
-.editor-split { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
+.editor-split { display: grid; grid-template-columns: 1fr 290px; gap: 1.5rem; align-items: start; }
 .editor-form-pane { min-width: 0; }
 .editor-preview-pane { position: sticky; top: 1.5rem; border-radius: 12px; overflow: hidden; border: 1px solid #3D2418; background: #fff; }
 .preview-pane-header { background: #9c664d; color: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
 .preview-pane-header span { font-size: 0.8rem; font-weight: 700; }
 .preview-pane-live { background: rgba(255,255,255,0.25); border-radius: 99px; padding: 2px 8px; font-size: 0.7rem; letter-spacing: 0.05em; }
 .preview-pane-body { padding: 16px; max-height: calc(100vh - 220px); overflow-y: auto; background: #fff; }
-@media (max-width: 1200px) {
+@media (max-width: 860px) {
   .editor-split { grid-template-columns: 1fr; }
   .editor-preview-pane { position: static; }
-  .preview-pane-body { max-height: 500px; }
+  .preview-pane-body { max-height: 400px; }
 }
 
 /* ── SKU field ── */

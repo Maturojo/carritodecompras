@@ -110,15 +110,18 @@ function NosotrosPreview({ c }) {
       </div>
 
       <div style={P.section}>
-        <p style={P.label}>Equipo</p>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <p style={{ ...P.label, textAlign: 'center', marginBottom: 10 }}>El equipo</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {c.team?.map((m, i) => (
-            <div key={i} style={{ ...P.card, flex: 1, textAlign: 'center', marginBottom: 0 }}>
-              <div style={{ fontSize: 20 }}>{m.emoji}</div>
-              <div style={{ fontSize: 9, fontWeight: 700, marginTop: 4 }}>{m.name}</div>
-              <div style={{ fontSize: 9, color: '#888' }}>{m.role}</div>
+            <div key={i} style={{ ...P.card, flex: '1 1 70px', textAlign: 'center', marginBottom: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+              <div style={{ fontSize: 26, lineHeight: 1 }}>{m.emoji}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, marginTop: 6, color: '#2d1a0e' }}>{m.name || '—'}</div>
+              <div style={{ fontSize: 8, color: '#9c664d', marginTop: 2 }}>{m.role}</div>
             </div>
           ))}
+          {(!c.team || c.team.length === 0) && (
+            <p style={{ fontSize: 10, color: '#aaa', fontStyle: 'italic' }}>Sin integrantes aún</p>
+          )}
         </div>
       </div>
 
