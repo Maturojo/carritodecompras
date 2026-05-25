@@ -399,8 +399,24 @@ export default function AdminContent() {
                     <label>Rol</label>
                     <input value={m.role} onChange={e => setArr('nosotros','team', i, 'role', e.target.value)} />
                   </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '2px' }}>
+                    <button type="button" title="Subir" disabled={i === 0}
+                      onClick={() => setForm(f => { const arr = [...f.nosotros.team]; [arr[i-1], arr[i]] = [arr[i], arr[i-1]]; return { ...f, nosotros: { ...f.nosotros, team: arr } } })}
+                      style={{ background: 'none', border: '1px solid #ccc', borderRadius: '4px', cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? 0.3 : 1, padding: '2px 6px' }}>▲</button>
+                    <button type="button" title="Bajar" disabled={i === form.nosotros.team.length - 1}
+                      onClick={() => setForm(f => { const arr = [...f.nosotros.team]; [arr[i], arr[i+1]] = [arr[i+1], arr[i]]; return { ...f, nosotros: { ...f.nosotros, team: arr } } })}
+                      style={{ background: 'none', border: '1px solid #ccc', borderRadius: '4px', cursor: i === form.nosotros.team.length - 1 ? 'default' : 'pointer', opacity: i === form.nosotros.team.length - 1 ? 0.3 : 1, padding: '2px 6px' }}>▼</button>
+                  </div>
+                  <button type="button" title="Eliminar"
+                    onClick={() => setForm(f => ({ ...f, nosotros: { ...f.nosotros, team: f.nosotros.team.filter((_,j) => j !== i) } }))}
+                    style={{ background: '#fee2e2', border: 'none', borderRadius: '6px', color: '#dc2626', cursor: 'pointer', padding: '6px 10px', marginBottom: '2px' }}>🗑️</button>
                 </div>
               ))}
+              <button type="button"
+                onClick={() => setForm(f => ({ ...f, nosotros: { ...f.nosotros, team: [...f.nosotros.team, { emoji: '🧑', name: '', role: '' }] } }))}
+                style={{ marginTop: '6px', background: 'none', border: '1px dashed #9c664d', borderRadius: '8px', color: '#9c664d', cursor: 'pointer', padding: '6px 14px', fontSize: '0.85rem' }}>
+                + Agregar integrante
+              </button>
 
               <h3>Nuestros valores</h3>
               {form.nosotros.values.map((v, i) => (
