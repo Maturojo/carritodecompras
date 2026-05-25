@@ -72,7 +72,7 @@ export default function Cart() {
           </div>
           <div className="summary-row">
             <span>Envío</span>
-            <span className="free-shipping">Gratis</span>
+            <span>A convenir</span>
           </div>
           <div className="summary-row total">
             <span>Total</span>

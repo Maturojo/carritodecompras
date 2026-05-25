@@ -225,7 +225,7 @@ export default function ProductDetail() {
               <span className="chip-icon">🚚</span>
               <div>
                 <span className="chip-label">Envío</span>
-                <span className="chip-value free">Gratis</span>
+                <span className="chip-value">A convenir</span>
               </div>
             </div>
           </div>
@@ -252,8 +252,8 @@ export default function ProductDetail() {
 
           {/* Perks */}
           <div className="detail-perks">
-            <div className="perk"><span>🚚</span><span>Envío gratis en compras mayores a $3.000</span></div>
-            <div className="perk"><span>🔄</span><span>Devolución gratis hasta 15 días</span></div>
+            <div className="perk"><span>🚚</span><span>Envío a convenir con el comprador</span></div>
+            <div className="perk"><span>🔄</span><span>Devolución hasta 15 días</span></div>
             <div className="perk"><span>🛡️</span><span>Garantía de satisfacción</span></div>
           </div>
         </div>
