@@ -54,7 +54,6 @@ export default function Navbar() {
   const links = [
     { to: '/',             label: 'Inicio' },
     { to: '/tienda',       label: 'Tienda' },
-    { to: '/personalizar', label: '✨ Personalizá' },
     { to: '/nosotros',     label: 'Nosotros' },
     { to: '/contacto',     label: 'Contacto' },
   ]

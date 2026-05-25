@@ -22,7 +22,6 @@ import Login         from './pages/Login'
 import Register      from './pages/Register'
 import MiCuenta      from './pages/MiCuenta'
 import AdminPanel    from './pages/admin/AdminPanel'
-import Personalizar  from './pages/Personalizar'
 import PagoExitoso  from './pages/PagoExitoso'
 import PagoFallido  from './pages/PagoFallido'
 import PagoPendiente from './pages/PagoPendiente'
@@ -43,7 +42,6 @@ function PublicSite() {
         <Route path="/login"     element={<Login />} />
         <Route path="/registro"  element={<Register />} />
         <Route path="/mi-cuenta"     element={<MiCuenta />} />
-        <Route path="/personalizar"   element={<Personalizar />} />
         <Route path="/pago-exitoso"   element={<PagoExitoso />} />
         <Route path="/pago-fallido"   element={<PagoFallido />} />
         <Route path="/pago-pendiente" element={<PagoPendiente />} />
