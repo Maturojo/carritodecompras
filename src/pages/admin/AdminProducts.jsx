@@ -469,10 +469,38 @@ export default function AdminProducts() {
               <textarea name="description" value={form.description} onChange={handleChange} required className="admin-input admin-textarea" rows={3} placeholder="Descripción del producto..." />
             </div>
 
+            {/* ── Fotos (solo cuando hay 1 variante) ── */}
+            {form.variants.length === 1 && (() => { const v = form.variants[0]; return (
+              <div className="admin-form-group">
+                <label>Fotos del producto</label>
+                <div className="images-list">
+                  {v.images.map((img, imgIdx) => (
+                    <div key={imgIdx} className="image-row">
+                      <input
+                        value={img}
+                        onChange={e => updateImage(v.id, imgIdx, e.target.value)}
+                        className="admin-input"
+                        placeholder="https://..."
+                      />
+                      {img && <img src={img} alt="" className="image-thumb" onError={e => e.target.style.display='none'} />}
+                      {v.images.length > 1 && (
+                        <button type="button" className="img-remove-btn" onClick={() => removeImage(v.id, imgIdx)}>✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" className="admin-btn-secondary small" onClick={() => addImage(v.id)}>
+                    + Agregar foto
+                  </button>
+                </div>
+              </div>
+            )})()}
+
             {/* ── Variantes ── */}
             <div className="variants-section">
               <div className="variants-header">
-                <h4>Variantes <span className="variant-count">{form.variants.length}</span></h4>
+                <h4>
+                  {form.variants.length === 1 ? 'Precio y stock' : <>Variantes <span className="variant-count">{form.variants.length}</span></>}
+                </h4>
                 <button type="button" className="admin-btn-secondary small" onClick={addVariant}>+ Agregar variante</button>
               </div>
 
@@ -480,7 +508,7 @@ export default function AdminProducts() {
                 <div key={v.id} className={`variant-card ${openVariant === idx ? 'open' : ''}`}>
                   <div className="variant-card-header" onClick={() => setOpenVariant(openVariant === idx ? -1 : idx)}>
                     <span className="variant-toggle">{openVariant === idx ? '▼' : '▶'}</span>
-                    <span className="variant-label">{v.name || `Variante ${idx + 1}`}</span>
+                    <span className="variant-label">{form.variants.length === 1 ? 'Precio y stock' : (v.name || `Variante ${idx + 1}`)}</span>
                     {v.price && <span className="variant-price-preview">{formatPrice(Number(v.price))}</span>}
                     {form.variants.length > 1 && (
                       <button type="button" className="variant-remove-btn" onClick={e => { e.stopPropagation(); removeVariant(v.id) }}>✕</button>
@@ -490,10 +518,12 @@ export default function AdminProducts() {
                   {openVariant === idx && (
                     <div className="variant-body">
                       <div className="form-row">
-                        <div className="admin-form-group">
-                          <label>Nombre de la variante *</label>
-                          <input value={v.name} onChange={e => updateVariant(v.id, 'name', e.target.value)} required className="admin-input" placeholder="Ej: Natural 250ml, Rojo, Grande..." />
-                        </div>
+                        {form.variants.length > 1 && (
+                          <div className="admin-form-group">
+                            <label>Nombre de la variante *</label>
+                            <input value={v.name} onChange={e => updateVariant(v.id, 'name', e.target.value)} required className="admin-input" placeholder="Ej: Natural 250ml, Rojo, Grande..." />
+                          </div>
+                        )}
                         <div className="admin-form-group">
                           <label>Precio (ARS) *</label>
                           <input type="number" value={v.price} onChange={e => updateVariant(v.id, 'price', e.target.value)} required min="0" className="admin-input" placeholder="2500" />
@@ -504,29 +534,31 @@ export default function AdminProducts() {
                         </div>
                       </div>
 
-                      {/* Imágenes */}
-                      <div className="admin-form-group">
-                        <label>Imágenes (URLs)</label>
-                        <div className="images-list">
-                          {v.images.map((img, imgIdx) => (
-                            <div key={imgIdx} className="image-row">
-                              <input
-                                value={img}
-                                onChange={e => updateImage(v.id, imgIdx, e.target.value)}
-                                className="admin-input"
-                                placeholder="https://..."
-                              />
-                              {img && <img src={img} alt="" className="image-thumb" onError={e => e.target.style.display='none'} />}
-                              {v.images.length > 1 && (
-                                <button type="button" className="img-remove-btn" onClick={() => removeImage(v.id, imgIdx)}>✕</button>
-                              )}
-                            </div>
-                          ))}
-                          <button type="button" className="admin-btn-secondary small" onClick={() => addImage(v.id)}>
-                            + Agregar imagen
-                          </button>
+                      {/* Imágenes dentro del acordeón solo si hay múltiples variantes */}
+                      {form.variants.length > 1 && (
+                        <div className="admin-form-group">
+                          <label>Imágenes (URLs)</label>
+                          <div className="images-list">
+                            {v.images.map((img, imgIdx) => (
+                              <div key={imgIdx} className="image-row">
+                                <input
+                                  value={img}
+                                  onChange={e => updateImage(v.id, imgIdx, e.target.value)}
+                                  className="admin-input"
+                                  placeholder="https://..."
+                                />
+                                {img && <img src={img} alt="" className="image-thumb" onError={e => e.target.style.display='none'} />}
+                                {v.images.length > 1 && (
+                                  <button type="button" className="img-remove-btn" onClick={() => removeImage(v.id, imgIdx)}>✕</button>
+                                )}
+                              </div>
+                            ))}
+                            <button type="button" className="admin-btn-secondary small" onClick={() => addImage(v.id)}>
+                              + Agregar imagen
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
