@@ -50,6 +50,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true })
     }
 
+    // DELETE ?action=reset → borrar todos los clientes
+    if (req.method === 'DELETE' && req.query.action === 'reset') {
+      await col.deleteMany({})
+      return res.status(200).json({ ok: true })
+    }
+
     return res.status(405).json({ error: 'Método no permitido' })
   } catch (err) {
     console.error('[users]', err)

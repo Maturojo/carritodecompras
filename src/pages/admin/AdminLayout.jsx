@@ -5,6 +5,7 @@ import AdminOrders from './AdminOrders'
 import AdminAnalytics from './AdminAnalytics'
 import AdminClientes from './AdminClientes'
 import AdminContent from './AdminContent'
+import AdminConfig  from './AdminConfig'
 
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard',  icon: '📊' },
@@ -13,6 +14,7 @@ const SECTIONS = [
   { id: 'analytics', label: 'Analytics',  icon: '📈' },
   { id: 'clientes',  label: 'Clientes',   icon: '👥' },
   { id: 'content',   label: 'Contenido',  icon: '✏️' },
+  { id: 'config',    label: 'Config',     icon: '⚙️' },
 ]
 
 export default function AdminLayout({ onLogout }) {
@@ -27,6 +29,7 @@ export default function AdminLayout({ onLogout }) {
       case 'analytics': return <AdminAnalytics />
       case 'clientes':  return <AdminClientes />
       case 'content':   return <AdminContent />
+      case 'config':    return <AdminConfig />
       default: return null
     }
   }

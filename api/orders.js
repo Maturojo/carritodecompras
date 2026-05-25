@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
@@ -42,6 +42,12 @@ export default async function handler(req, res) {
       if (status) update.status = status
       if (numeroEnvio) update.numeroEnvio = numeroEnvio
       await col.updateOne({ _id: new ObjectId(id) }, { $set: update })
+      return res.status(200).json({ ok: true })
+    }
+
+    // DELETE ?action=reset → borrar todos los pedidos
+    if (req.method === 'DELETE' && req.query.action === 'reset') {
+      await col.deleteMany({})
       return res.status(200).json({ ok: true })
     }
 
