@@ -711,12 +711,8 @@ button { cursor: pointer; border: none; font-family: inherit; }
   padding: 5rem 1.5rem;
 }
 .about-inner {
-  max-width: 1100px;
+  max-width: 720px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: center;
 }
 .section-pretitle {
   display: block;
