@@ -35,7 +35,7 @@ export default function Nosotros() {
       <section className="timeline-section">
         <h2 className="section-title centered">Nuestro camino</h2>
         <div className="timeline">
-          {c.timeline.map((item, i) => (
+          {c.timeline.filter(item => item.year?.trim() || item.event?.trim()).map((item, i) => (
             <div key={i} className="timeline-item">
               <div className="timeline-year">{item.year}</div>
               <div className="timeline-dot" />
