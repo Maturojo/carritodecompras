@@ -1723,6 +1723,8 @@ button { cursor: pointer; border: none; font-family: inherit; }
 .auth-success { font-size: 0.85rem; color: var(--verde); }
 .auth-switch { text-align: center; font-size: 0.88rem; color: var(--texto-suave); }
 .auth-link { color: var(--verde-claro); font-weight: 600; }
+.auth-forgot { background: none; border: none; color: var(--texto-suave); font-size: 0.83rem; text-align: center; cursor: pointer; text-decoration: underline; padding: 0; transition: color 0.2s; }
+.auth-forgot:hover { color: var(--verde); }
 .input-disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Mi Cuenta ── */

@@ -124,7 +124,7 @@ export default function ProductDetail() {
               : <div className="gallery-placeholder">Sin imagen</div>
             }
             {variant.stock <= 5 && variant.stock > 0 && (
-              <span className="stock-badge">¡{variant.stock === 1 ? 'Última unidad' : `Últimas ${variant.stock} unidades`}!</span>
+              <span className="stock-badge">¡Últimas unidades!</span>
             )}
             {variant.stock === 0 && (
               <span className="stock-badge out">Sin stock</span>
@@ -153,7 +153,7 @@ export default function ProductDetail() {
           <div className="detail-header">
             <span className="detail-category-tag">{product.category}</span>
             {variant.stock > 0 && variant.stock <= 5 && (
-              <span className="detail-urgency">🔥 ¡Últimas {variant.stock}!</span>
+              <span className="detail-urgency">🔥 ¡Últimas unidades!</span>
             )}
           </div>
           <h1 className="detail-title">{product.name}</h1>
@@ -209,8 +209,8 @@ export default function ProductDetail() {
               <span className="chip-icon">📦</span>
               <div>
                 <span className="chip-label">Stock</span>
-                <span className={`chip-value ${variant.stock <= 5 ? 'low' : ''}`}>
-                  {variant.stock} {variant.stock === 1 ? 'unidad' : 'unidades'}
+                <span className={`chip-value ${variant.stock === 0 ? 'low' : ''}`}>
+                  {variant.stock > 0 ? 'Disponible' : 'Sin stock'}
                 </span>
               </div>
             </div>

@@ -38,7 +38,7 @@ export default function ProductCard({ product }) {
     if (!result.ok) {
       Swal.fire({
         title: 'Stock insuficiente',
-        text: `Solo hay ${result.stock} unidad${result.stock === 1 ? '' : 'es'} disponibles de este producto.`,
+        text: 'No hay suficiente stock disponible de este producto.',
         icon: 'warning',
         confirmButtonColor: '#9c664d',
         confirmButtonText: 'Entendido',
@@ -53,7 +53,7 @@ export default function ProductCard({ product }) {
       <Link to={`/tienda/${product.id}`} className="product-image-wrapper"
         onClick={() => trackProductClick(product.id)}>
         <img src={image || 'https://placehold.co/300x300/e8e0d5/888?text=Sin+imagen'} alt={product.name} className="product-image" />
-        {stock <= 5 && stock > 0 && <span className="stock-badge">¡{stock === 1 ? 'Última unidad' : `Últimas ${stock} unidades`}!</span>}
+        {stock > 0 && stock <= 5 && <span className="stock-badge">¡Últimas unidades!</span>}
         {stock === 0 && <span className="stock-badge out">Sin stock</span>}
         <div className="product-image-overlay"><span>Ver producto</span></div>
       </Link>

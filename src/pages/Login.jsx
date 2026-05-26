@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useContent } from '../context/ContentContext'
 import Swal from 'sweetalert2'
 
 export default function Login() {
   const { login } = useAuth()
+  const { content } = useContent()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from || '/'
@@ -12,6 +14,28 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleForgotPassword = () => {
+    const waNumber = content.contacto?.whatsapp || '5492236359767'
+    const waMsg = encodeURIComponent('Hola! Olvidé mi contraseña y necesito recuperar mi cuenta 🔑')
+    Swal.fire({
+      title: '¿Olvidaste tu contraseña?',
+      html: `<p style="color:#6B5C52;font-size:0.92rem;line-height:1.6">
+        Escribinos por WhatsApp con tu email registrado y te ayudamos a recuperar el acceso a tu cuenta.
+      </p>`,
+      icon: 'info',
+      confirmButtonText: '💬 Ir a WhatsApp',
+      confirmButtonColor: '#25D366',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      background: '#FDF9F0',
+      color: '#1a1209',
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.open(`https://wa.me/${waNumber}?text=${waMsg}`, '_blank')
+      }
+    })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -69,10 +93,13 @@ export default function Login() {
           <button type="submit" className="btn-primary full-width" disabled={loading}>
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
+          <button type="button" className="auth-forgot" onClick={handleForgotPassword}>
+            ¿Olvidaste tu contraseña?
+          </button>
         </form>
 
         <p className="auth-switch">
-          ¿No tenés cuenta? <Link to="/registro" className="auth-link">Registrate gratis</Link>
+          ¿No tenés cuenta? <Link to="/registro" className="auth-link">Registrate</Link>
         </p>
       </div>
     </main>
