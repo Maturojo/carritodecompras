@@ -258,7 +258,10 @@ export default function ProductDetail() {
                       checked={packagingChoice?.id === opt.id}
                       onChange={() => setPackagingChoice(opt)}
                     />
-                    <span className="pkg-emoji">{opt.emoji}</span>
+                    {opt.imagen
+                      ? <img src={opt.imagen} alt={opt.nombre} className="pkg-option-img" />
+                      : <span className="pkg-emoji">{opt.emoji}</span>
+                    }
                     <div className="pkg-info">
                       <strong>{opt.nombre}</strong>
                       <span>{opt.desc}</span>

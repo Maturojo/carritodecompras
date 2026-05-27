@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useContent } from '../../context/ContentContext'
+import { useStore } from '../../context/StoreContext'
 import Swal from 'sweetalert2'
 
 const TABS = [
@@ -185,9 +186,19 @@ function ContactoPreview({ c }) {
 ───────────────────────────────────────────── */
 export default function AdminContent() {
   const { content, saveContent } = useContent()
-  const [tab, setTab]       = useState('landing')
-  const [form, setForm]     = useState(content)
-  const [saving, setSaving] = useState(false)
+  const { products, updateProduct } = useStore()
+  const [tab, setTab]         = useState('landing')
+  const [form, setForm]       = useState(content)
+  const [saving, setSaving]   = useState(false)
+  const [togglingId, setTogglingId] = useState(null)
+
+  const toggleFeatured = async (product) => {
+    setTogglingId(product.id)
+    try {
+      await updateProduct(product.id, { ...product, featured: !product.featured })
+    } catch (_) { /* ignore */ }
+    finally { setTogglingId(null) }
+  }
 
   const set = (page, field, value) =>
     setForm(f => ({ ...f, [page]: { ...f[page], [field]: value } }))
@@ -335,6 +346,47 @@ export default function AdminContent() {
               <button className="admin-btn-primary" onClick={() => handleSave('landing')} disabled={saving}>
                 {saving ? 'Guardando...' : '💾 Guardar cambios'}
               </button>
+            </div>
+          )}
+
+          {tab === 'landing' && (
+            <div className="content-section" style={{ marginTop: '1.5rem' }}>
+              <h3>⭐ Productos destacados en el inicio</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', marginBottom: '1rem' }}>
+                Los productos marcados aparecen primero en la sección "Productos destacados". Máximo 4 se muestran.
+              </p>
+              {products.length === 0 && (
+                <p style={{ color: 'var(--text-soft)', fontSize: '0.85rem' }}>Cargando productos...</p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {products.map(p => {
+                  const thumb = p.variants?.[0]?.images?.[0] || p.image || ''
+                  return (
+                    <div key={p.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.5rem 0.75rem', borderRadius: 10,
+                      background: p.featured ? 'color-mix(in srgb, var(--verde) 8%, var(--crema))' : 'var(--crema)',
+                      border: `2px solid ${p.featured ? 'var(--verde)' : 'var(--crema-oscuro)'}`,
+                      transition: 'all 0.2s',
+                    }}>
+                      {thumb
+                        ? <img src={thumb} alt={p.name} style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                        : <div style={{ width: 38, height: 38, borderRadius: 6, background: 'var(--crema-oscuro)', flexShrink: 0 }} />
+                      }
+                      <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500, color: 'var(--texto)' }}>{p.name}</span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--texto-suave)', marginRight: '0.25rem' }}>{p.category}</span>
+                      <button
+                        className={p.featured ? 'admin-btn-primary small' : 'admin-btn-secondary small'}
+                        onClick={() => toggleFeatured(p)}
+                        disabled={togglingId === p.id}
+                        style={{ minWidth: 88 }}
+                      >
+                        {togglingId === p.id ? '...' : p.featured ? '⭐ Quitar' : '☆ Destacar'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -572,6 +624,21 @@ export default function AdminContent() {
                         set('packaging', 'options', opts)
                       }}
                     />
+                  </div>
+                  <div className="content-field">
+                    <label>Imagen (URL, opcional)</label>
+                    <input
+                      value={opt.imagen || ''}
+                      onChange={e => {
+                        const opts = [...(form.packaging?.options || [])]
+                        opts[i] = { ...opts[i], imagen: e.target.value }
+                        set('packaging', 'options', opts)
+                      }}
+                      placeholder="https://... — reemplaza el emoji si se especifica"
+                    />
+                    {opt.imagen && (
+                      <img src={opt.imagen} alt="" className="content-img-preview" style={{ marginTop: 8, width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
+                    )}
                   </div>
                 </div>
               ))}

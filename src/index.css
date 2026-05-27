@@ -2711,6 +2711,13 @@ button { cursor: pointer; border: none; font-family: inherit; }
   font-size: 1.5rem;
   flex-shrink: 0;
 }
+.pkg-option-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
 .pkg-info {
   display: flex;
   flex-direction: column;
