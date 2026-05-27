@@ -3,9 +3,10 @@ import { useContent } from '../../context/ContentContext'
 import Swal from 'sweetalert2'
 
 const TABS = [
-  { id: 'landing',  label: '🏠 Inicio' },
-  { id: 'nosotros', label: '👥 Nosotros' },
-  { id: 'contacto', label: '📬 Contacto' },
+  { id: 'landing',   label: '🏠 Inicio' },
+  { id: 'nosotros',  label: '👥 Nosotros' },
+  { id: 'contacto',  label: '📬 Contacto' },
+  { id: 'packaging', label: '📦 Packaging' },
 ]
 
 /* ─────────────────────────────────────────────
@@ -487,6 +488,95 @@ export default function AdminContent() {
               ))}
 
               <button className="admin-btn-primary" onClick={() => handleSave('contacto')} disabled={saving}>
+                {saving ? 'Guardando...' : '💾 Guardar cambios'}
+              </button>
+            </div>
+          )}
+
+          {/* ── PACKAGING ── */}
+          {tab === 'packaging' && (
+            <div className="content-section">
+              <h3>Opciones de empaque</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', marginBottom: '1rem' }}>
+                Se muestra al cliente antes de agregar un producto al carrito.
+              </p>
+
+              <div className="content-field">
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={form.packaging?.enabled ?? true}
+                    onChange={e => set('packaging', 'enabled', e.target.checked)}
+                  />
+                  Activar selector de packaging
+                </label>
+              </div>
+
+              <div className="content-field">
+                <label>Título del selector</label>
+                <input
+                  value={form.packaging?.titulo || ''}
+                  onChange={e => set('packaging', 'titulo', e.target.value)}
+                  placeholder="¿Cómo querés recibir tu pedido?"
+                />
+              </div>
+
+              <h3>Opciones</h3>
+              {(form.packaging?.options || []).map((opt, i) => (
+                <div key={i} style={{ background: 'var(--card)', borderRadius: 10, padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <div className="content-field">
+                      <label>Emoji</label>
+                      <input
+                        value={opt.emoji}
+                        onChange={e => {
+                          const opts = [...(form.packaging?.options || [])]
+                          opts[i] = { ...opts[i], emoji: e.target.value }
+                          set('packaging', 'options', opts)
+                        }}
+                        style={{ textAlign: 'center', fontSize: '1.2rem' }}
+                      />
+                    </div>
+                    <div className="content-field">
+                      <label>Nombre</label>
+                      <input
+                        value={opt.nombre}
+                        onChange={e => {
+                          const opts = [...(form.packaging?.options || [])]
+                          opts[i] = { ...opts[i], nombre: e.target.value }
+                          set('packaging', 'options', opts)
+                        }}
+                      />
+                    </div>
+                    <div className="content-field">
+                      <label>Precio adicional ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={opt.precio}
+                        onChange={e => {
+                          const opts = [...(form.packaging?.options || [])]
+                          opts[i] = { ...opts[i], precio: Number(e.target.value) }
+                          set('packaging', 'options', opts)
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="content-field">
+                    <label>Descripción</label>
+                    <input
+                      value={opt.desc}
+                      onChange={e => {
+                        const opts = [...(form.packaging?.options || [])]
+                        opts[i] = { ...opts[i], desc: e.target.value }
+                        set('packaging', 'options', opts)
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <button className="admin-btn-primary" onClick={() => handleSave('packaging')} disabled={saving}>
                 {saving ? 'Guardando...' : '💾 Guardar cambios'}
               </button>
             </div>

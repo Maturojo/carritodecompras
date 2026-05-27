@@ -2667,3 +2667,102 @@ button { cursor: pointer; border: none; font-family: inherit; }
   .personalizador-preview { position: static; }
   .mate-canvas-wrap { height: 320px; }
 }
+
+/* ── Packaging Selector (ProductDetail) ── */
+.packaging-selector {
+  margin: 1.2rem 0;
+}
+.packaging-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--texto);
+  margin-bottom: 0.75rem;
+}
+.packaging-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.packaging-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--crema-oscuro);
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--crema);
+  transition: border-color 0.2s, background 0.2s;
+}
+.packaging-option input[type="radio"] {
+  accent-color: var(--verde);
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.packaging-option.selected {
+  border-color: var(--verde);
+  background: color-mix(in srgb, var(--verde) 8%, var(--crema));
+}
+.packaging-option:hover:not(.selected) {
+  border-color: var(--verde-claro);
+}
+.pkg-emoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.pkg-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.15rem;
+}
+.pkg-info strong {
+  font-size: 0.9rem;
+  color: var(--texto);
+}
+.pkg-info span {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+.pkg-price {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  white-space: nowrap;
+}
+
+/* ── Cart item packaging display ── */
+.cart-item-packaging {
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.pkg-extra {
+  font-weight: 600;
+  color: var(--verde-oscuro);
+}
+
+/* ── Admin: featured toggle ── */
+.admin-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+.admin-toggle-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--verde);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.admin-toggle-row label {
+  font-size: 0.9rem;
+  color: var(--texto);
+  cursor: pointer;
+  user-select: none;
+}

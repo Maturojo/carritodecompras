@@ -52,6 +52,14 @@ export const DEFAULT_CONTENT = {
       { icon: '💬', title: 'Cercanía', desc: 'Respondemos cada consulta como si fuera la de un amigo.' },
     ],
   },
+  packaging: {
+    enabled: true,
+    titulo: '¿Cómo querés recibir tu pedido?',
+    options: [
+      { id: 'normal',  nombre: 'Empaque estándar', desc: 'Bolsa reciclable simple',                               precio: 0,   emoji: '📦' },
+      { id: 'premium', nombre: 'Empaque premium',  desc: 'Caja regalo con papel de seda y tarjeta personalizada',  precio: 500, emoji: '🎁' },
+    ],
+  },
   contacto: {
     email:    'hola@mateandcomdp.com.ar',
     whatsapp: '5492236359767',
@@ -77,11 +85,13 @@ export function ContentProvider({ children }) {
       fetch('/api/content?key=landing').then(r => r.json()),
       fetch('/api/content?key=nosotros').then(r => r.json()),
       fetch('/api/content?key=contacto').then(r => r.json()),
-    ]).then(([landing, nosotros, contacto]) => {
+      fetch('/api/content?key=packaging').then(r => r.json()),
+    ]).then(([landing, nosotros, contacto, packaging]) => {
       setContent({
-        landing:  { ...DEFAULT_CONTENT.landing,  ...(Object.keys(landing).length  > 1 ? landing  : {}) },
-        nosotros: { ...DEFAULT_CONTENT.nosotros, ...(Object.keys(nosotros).length > 1 ? nosotros : {}) },
-        contacto: { ...DEFAULT_CONTENT.contacto, ...(Object.keys(contacto).length > 1 ? contacto : {}) },
+        landing:   { ...DEFAULT_CONTENT.landing,   ...(Object.keys(landing).length   > 1 ? landing   : {}) },
+        nosotros:  { ...DEFAULT_CONTENT.nosotros,  ...(Object.keys(nosotros).length  > 1 ? nosotros  : {}) },
+        contacto:  { ...DEFAULT_CONTENT.contacto,  ...(Object.keys(contacto).length  > 1 ? contacto  : {}) },
+        packaging: { ...DEFAULT_CONTENT.packaging, ...(Object.keys(packaging).length > 1 ? packaging : {}) },
       })
     }).catch(() => {}).finally(() => setLoaded(true))
   }, [])

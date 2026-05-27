@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useContent } from '../context/ContentContext'
 import { useAnalytics } from '../context/AnalyticsContext'
+import { showPackagingSelector } from '../utils/packaging'
 import FavoriteBtn from './FavoriteBtn'
 import Swal from 'sweetalert2'
 
 export default function ProductCard({ product }) {
   const { addItem, items } = useCart()
+  const { content } = useContent()
   const { trackProductClick } = useAnalytics()
 
   // Soporte para productos con y sin variantes
@@ -24,7 +27,10 @@ export default function ProductCard({ product }) {
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
+    const { selected, cancelled } = await showPackagingSelector(content.packaging)
+    if (cancelled) return
+
     const result = addItem({
       cartKey,
       productId: product.id,
@@ -34,6 +40,7 @@ export default function ProductCard({ product }) {
       price,
       image,
       stock,
+      packaging: selected,
     })
     if (!result.ok) {
       Swal.fire({

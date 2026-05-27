@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useStore } from '../context/StoreContext'
 import { useContent } from '../context/ContentContext'
 import ProductCard from '../components/ProductCard'
@@ -8,7 +9,17 @@ export default function Landing() {
   const { products } = useStore()
   const { content } = useContent()
   const c = content.landing
-  const featured = products.slice(0, 4)
+
+  // Destacados primero; si no hay ninguno marcado, muestra los 4 primeros
+  const featured = useMemo(() => {
+    const feat = products.filter(p => p.featured)
+    if (feat.length >= 4) return feat.slice(0, 4)
+    if (feat.length > 0) {
+      const rest = products.filter(p => !p.featured).slice(0, 4 - feat.length)
+      return [...feat, ...rest]
+    }
+    return products.slice(0, 4)
+  }, [products])
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',

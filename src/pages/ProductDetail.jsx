@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../context/StoreContext'
 import { useCart } from '../context/CartContext'
+import { useContent } from '../context/ContentContext'
 import ProductCard from '../components/ProductCard'
 import Lightbox from '../components/Lightbox'
 import SEO from '../components/SEO'
@@ -10,10 +11,19 @@ export default function ProductDetail() {
   const { id } = useParams()
   const { products } = useStore()
   const { addItem, items } = useCart()
+  const { content } = useContent()
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0)
   const [selectedImageIdx, setSelectedImageIdx]     = useState(0)
   const [lightboxOpen, setLightboxOpen]             = useState(false)
-  const [added, setAdded] = useState(false)
+  const [added, setAdded]           = useState(false)
+  const [packagingChoice, setPackagingChoice] = useState(null)
+
+  // Pre-seleccionar la primera opción de packaging
+  useEffect(() => {
+    if (content.packaging?.options?.length) {
+      setPackagingChoice(content.packaging.options[0])
+    }
+  }, [content.packaging])
 
   const product = products.find(p => String(p.id) === String(id))
 
@@ -63,6 +73,7 @@ export default function ProductDetail() {
       price: variant.price,
       image: images[0] || '',
       stock: variant.stock,
+      packaging: packagingChoice,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -229,6 +240,37 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
+          {/* ── Packaging ── */}
+          {content.packaging?.enabled && content.packaging?.options?.length > 1 && (
+            <div className="packaging-selector">
+              <p className="packaging-title">{content.packaging.titulo}</p>
+              <div className="packaging-options">
+                {content.packaging.options.map(opt => (
+                  <label
+                    key={opt.id}
+                    className={`packaging-option${packagingChoice?.id === opt.id ? ' selected' : ''}`}
+                    onClick={() => setPackagingChoice(opt)}
+                  >
+                    <input
+                      type="radio"
+                      name="packaging-detail"
+                      checked={packagingChoice?.id === opt.id}
+                      onChange={() => setPackagingChoice(opt)}
+                    />
+                    <span className="pkg-emoji">{opt.emoji}</span>
+                    <div className="pkg-info">
+                      <strong>{opt.nombre}</strong>
+                      <span>{opt.desc}</span>
+                    </div>
+                    <span className="pkg-price">
+                      {opt.precio === 0 ? 'Incluido' : `+${formatPrice(opt.precio)}`}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Botones */}
           <div className="detail-actions">

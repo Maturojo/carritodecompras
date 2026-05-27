@@ -62,11 +62,13 @@ export function CartProvider({ children }) {
   const updateQuantity = (cartKey, quantity)  => dispatch({ type: 'UPDATE_QUANTITY', cartKey, quantity })
   const clearCart      = ()                 => dispatch({ type: 'CLEAR' })
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
-  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const totalItems    = items.reduce((sum, i) => sum + i.quantity, 0)
+  // packaging se cobra una vez por línea (no por unidad)
+  const totalPrice    = items.reduce((sum, i) => sum + i.price * i.quantity + (i.packaging?.precio || 0), 0)
+  const totalPackaging = items.reduce((sum, i) => sum + (i.packaging?.precio || 0), 0)
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, totalPackaging }}>
       {children}
     </CartContext.Provider>
   )

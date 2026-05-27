@@ -58,6 +58,7 @@ const emptyForm = (firstCat = 'mates') => ({
   sku: '',
   description: '',
   category: firstCat,
+  featured: false,
   variants: [newVariant()],
 })
 
@@ -270,7 +271,7 @@ export default function AdminProducts() {
         }))
       : [{ ...newVariant(), name: 'Única', price: String(product.price || ''), stock: String(product.stock || ''), images: [product.image || ''] }]
 
-    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', variants })
+    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', featured: product.featured || false, variants })
     setEditingId(product.id)
     setOpenVariant(0)
     setShowForm(true)
@@ -464,7 +465,18 @@ export default function AdminProducts() {
                 </select>
               </div>
             </div>
-            <div className="admin-form-group">
+            <div className="admin-form-group" style={{ justifyContent: 'flex-end', paddingTop: '1.6rem' }}>
+              <label className="admin-toggle-row">
+                <input
+                  type="checkbox"
+                  checked={form.featured || false}
+                  onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}
+                  className="admin-toggle-checkbox"
+                />
+                <span>⭐ Destacado en inicio</span>
+              </label>
+            </div>
+            <div className="admin-form-group" style={{ gridColumn: '1 / -1' }}>
               <label>Descripción *</label>
               <textarea name="description" value={form.description} onChange={handleChange} required className="admin-input admin-textarea" rows={3} placeholder="Descripción del producto..." />
             </div>
@@ -591,7 +603,10 @@ export default function AdminProducts() {
                 return (
                   <tr key={p.id}>
                     <td><img src={img || 'https://placehold.co/48x48/e8e0d5/888?text=?'} alt={p.name} className="table-product-img" /></td>
-                    <td className="product-name-cell">{p.name}</td>
+                    <td className="product-name-cell">
+                      {p.featured && <span title="Destacado en inicio" style={{ marginRight: 4 }}>⭐</span>}
+                      {p.name}
+                    </td>
                     <td><span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#9c664d' }}>{p.sku || '—'}</span></td>
                     <td><span className="cat-tag">{p.category}</span></td>
                     <td><span className="variant-badge">{p.variants?.length || 1} variante{(p.variants?.length || 1) !== 1 ? 's' : ''}</span></td>
