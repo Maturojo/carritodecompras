@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useStore } from '../context/StoreContext'
 import { useCart } from '../context/CartContext'
 import { useContent } from '../context/ContentContext'
+import { showPackagingSelector } from '../utils/packaging'
 import ProductCard from '../components/ProductCard'
 import Lightbox from '../components/Lightbox'
 import SEO from '../components/SEO'
@@ -17,7 +18,6 @@ export default function ProductDetail() {
   const [lightboxOpen, setLightboxOpen]             = useState(false)
   const [added, setAdded]           = useState(false)
   const [packagingChoice, setPackagingChoice] = useState(null)
-  const [pkgImgZoom, setPkgImgZoom]           = useState(null)
 
   // Pre-seleccionar la primera opción de packaging
   useEffect(() => {
@@ -64,7 +64,19 @@ export default function ProductDetail() {
     setSelectedImageIdx(0)
   }
 
-  const handleAdd = () => {
+  const pkgCats    = content.packaging?.categories
+  const pkgApplies = content.packaging?.enabled &&
+    content.packaging?.options?.length > 1 &&
+    (!pkgCats?.length || pkgCats.includes(product.category))
+
+  const handleAdd = async () => {
+    let chosen = packagingChoice
+    if (pkgApplies) {
+      const { selected, cancelled } = await showPackagingSelector(content.packaging)
+      if (cancelled) return
+      chosen = selected
+      setPackagingChoice(selected)
+    }
     addItem({
       cartKey,
       productId: product.id,
@@ -74,7 +86,7 @@ export default function ProductDetail() {
       price: variant.price,
       image: images[0] || '',
       stock: variant.stock,
-      packaging: packagingChoice,
+      packaging: chosen,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -242,43 +254,20 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* ── Packaging ── */}
-          {content.packaging?.enabled && content.packaging?.options?.length > 1 &&
-           (!(content.packaging.categories?.length) || content.packaging.categories.includes(product.category)) && (
-            <div className="packaging-selector">
-              <p className="packaging-title">{content.packaging.titulo}</p>
-              <div className="packaging-options">
-                {content.packaging.options.map(opt => (
-                  <label
-                    key={opt.id}
-                    className={`packaging-option${packagingChoice?.id === opt.id ? ' selected' : ''}`}
-                    onClick={() => setPackagingChoice(opt)}
-                  >
-                    <input
-                      type="radio"
-                      name="packaging-detail"
-                      checked={packagingChoice?.id === opt.id}
-                      onChange={() => setPackagingChoice(opt)}
-                    />
-                    {opt.imagen
-                      ? <img src={opt.imagen} alt={opt.nombre} className="pkg-option-img" />
-                      : <span className="pkg-emoji">{opt.emoji}</span>
-                    }
-                    <div className="pkg-info">
-                      <strong>{opt.nombre}</strong>
-                      <span>{opt.desc}</span>
-                    </div>
-                    <span className="pkg-price">
-                      {opt.precio === 0 ? 'Incluido' : `+${formatPrice(opt.precio)}`}
-                    </span>
-                    {opt.imagen && packagingChoice?.id === opt.id && (
-                      <div className="pkg-img-preview-expanded">
-                        <img src={opt.imagen} alt={opt.nombre} />
-                      </div>
-                    )}
-                  </label>
-                ))}
+          {/* ── Packaging elegido ── */}
+          {pkgApplies && packagingChoice && (
+            <div className="pkg-chosen-badge">
+              {packagingChoice.imagen
+                ? <img src={packagingChoice.imagen} alt={packagingChoice.nombre} className="pkg-chosen-img" />
+                : <span className="pkg-chosen-emoji">{packagingChoice.emoji}</span>
+              }
+              <div className="pkg-chosen-info">
+                <span className="pkg-chosen-label">Empaque seleccionado</span>
+                <strong>{packagingChoice.nombre}</strong>
               </div>
+              {packagingChoice.precio > 0 && (
+                <span className="pkg-chosen-price">+{formatPrice(packagingChoice.precio)}</span>
+              )}
             </div>
           )}
 
@@ -310,13 +299,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
-
-      {/* Zoom imagen packaging */}
-      {pkgImgZoom && (
-        <div className="pkg-img-overlay" onClick={() => setPkgImgZoom(null)}>
-          <img src={pkgImgZoom} alt="Packaging" />
-        </div>
-      )}
 
       {/* Lightbox */}
       {lightboxOpen && images.length > 0 && (
