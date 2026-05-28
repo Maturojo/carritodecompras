@@ -261,12 +261,7 @@ export default function ProductDetail() {
                       onChange={() => setPackagingChoice(opt)}
                     />
                     {opt.imagen
-                      ? <img
-                          src={opt.imagen}
-                          alt={opt.nombre}
-                          className="pkg-option-img"
-                          onClick={e => { e.stopPropagation(); setPkgImgZoom(opt.imagen) }}
-                        />
+                      ? <img src={opt.imagen} alt={opt.nombre} className="pkg-option-img" />
                       : <span className="pkg-emoji">{opt.emoji}</span>
                     }
                     <div className="pkg-info">
@@ -276,6 +271,11 @@ export default function ProductDetail() {
                     <span className="pkg-price">
                       {opt.precio === 0 ? 'Incluido' : `+${formatPrice(opt.precio)}`}
                     </span>
+                    {opt.imagen && packagingChoice?.id === opt.id && (
+                      <div className="pkg-img-preview-expanded">
+                        <img src={opt.imagen} alt={opt.nombre} />
+                      </div>
+                    )}
                   </label>
                 ))}
               </div>

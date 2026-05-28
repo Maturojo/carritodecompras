@@ -13,6 +13,9 @@ export async function showPackagingSelector(packaging) {
     return { selected: options[0] || null, cancelled: false }
   }
 
+  // Preview inicial: imagen de la primera opción (si tiene)
+  const firstImg = options[0]?.imagen || ''
+
   const result = await Swal.fire({
     title: packaging.titulo || '¿Cómo querés recibir tu pedido?',
     html: `
@@ -20,29 +23,39 @@ export async function showPackagingSelector(packaging) {
         ${options.map((opt, i) => `
           <label
             id="pkg-label-${i}"
-            style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid ${i === 0 ? '#9c664d' : '#e8dfd4'};border-radius:10px;cursor:pointer;transition:all 0.15s;background:${i === 0 ? '#fdf5ee' : '#fff'}"
+            style="display:flex;flex-direction:column;gap:0;border:2px solid ${i === 0 ? '#9c664d' : '#e8dfd4'};border-radius:12px;cursor:pointer;transition:all 0.18s;background:${i === 0 ? '#fdf5ee' : '#fff'};overflow:hidden"
             onclick="
               document.querySelectorAll('[id^=pkg-label-]').forEach(el => {
                 el.style.border='2px solid #e8dfd4';
                 el.style.background='#fff';
+                el.querySelector('.pkg-swal-expanded') && (el.querySelector('.pkg-swal-expanded').style.maxHeight='0');
               });
               this.style.border='2px solid #9c664d';
               this.style.background='#fdf5ee';
-              document.getElementById('pkg-radio-${i}').checked=true
+              document.getElementById('pkg-radio-${i}').checked=true;
+              var exp=this.querySelector('.pkg-swal-expanded');
+              if(exp) exp.style.maxHeight='220px';
             "
           >
-            <input type="radio" name="pkg" id="pkg-radio-${i}" value="${i}" ${i === 0 ? 'checked' : ''} style="display:none">
-            ${opt.imagen
-              ? `<img src="${opt.imagen}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;cursor:zoom-in" onclick="window.open('${opt.imagen}','_blank')">`
-              : `<span style="font-size:2rem;flex-shrink:0">${opt.emoji}</span>`
-            }
-            <div style="flex:1;min-width:0">
-              <strong style="display:block;font-size:0.95rem;color:#1a1209">${opt.nombre}</strong>
-              <span style="font-size:0.8rem;color:#6B5C52;line-height:1.4">${opt.desc}</span>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+              <input type="radio" name="pkg" id="pkg-radio-${i}" value="${i}" ${i === 0 ? 'checked' : ''} style="display:none">
+              ${opt.imagen
+                ? `<img src="${opt.imagen}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">`
+                : `<span style="font-size:2rem;flex-shrink:0">${opt.emoji}</span>`
+              }
+              <div style="flex:1;min-width:0">
+                <strong style="display:block;font-size:0.95rem;color:#1a1209">${opt.nombre}</strong>
+                <span style="font-size:0.8rem;color:#6B5C52;line-height:1.4">${opt.desc}</span>
+              </div>
+              <span style="font-weight:700;color:#9c664d;white-space:nowrap;margin-left:8px">
+                ${opt.precio === 0 ? 'Incluido' : '+' + fmt(opt.precio)}
+              </span>
             </div>
-            <span style="font-weight:700;color:#9c664d;white-space:nowrap;margin-left:8px">
-              ${opt.precio === 0 ? 'Incluido' : '+' + fmt(opt.precio)}
-            </span>
+            ${opt.imagen ? `
+              <div class="pkg-swal-expanded" style="max-height:${i === 0 ? '220px' : '0'};overflow:hidden;transition:max-height 0.3s ease">
+                <img src="${opt.imagen}" style="width:100%;max-height:220px;object-fit:cover;display:block">
+              </div>
+            ` : ''}
           </label>
         `).join('')}
       </div>
