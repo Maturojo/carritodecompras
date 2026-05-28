@@ -2728,18 +2728,17 @@ button { cursor: pointer; border: none; font-family: inherit; }
   margin-top: 0.5rem;
   border-radius: 10px;
   overflow: hidden;
-  animation: pkgExpandIn 0.25s ease;
+  animation: pkgExpandIn 0.3s ease;
 }
 .pkg-img-preview-expanded img {
   width: 100%;
-  max-height: 220px;
-  object-fit: cover;
+  height: auto;
   display: block;
   border-radius: 10px;
 }
 @keyframes pkgExpandIn {
-  from { opacity: 0; max-height: 0; }
-  to   { opacity: 1; max-height: 220px; }
+  from { opacity: 0; transform: scaleY(0.85); transform-origin: top; }
+  to   { opacity: 1; transform: scaleY(1);    transform-origin: top; }
 }
 
 /* Overlay de imagen packaging */

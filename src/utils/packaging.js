@@ -34,7 +34,7 @@ export async function showPackagingSelector(packaging) {
               this.style.background='#fdf5ee';
               document.getElementById('pkg-radio-${i}').checked=true;
               var exp=this.querySelector('.pkg-swal-expanded');
-              if(exp) exp.style.maxHeight='220px';
+              if(exp) exp.style.maxHeight='600px';
             "
           >
             <div style="display:flex;align-items:center;gap:12px;padding:12px 14px">
@@ -52,8 +52,8 @@ export async function showPackagingSelector(packaging) {
               </span>
             </div>
             ${opt.imagen ? `
-              <div class="pkg-swal-expanded" style="max-height:${i === 0 ? '220px' : '0'};overflow:hidden;transition:max-height 0.3s ease">
-                <img src="${opt.imagen}" style="width:100%;max-height:220px;object-fit:cover;display:block">
+              <div class="pkg-swal-expanded" style="max-height:${i === 0 ? '600px' : '0'};overflow:hidden;transition:max-height 0.35s ease">
+                <img src="${opt.imagen}" style="width:100%;height:auto;display:block">
               </div>
             ` : ''}
           </label>
