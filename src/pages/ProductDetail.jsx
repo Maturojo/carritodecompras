@@ -242,7 +242,8 @@ export default function ProductDetail() {
           </div>
 
           {/* ── Packaging ── */}
-          {content.packaging?.enabled && content.packaging?.options?.length > 1 && (
+          {content.packaging?.enabled && content.packaging?.options?.length > 1 &&
+           (!(content.packaging.categories?.length) || content.packaging.categories.includes(product.category)) && (
             <div className="packaging-selector">
               <p className="packaging-title">{content.packaging.titulo}</p>
               <div className="packaging-options">

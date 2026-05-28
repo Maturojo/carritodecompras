@@ -186,7 +186,7 @@ function ContactoPreview({ c }) {
 ───────────────────────────────────────────── */
 export default function AdminContent() {
   const { content, saveContent } = useContent()
-  const { products, updateProduct } = useStore()
+  const { products, updateProduct, categories } = useStore()
   const [tab, setTab]         = useState('landing')
   const [form, setForm]       = useState(content)
   const [saving, setSaving]   = useState(false)
@@ -571,6 +571,41 @@ export default function AdminContent() {
                   onChange={e => set('packaging', 'titulo', e.target.value)}
                   placeholder="¿Cómo querés recibir tu pedido?"
                 />
+              </div>
+
+              <div className="content-field">
+                <label>Mostrar sólo en estas categorías</label>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-soft)', margin: '0.25rem 0 0.6rem' }}>
+                  Sin selección = aparece en <strong>todas</strong> las categorías
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {categories.map(cat => {
+                    const selected = (form.packaging?.categories || []).includes(cat.id)
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          const current = form.packaging?.categories || []
+                          const next = selected
+                            ? current.filter(c => c !== cat.id)
+                            : [...current, cat.id]
+                          set('packaging', 'categories', next)
+                        }}
+                        style={{
+                          padding: '5px 14px', borderRadius: 20, fontSize: '0.84rem',
+                          cursor: 'pointer', fontWeight: selected ? 600 : 400,
+                          border: `2px solid ${selected ? 'var(--verde)' : 'var(--crema-oscuro)'}`,
+                          background: selected ? 'color-mix(in srgb, var(--verde) 12%, white)' : 'white',
+                          color: selected ? 'var(--verde-oscuro)' : 'var(--texto)',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {selected ? '✓ ' : ''}{cat.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <h3>Opciones</h3>

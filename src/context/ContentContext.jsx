@@ -55,6 +55,7 @@ export const DEFAULT_CONTENT = {
   packaging: {
     enabled: true,
     titulo: '¿Cómo querés recibir tu pedido?',
+    categories: [],   // vacío = todas las categorías
     options: [
       { id: 'normal',  nombre: 'Empaque estándar', desc: 'Bolsa reciclable simple',                               precio: 0,   emoji: '📦' },
       { id: 'premium', nombre: 'Empaque premium',  desc: 'Caja regalo con papel de seda y tarjeta personalizada',  precio: 500, emoji: '🎁' },

@@ -28,7 +28,11 @@ export default function ProductCard({ product }) {
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
   const handleAdd = async () => {
-    const { selected, cancelled } = await showPackagingSelector(content.packaging)
+    const pkgCats = content.packaging?.categories
+    const pkgApplies = !pkgCats?.length || pkgCats.includes(product.category)
+    const { selected, cancelled } = pkgApplies
+      ? await showPackagingSelector(content.packaging)
+      : { selected: content.packaging?.options?.[0] ?? null, cancelled: false }
     if (cancelled) return
 
     const result = addItem({
