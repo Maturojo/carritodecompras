@@ -17,6 +17,7 @@ export default function ProductDetail() {
   const [lightboxOpen, setLightboxOpen]             = useState(false)
   const [added, setAdded]           = useState(false)
   const [packagingChoice, setPackagingChoice] = useState(null)
+  const [pkgImgZoom, setPkgImgZoom]           = useState(null)
 
   // Pre-seleccionar la primera opción de packaging
   useEffect(() => {
@@ -260,7 +261,12 @@ export default function ProductDetail() {
                       onChange={() => setPackagingChoice(opt)}
                     />
                     {opt.imagen
-                      ? <img src={opt.imagen} alt={opt.nombre} className="pkg-option-img" />
+                      ? <img
+                          src={opt.imagen}
+                          alt={opt.nombre}
+                          className="pkg-option-img"
+                          onClick={e => { e.stopPropagation(); setPkgImgZoom(opt.imagen) }}
+                        />
                       : <span className="pkg-emoji">{opt.emoji}</span>
                     }
                     <div className="pkg-info">
@@ -304,6 +310,13 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
+
+      {/* Zoom imagen packaging */}
+      {pkgImgZoom && (
+        <div className="pkg-img-overlay" onClick={() => setPkgImgZoom(null)}>
+          <img src={pkgImgZoom} alt="Packaging" />
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxOpen && images.length > 0 && (

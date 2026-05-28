@@ -33,7 +33,7 @@ export async function showPackagingSelector(packaging) {
           >
             <input type="radio" name="pkg" id="pkg-radio-${i}" value="${i}" ${i === 0 ? 'checked' : ''} style="display:none">
             ${opt.imagen
-              ? `<img src="${opt.imagen}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0">`
+              ? `<img src="${opt.imagen}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;cursor:zoom-in" onclick="window.open('${opt.imagen}','_blank')">`
               : `<span style="font-size:2rem;flex-shrink:0">${opt.emoji}</span>`
             }
             <div style="flex:1;min-width:0">
