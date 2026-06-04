@@ -1292,7 +1292,17 @@ button { cursor: pointer; border: none; font-family: inherit; }
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.shipping-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--crema-oscuro);
+  border-top-color: var(--verde);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.shipping-option-logo { font-size: 1rem; }
 .shipping-error { font-size: 0.85rem; color: #e63946; }
+.shipping-disclaimer { font-size: 0.78rem; color: #6b7280; margin-top: 8px; padding: 0 4px; }
 .shipping-hint { font-size: 0.82rem; color: var(--texto-suave); font-style: italic; }
 .shipping-options { display: flex; flex-direction: column; gap: 0.5rem; }
 .shipping-option {

@@ -77,6 +77,12 @@ export default function ShippingQuote({ codigoPostal, pesoTotal = 0.5, selected,
           })}
         </div>
       )}
+
+      {!loading && opciones.length > 0 && opciones[0]?.proveedor !== 'local' && (
+        <p className="shipping-disclaimer">
+          * El precio puede variar según la localidad y es a cargo del comprador.
+        </p>
+      )}
     </div>
   )
 }

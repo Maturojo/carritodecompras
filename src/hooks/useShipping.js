@@ -61,13 +61,15 @@ export function useShipping() {
 
     if (servicios.length === 0) {
       setError('No pudimos obtener opciones de envío. Intentá de nuevo.')
+      setOpciones([])
     } else {
-      // Ordenar por precio ascendente y asignar tipo: el más barato = retiro, el resto = domicilio
       servicios.sort((a, b) => a.precio - b.precio)
-      servicios.forEach((s, i) => {
-        s.tipo = i === 0 ? 'sucursal' : 'domicilio'
-        s.nombre = i === 0 ? 'Retiro en sucursal más cercana' : 'Envío a domicilio'
-      })
+      // Solo 2 opciones: retiro en sucursal (más barata) y envío a domicilio
+      const dos = servicios.slice(0, 2)
+      dos[0] = { ...dos[0], tipo: 'sucursal', nombre: 'Retiro en sucursal más cercana' }
+      if (dos[1]) dos[1] = { ...dos[1], tipo: 'domicilio', nombre: 'Envío a domicilio' }
+      setOpciones(dos)
+      return
     }
 
     setOpciones(servicios)
