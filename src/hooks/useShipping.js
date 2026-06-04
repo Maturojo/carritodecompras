@@ -18,6 +18,19 @@ export function useShipping() {
     setError(null)
     setOpciones([])
 
+    // Mar del Plata: envío a domicilio sin costo
+    if (codigoPostal.trim() === '7600') {
+      setOpciones([{
+        nombre: 'Envío a domicilio',
+        precio: 0,
+        diasEstimados: '1-2',
+        proveedor: 'local',
+        tipo: 'domicilio',
+      }])
+      setLoading(false)
+      return
+    }
+
     const payload = JSON.stringify({
       codigoPostalDestino: codigoPostal,
       pesoTotal,
@@ -49,8 +62,12 @@ export function useShipping() {
     if (servicios.length === 0) {
       setError('No pudimos obtener opciones de envío. Intentá de nuevo.')
     } else {
-      // Ordenar por precio ascendente
+      // Ordenar por precio ascendente y asignar tipo: el más barato = retiro, el resto = domicilio
       servicios.sort((a, b) => a.precio - b.precio)
+      servicios.forEach((s, i) => {
+        s.tipo = i === 0 ? 'sucursal' : 'domicilio'
+        s.nombre = i === 0 ? 'Retiro en sucursal más cercana' : 'Envío a domicilio'
+      })
     }
 
     setOpciones(servicios)
@@ -66,7 +83,11 @@ export function useShipping() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orden, servicio: servicio.nombre }),
+      body: JSON.stringify({
+        orden,
+        servicio: servicio.nombre,
+        serviceType: servicio.serviceType || 'CP',
+      }),
     })
     return res.json()
   }, [])

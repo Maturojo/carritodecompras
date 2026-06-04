@@ -6,6 +6,9 @@ import ShippingQuote from '../components/ShippingQuote'
 export default function Checkout() {
   const { items, totalPrice } = useCart()
 
+  // Peso estimado: 300g base por ítem (mínimo 0.5kg para cotización)
+  const pesoTotalKg = Math.max(0.5, items.reduce((acc, item) => acc + (item.quantity * 0.3), 0))
+
   const [loading, setLoading] = useState(false)
   const [selectedShipping, setSelectedShipping] = useState(null)
   const [error, setError] = useState(null)
@@ -121,6 +124,7 @@ export default function Checkout() {
             <h2>Envío</h2>
             <ShippingQuote
               codigoPostal={form.codigoPostal}
+              pesoTotal={pesoTotalKg}
               selected={selectedShipping}
               onSelect={setSelectedShipping}
             />
@@ -176,7 +180,7 @@ export default function Checkout() {
           </div>
           <div className="summary-row">
             <span>Envío {selectedShipping ? `(${selectedShipping.nombre})` : ''}</span>
-            <span>{selectedShipping ? formatPrice(selectedShipping.precio) : '—'}</span>
+            <span>{selectedShipping ? (selectedShipping.precio === 0 ? 'GRATIS' : formatPrice(selectedShipping.precio)) : '—'}</span>
           </div>
           <div className="summary-row total">
             <span>Total</span>
