@@ -65,13 +65,10 @@ export default function ShippingQuote({ codigoPostal, pesoTotal = 0.5, selected,
                     🕐 {op.diasEstimados} días hábiles
                   </span>
                 </div>
-                <span className="shipping-option-price" style={op.precio === 0 ? { color: '#16a34a', fontWeight: 700 } : {}}>
-                  {op.precio === 0
-                    ? 'GRATIS'
-                    : new Intl.NumberFormat('es-AR', {
-                        style: 'currency', currency: 'ARS', maximumFractionDigits: 0,
-                      }).format(op.precio)}
-                </span>
+                {op.proveedor === 'local'
+                  ? <span className="shipping-option-price" style={{ color: '#16a34a', fontWeight: 700 }}>GRATIS</span>
+                  : null
+                }
               </label>
             )
           })}
