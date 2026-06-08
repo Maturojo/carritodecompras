@@ -53,12 +53,15 @@ const newVariant = () => ({
   images: [''],
 })
 
+const CATS_CON_PACKAGING = ['mates', 'bombillas']
+
 const emptyForm = (firstCat = 'mates') => ({
   name: '',
   sku: '',
   description: '',
   category: firstCat,
   featured: false,
+  packaging: false,
   variants: [newVariant()],
 })
 
@@ -271,7 +274,7 @@ export default function AdminProducts() {
         }))
       : [{ ...newVariant(), name: 'Única', price: String(product.price || ''), stock: String(product.stock || ''), images: [product.image || ''] }]
 
-    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', featured: product.featured || false, variants })
+    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', featured: product.featured || false, packaging: product.packaging || false, variants })
     setEditingId(product.id)
     setOpenVariant(0)
     setShowForm(true)
@@ -465,7 +468,7 @@ export default function AdminProducts() {
                 </select>
               </div>
             </div>
-            <div className="admin-form-group" style={{ justifyContent: 'flex-end', paddingTop: '1.6rem' }}>
+            <div className="admin-form-group" style={{ justifyContent: 'flex-end', paddingTop: '1.6rem', flexDirection: 'column', gap: '0.5rem' }}>
               <label className="admin-toggle-row">
                 <input
                   type="checkbox"
@@ -475,6 +478,17 @@ export default function AdminProducts() {
                 />
                 <span>⭐ Destacado en inicio</span>
               </label>
+              {CATS_CON_PACKAGING.includes(form.category) && (
+                <label className="admin-toggle-row">
+                  <input
+                    type="checkbox"
+                    checked={form.packaging || false}
+                    onChange={e => setForm(f => ({ ...f, packaging: e.target.checked }))}
+                    className="admin-toggle-checkbox"
+                  />
+                  <span>🎁 Incluye packaging</span>
+                </label>
+              )}
             </div>
             <div className="admin-form-group" style={{ gridColumn: '1 / -1' }}>
               <label>Descripción *</label>
