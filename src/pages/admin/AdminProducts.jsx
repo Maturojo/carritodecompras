@@ -53,7 +53,7 @@ const newVariant = () => ({
   images: [''],
 })
 
-const CATS_CON_PACKAGING = ['mates', 'bombillas']
+const LABELS_CON_PACKAGING = ['mates', 'bombillas']
 
 const emptyForm = (firstCat = 'mates') => ({
   name: '',
@@ -478,7 +478,11 @@ export default function AdminProducts() {
                 />
                 <span>⭐ Destacado en inicio</span>
               </label>
-              {CATS_CON_PACKAGING.includes(form.category) && (
+              {(() => {
+                const cat = catOptions.find(c => (c.slug || c.id) === form.category)
+                const label = (cat?.label || cat?.slug || cat?.id || form.category || '').toLowerCase()
+                return LABELS_CON_PACKAGING.some(l => label.includes(l))
+              })() && (
                 <label className="admin-toggle-row">
                   <input
                     type="checkbox"
