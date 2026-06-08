@@ -28,10 +28,11 @@ export default function ProductCard({ product }) {
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
   const handleAdd = async () => {
-    const pkgCats = content.packaging?.categories
-    const pkgApplies = !pkgCats?.length || pkgCats.includes(product.category)
-    const { selected, cancelled } = pkgApplies
-      ? await showPackagingSelector(content.packaging)
+    const esConPackaging = product.packaging ||
+      ['mates', 'bombillas'].some(k => (product.category || '').toLowerCase().includes(k))
+    const pkgConfig = { ...content.packaging, enabled: true }
+    const { selected, cancelled } = esConPackaging
+      ? await showPackagingSelector(pkgConfig)
       : { selected: content.packaging?.options?.[0] ?? null, cancelled: false }
     if (cancelled) return
 

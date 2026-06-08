@@ -64,15 +64,15 @@ export default function ProductDetail() {
     setSelectedImageIdx(0)
   }
 
-  const pkgCats    = content.packaging?.categories
-  const pkgApplies = content.packaging?.enabled &&
-    content.packaging?.options?.length > 1 &&
-    (!pkgCats?.length || pkgCats.includes(product.category))
+  const pkgApplies = (
+    product.packaging ||
+    ['mates', 'bombillas'].some(k => (product.category || '').toLowerCase().includes(k))
+  ) && content.packaging?.options?.length > 1
 
   const handleAdd = async () => {
     let chosen = packagingChoice
     if (pkgApplies) {
-      const { selected, cancelled } = await showPackagingSelector(content.packaging)
+      const { selected, cancelled } = await showPackagingSelector({ ...content.packaging, enabled: true })
       if (cancelled) return
       chosen = selected
       setPackagingChoice(selected)
