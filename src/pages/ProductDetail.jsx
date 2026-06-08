@@ -147,9 +147,7 @@ export default function ProductDetail() {
                 </>
               : <div className="gallery-placeholder">Sin imagen</div>
             }
-            {variant.stock <= 5 && variant.stock > 0 && (
-              <span className="stock-badge">¡Últimas unidades!</span>
-            )}
+
             {variant.stock === 0 && (
               <span className="stock-badge out">Sin stock</span>
             )}
@@ -176,9 +174,7 @@ export default function ProductDetail() {
           {/* Categoría + nombre */}
           <div className="detail-header">
             <span className="detail-category-tag">{product.category}</span>
-            {variant.stock > 0 && variant.stock <= 5 && (
-              <span className="detail-urgency">🔥 ¡Últimas unidades!</span>
-            )}
+
           </div>
           <h1 className="detail-title">{product.name}</h1>
 
