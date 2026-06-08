@@ -13,6 +13,7 @@ const DEFAULT_CATS = [
   { id: 'yerbas',    label: 'Yerbas' },
   { id: 'termos',    label: 'Termos' },
   { id: 'kits',      label: 'Kits' },
+  { id: 'packaging', label: 'Packaging' },
 ]
 
 export default async function handler(req, res) {

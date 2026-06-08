@@ -10,6 +10,7 @@ const DEFAULT_CATS = [
   { id: 'yerbas',    label: 'Yerbas' },
   { id: 'termos',    label: 'Termos' },
   { id: 'kits',      label: 'Kits' },
+  { id: 'packaging', label: 'Packaging' },
 ]
 
 export function StoreProvider({ children }) {
