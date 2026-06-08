@@ -308,6 +308,12 @@ export default function AdminProducts() {
   const handleCancel = () => { setForm(emptyForm()); setEditingId(null); setShowForm(false) }
   const handleDelete = (id) => { deleteProduct(id); setConfirmDelete(null) }
 
+  const aplicarPackagingMasivo = async () => {
+    const targets = products.filter(p => ['mates', 'bombillas'].some(k => (p.category || '').toLowerCase().includes(k)))
+    await Promise.all(targets.map(p => updateProduct(p.id, { ...p, packaging: true })))
+    alert(`✅ Packaging activado en ${targets.length} productos.`)
+  }
+
   /* ── Asignar SKU a productos sin código ── */
   const handleAsignarSkus = async () => {
     const sinSku = products.filter(p => !p.sku?.trim())
@@ -331,6 +337,10 @@ export default function AdminProducts() {
   }
 
   const catOptions = categories.filter(c => c.id !== 'todos')
+  const mostrarPackaging = ['mates', 'bombillas'].some(k =>
+    (form.category || '').toLowerCase().includes(k) ||
+    catOptions.find(c => (c.slug || c.id) === form.category)?.label?.toLowerCase().includes(k)
+  )
 
   // Categorías usadas por productos pero que no están registradas en la BD
   const registeredSlugs = new Set(catOptions.map(c => (c.slug || c.id).toLowerCase()))
@@ -355,6 +365,11 @@ export default function AdminProducts() {
           {products.some(p => !p.sku?.trim()) && (
             <button className="admin-btn-secondary" onClick={handleAsignarSkus} title="Generar códigos para productos que no tienen">
               🏷️ Asignar códigos faltantes ({products.filter(p => !p.sku?.trim()).length})
+            </button>
+          )}
+          {products.some(p => ['mates','bombillas'].some(k => (p.category||'').toLowerCase().includes(k)) && !p.packaging) && (
+            <button className="admin-btn-secondary" onClick={aplicarPackagingMasivo} title="Activar packaging en todos los mates y bombillas">
+              🎁 Activar packaging en mates y bombillas
             </button>
           )}
           <button className="admin-btn-primary" onClick={() => { setForm(emptyForm()); setEditingId(null); setOpenVariant(0); setShowForm(true) }}>
@@ -478,11 +493,7 @@ export default function AdminProducts() {
                 />
                 <span>⭐ Destacado en inicio</span>
               </label>
-              {(() => {
-                const cat = catOptions.find(c => (c.slug || c.id) === form.category)
-                const label = (cat?.label || cat?.slug || cat?.id || form.category || '').toLowerCase()
-                return LABELS_CON_PACKAGING.some(l => label.includes(l))
-              })() && (
+              {mostrarPackaging && (
                 <label className="admin-toggle-row">
                   <input
                     type="checkbox"
