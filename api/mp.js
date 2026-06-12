@@ -1,9 +1,45 @@
 import { getDb } from './lib/mongodb.js'
+import { ObjectId } from 'mongodb'
 
 const isMdp = (cp) => /^760\d$/.test(cp?.trim())
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
+
+async function descontarStock(db, order) {
+  if (!Array.isArray(order.items) || order.items.length === 0) return
+
+  const products = db.collection('products')
+
+  for (const item of order.items) {
+    const productId = item.productId || item.id
+    const quantity = Math.max(0, Number(item.quantity) || 0)
+    if (!productId || quantity === 0) continue
+
+    const productObjectId = ObjectId.isValid(productId) ? new ObjectId(productId) : productId
+    const variantId = item.variantId && item.variantId !== 'default'
+      ? String(item.variantId)
+      : null
+
+    if (variantId) {
+      await products.updateOne(
+        {
+          _id: productObjectId,
+          variants: { $elemMatch: { id: variantId, stock: { $gte: quantity } } },
+        },
+        { $inc: { 'variants.$.stock': -quantity } }
+      )
+    } else {
+      await products.updateOne(
+        {
+          _id: productObjectId,
+          stock: { $gte: quantity },
+        },
+        { $inc: { stock: -quantity } }
+      )
+    }
+  }
+}
 
 async function notificarDueno(order) {
   const resendKey  = process.env.RESEND_API_KEY
@@ -172,6 +208,13 @@ export default async function handler(req, res) {
       // Notificar al dueño si el pago fue aprobado
       if (status === 'approved') {
         const order = await db.collection('orders').findOne({ orderId: external_reference })
+        if (order && !order.stockDescontado) {
+          await descontarStock(db, order)
+          await db.collection('orders').updateOne(
+            { orderId: external_reference },
+            { $set: { stockDescontado: true, stockDescontadoAt: new Date().toISOString() } }
+          )
+        }
         if (order) await notificarDueno(order)
       }
 

@@ -52,7 +52,7 @@ export default function Landing() {
           <p className="landing-hero-subtitle">{c.heroSubtitle}</p>
           <div className="hero-cta-group">
             <Link to="/tienda" className="btn-primary btn-large">Ver tienda</Link>
-            <a href="#nosotros-section" className="btn-outline btn-large">Conocernos</a>
+            <a href="#nosotros-section" className="btn-outline btn-large">Conocenos</a>
           </div>
         </div>
         <div className="hero-scroll-hint">Explorar</div>
@@ -79,7 +79,7 @@ export default function Landing() {
             <h2 className="section-title">{c.aboutTitle}</h2>
             <p>{c.aboutText1}</p>
             <p>{c.aboutText2}</p>
-            <Link to="/nosotros" className="btn-secondary">Leer más sobre nosotros</Link>
+            <Link to="/nosotros" className="btn-secondary">Lee más sobre nosotros</Link>
           </div>
         </div>
       </section>

@@ -10,7 +10,7 @@ export default function PagoExitoso() {
   // Marcar el pedido como pagado usando el external_reference
   useEffect(() => {
     if (!orderId) return
-    fetch('/api/mp-webhook', {
+    fetch('/api/mp?action=webhook', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
