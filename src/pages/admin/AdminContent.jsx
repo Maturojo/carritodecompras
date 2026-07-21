@@ -7,7 +7,6 @@ const TABS = [
   { id: 'landing',   label: '🏠 Inicio' },
   { id: 'nosotros',  label: '👥 Nosotros' },
   { id: 'contacto',  label: '📬 Contacto' },
-  { id: 'packaging', label: '📦 Packaging' },
 ]
 
 /* ─────────────────────────────────────────────
@@ -186,7 +185,7 @@ function ContactoPreview({ c }) {
 ───────────────────────────────────────────── */
 export default function AdminContent() {
   const { content, saveContent } = useContent()
-  const { products, updateProduct, categories } = useStore()
+  const { products, updateProduct } = useStore()
   const [tab, setTab]         = useState('landing')
   const [form, setForm]       = useState(content)
   const [saving, setSaving]   = useState(false)
@@ -545,144 +544,6 @@ export default function AdminContent() {
             </div>
           )}
 
-          {/* ── PACKAGING ── */}
-          {tab === 'packaging' && (
-            <div className="content-section">
-              <h3>Opciones de empaque</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-soft)', marginBottom: '1rem' }}>
-                Se muestra al cliente antes de agregar un producto al carrito.
-              </p>
-
-              <div className="content-field">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={form.packaging?.enabled ?? true}
-                    onChange={e => set('packaging', 'enabled', e.target.checked)}
-                  />
-                  Activar selector de packaging
-                </label>
-              </div>
-
-              <div className="content-field">
-                <label>Título del selector</label>
-                <input
-                  value={form.packaging?.titulo || ''}
-                  onChange={e => set('packaging', 'titulo', e.target.value)}
-                  placeholder="¿Cómo querés recibir tu pedido?"
-                />
-              </div>
-
-              <div className="content-field">
-                <label>Mostrar sólo en estas categorías</label>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-soft)', margin: '0.25rem 0 0.6rem' }}>
-                  Sin selección = aparece en <strong>todas</strong> las categorías
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  {categories.map(cat => {
-                    const selected = (form.packaging?.categories || []).includes(cat.id)
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          const current = form.packaging?.categories || []
-                          const next = selected
-                            ? current.filter(c => c !== cat.id)
-                            : [...current, cat.id]
-                          set('packaging', 'categories', next)
-                        }}
-                        style={{
-                          padding: '5px 14px', borderRadius: 20, fontSize: '0.84rem',
-                          cursor: 'pointer', fontWeight: selected ? 600 : 400,
-                          border: `2px solid ${selected ? 'var(--verde)' : 'var(--crema-oscuro)'}`,
-                          background: selected ? 'color-mix(in srgb, var(--verde) 12%, white)' : 'white',
-                          color: selected ? 'var(--verde-oscuro)' : 'var(--texto)',
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        {selected ? '✓ ' : ''}{cat.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <h3>Opciones</h3>
-              {(form.packaging?.options || []).map((opt, i) => (
-                <div key={i} style={{ background: 'var(--card)', borderRadius: 10, padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <div className="content-field">
-                      <label>Emoji</label>
-                      <input
-                        value={opt.emoji}
-                        onChange={e => {
-                          const opts = [...(form.packaging?.options || [])]
-                          opts[i] = { ...opts[i], emoji: e.target.value }
-                          set('packaging', 'options', opts)
-                        }}
-                        style={{ textAlign: 'center', fontSize: '1.2rem' }}
-                      />
-                    </div>
-                    <div className="content-field">
-                      <label>Nombre</label>
-                      <input
-                        value={opt.nombre}
-                        onChange={e => {
-                          const opts = [...(form.packaging?.options || [])]
-                          opts[i] = { ...opts[i], nombre: e.target.value }
-                          set('packaging', 'options', opts)
-                        }}
-                      />
-                    </div>
-                    <div className="content-field">
-                      <label>Precio adicional ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={opt.precio}
-                        onChange={e => {
-                          const opts = [...(form.packaging?.options || [])]
-                          opts[i] = { ...opts[i], precio: Number(e.target.value) }
-                          set('packaging', 'options', opts)
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="content-field">
-                    <label>Descripción</label>
-                    <input
-                      value={opt.desc}
-                      onChange={e => {
-                        const opts = [...(form.packaging?.options || [])]
-                        opts[i] = { ...opts[i], desc: e.target.value }
-                        set('packaging', 'options', opts)
-                      }}
-                    />
-                  </div>
-                  <div className="content-field">
-                    <label>Imagen (URL, opcional)</label>
-                    <input
-                      value={opt.imagen || ''}
-                      onChange={e => {
-                        const opts = [...(form.packaging?.options || [])]
-                        opts[i] = { ...opts[i], imagen: e.target.value }
-                        set('packaging', 'options', opts)
-                      }}
-                      placeholder="https://... — reemplaza el emoji si se especifica"
-                    />
-                    {opt.imagen && (
-                      <img src={opt.imagen} alt="" className="content-img-preview" style={{ marginTop: 8, width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              <button className="admin-btn-primary" onClick={() => handleSave('packaging')} disabled={saving}>
-                {saving ? 'Guardando...' : '💾 Guardar cambios'}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* ── PREVIEW ── */}

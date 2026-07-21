@@ -1,30 +1,21 @@
-import { useParams, Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useStore } from '../context/StoreContext'
 import { useCart } from '../context/CartContext'
-import { useContent } from '../context/ContentContext'
-import { showPackagingSelector } from '../utils/packaging'
 import ProductCard from '../components/ProductCard'
 import Lightbox from '../components/Lightbox'
 import SEO from '../components/SEO'
+import Swal from 'sweetalert2'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const { products } = useStore()
   const { addItem, items } = useCart()
-  const { content } = useContent()
+  const navigate = useNavigate()
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0)
   const [selectedImageIdx, setSelectedImageIdx]     = useState(0)
   const [lightboxOpen, setLightboxOpen]             = useState(false)
   const [added, setAdded]           = useState(false)
-  const [packagingChoice, setPackagingChoice] = useState(null)
-
-  // Pre-seleccionar la primera opción de packaging
-  useEffect(() => {
-    if (content.packaging?.options?.length) {
-      setPackagingChoice(content.packaging.options[0])
-    }
-  }, [content.packaging])
 
   const product = products.find(p => String(p.id) === String(id))
 
@@ -64,20 +55,8 @@ export default function ProductDetail() {
     setSelectedImageIdx(0)
   }
 
-  const pkgApplies = (
-    product.packaging ||
-    ['mates', 'bombillas'].some(k => (product.category || '').toLowerCase().includes(k))
-  ) && content.packaging?.options?.length > 1
-
-  const handleAdd = async () => {
-    let chosen = packagingChoice
-    if (pkgApplies) {
-      const { selected, cancelled } = await showPackagingSelector({ ...content.packaging, enabled: true })
-      if (cancelled) return
-      chosen = selected
-      setPackagingChoice(selected)
-    }
-    addItem({
+  const handleAdd = () => {
+    const result = addItem({
       cartKey,
       productId: product.id,
       variantId: variant.id,
@@ -86,10 +65,21 @@ export default function ProductDetail() {
       price: variant.price,
       image: images[0] || '',
       stock: variant.stock,
-      packaging: chosen,
     })
+    if (!result.ok) {
+      Swal.fire({
+        title: 'Stock insuficiente',
+        text: 'No hay suficiente stock disponible de este producto.',
+        icon: 'warning',
+        confirmButtonColor: '#9c664d',
+        confirmButtonText: 'Entendido',
+        background: '#FDF9F0',
+        color: '#1a1209',
+      })
+      return
+    }
     setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
+    navigate('/carrito')
   }
 
   const related = products
@@ -249,23 +239,6 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
-
-          {/* ── Packaging elegido ── */}
-          {pkgApplies && packagingChoice && (
-            <div className="pkg-chosen-badge">
-              {packagingChoice.imagen
-                ? <img src={packagingChoice.imagen} alt={packagingChoice.nombre} className="pkg-chosen-img" />
-                : <span className="pkg-chosen-emoji">{packagingChoice.emoji}</span>
-              }
-              <div className="pkg-chosen-info">
-                <span className="pkg-chosen-label">Empaque seleccionado</span>
-                <strong>{packagingChoice.nombre}</strong>
-              </div>
-              {packagingChoice.precio > 0 && (
-                <span className="pkg-chosen-price">+{formatPrice(packagingChoice.precio)}</span>
-              )}
-            </div>
-          )}
 
           {/* Botones */}
           <div className="detail-actions">

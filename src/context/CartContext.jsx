@@ -63,12 +63,10 @@ export function CartProvider({ children }) {
   const clearCart      = ()                 => dispatch({ type: 'CLEAR' })
 
   const totalItems    = items.reduce((sum, i) => sum + i.quantity, 0)
-  // packaging se cobra una vez por línea (no por unidad)
-  const totalPrice    = items.reduce((sum, i) => sum + i.price * i.quantity + (i.packaging?.precio || 0), 0)
-  const totalPackaging = items.reduce((sum, i) => sum + (i.packaging?.precio || 0), 0)
+  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, totalPackaging }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
       {children}
     </CartContext.Provider>
   )

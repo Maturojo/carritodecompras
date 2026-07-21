@@ -53,15 +53,12 @@ const newVariant = () => ({
   images: [''],
 })
 
-const LABELS_CON_PACKAGING = ['mates', 'bombillas']
-
 const emptyForm = (firstCat = 'mates') => ({
   name: '',
   sku: '',
   description: '',
   category: firstCat,
   featured: false,
-  packaging: false,
   variants: [newVariant()],
 })
 
@@ -274,7 +271,7 @@ export default function AdminProducts() {
         }))
       : [{ ...newVariant(), name: 'Única', price: String(product.price || ''), stock: String(product.stock || ''), images: [product.image || ''] }]
 
-    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', featured: product.featured || false, packaging: product.packaging || false, variants })
+    setForm({ name: product.name, sku: product.sku || '', description: product.description || '', category: product.category || 'mates', featured: product.featured || false, variants })
     setEditingId(product.id)
     setOpenVariant(0)
     setShowForm(true)
@@ -308,12 +305,6 @@ export default function AdminProducts() {
   const handleCancel = () => { setForm(emptyForm()); setEditingId(null); setShowForm(false) }
   const handleDelete = (id) => { deleteProduct(id); setConfirmDelete(null) }
 
-  const aplicarPackagingMasivo = async () => {
-    const targets = products.filter(p => ['mates', 'bombillas'].some(k => (p.category || '').toLowerCase().includes(k)))
-    await Promise.all(targets.map(p => updateProduct(p.id, { ...p, packaging: true })))
-    alert(`✅ Packaging activado en ${targets.length} productos.`)
-  }
-
   /* ── Asignar SKU a productos sin código ── */
   const handleAsignarSkus = async () => {
     const sinSku = products.filter(p => !p.sku?.trim())
@@ -337,11 +328,6 @@ export default function AdminProducts() {
   }
 
   const catOptions = categories.filter(c => c.id !== 'todos')
-  const mostrarPackaging = ['mates', 'bombillas'].some(k =>
-    (form.category || '').toLowerCase().includes(k) ||
-    catOptions.find(c => (c.slug || c.id) === form.category)?.label?.toLowerCase().includes(k)
-  )
-
   // Categorías usadas por productos pero que no están registradas en la BD
   const registeredSlugs = new Set(catOptions.map(c => (c.slug || c.id).toLowerCase()))
   const orphanCats = [...new Set(products.map(p => p.category).filter(Boolean))]
@@ -365,11 +351,6 @@ export default function AdminProducts() {
           {products.some(p => !p.sku?.trim()) && (
             <button className="admin-btn-secondary" onClick={handleAsignarSkus} title="Generar códigos para productos que no tienen">
               🏷️ Asignar códigos faltantes ({products.filter(p => !p.sku?.trim()).length})
-            </button>
-          )}
-          {products.some(p => ['mates','bombillas'].some(k => (p.category||'').toLowerCase().includes(k)) && !p.packaging) && (
-            <button className="admin-btn-secondary" onClick={aplicarPackagingMasivo} title="Activar packaging en todos los mates y bombillas">
-              🎁 Activar packaging en mates y bombillas
             </button>
           )}
           <button className="admin-btn-primary" onClick={() => { setForm(emptyForm()); setEditingId(null); setOpenVariant(0); setShowForm(true) }}>
@@ -493,17 +474,6 @@ export default function AdminProducts() {
                 />
                 <span>⭐ Destacado en inicio</span>
               </label>
-              {mostrarPackaging && (
-                <label className="admin-toggle-row">
-                  <input
-                    type="checkbox"
-                    checked={form.packaging || false}
-                    onChange={e => setForm(f => ({ ...f, packaging: e.target.checked }))}
-                    className="admin-toggle-checkbox"
-                  />
-                  <span>🎁 Incluye packaging</span>
-                </label>
-              )}
             </div>
             <div className="admin-form-group" style={{ gridColumn: '1 / -1' }}>
               <label>Descripción *</label>

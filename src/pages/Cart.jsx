@@ -5,7 +5,7 @@ import Swal from 'sweetalert2'
 
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, totalPrice, totalPackaging } = useCart()
+  const { items, removeItem, updateQuantity, totalPrice } = useCart()
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price)
@@ -36,12 +36,6 @@ export default function Cart() {
                 <h3>{item.name}</h3>
                 {item.variantName && <p className="cart-item-variant">{item.variantName}</p>}
                 <p className="cart-item-price">{formatPrice(item.price)} c/u</p>
-                {item.packaging && (
-                  <p className="cart-item-packaging">
-                    {item.packaging.emoji} {item.packaging.nombre}
-                    {item.packaging.precio > 0 && <span className="pkg-extra"> +{formatPrice(item.packaging.precio)}</span>}
-                  </p>
-                )}
               </div>
               <div className="cart-item-controls">
                 <button className="qty-btn" onClick={() => updateQuantity(item.cartKey || String(item.id), item.quantity - 1)}>−</button>
@@ -75,14 +69,8 @@ export default function Cart() {
           <h2>Resumen del pedido</h2>
           <div className="summary-row">
             <span>Subtotal productos</span>
-            <span>{formatPrice(totalPrice - totalPackaging)}</span>
+            <span>{formatPrice(totalPrice)}</span>
           </div>
-          {totalPackaging > 0 && (
-            <div className="summary-row">
-              <span>Empaque premium</span>
-              <span>{formatPrice(totalPackaging)}</span>
-            </div>
-          )}
           <div className="summary-row">
             <span>Envío</span>
             <span>A convenir</span>

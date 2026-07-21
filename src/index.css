@@ -2678,44 +2678,6 @@ button { cursor: pointer; border: none; font-family: inherit; }
   .mate-canvas-wrap { height: 320px; }
 }
 
-/* ── Packaging: insignia de empaque elegido (ProductDetail) ── */
-.pkg-chosen-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.9rem;
-  border: 2px solid var(--verde);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--verde) 7%, var(--crema));
-  margin: 0.5rem 0 0.25rem;
-}
-.pkg-chosen-img {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 7px;
-  flex-shrink: 0;
-}
-.pkg-chosen-emoji { font-size: 1.6rem; flex-shrink: 0; }
-.pkg-chosen-info  { display: flex; flex-direction: column; flex: 1; gap: 0.1rem; }
-.pkg-chosen-label { font-size: 0.72rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; }
-.pkg-chosen-info strong { font-size: 0.88rem; color: var(--texto); }
-.pkg-chosen-price { font-size: 0.85rem; font-weight: 700; color: var(--verde-oscuro); white-space: nowrap; }
-
-/* ── Cart item packaging display ── */
-.cart-item-packaging {
-  font-size: 0.82rem;
-  color: var(--texto-suave);
-  margin-top: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-.pkg-extra {
-  font-weight: 600;
-  color: var(--verde-oscuro);
-}
-
 /* ── Admin: featured toggle ── */
 .admin-toggle-row {
   display: flex;

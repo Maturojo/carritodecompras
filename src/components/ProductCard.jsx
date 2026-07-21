@@ -1,15 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { useContent } from '../context/ContentContext'
 import { useAnalytics } from '../context/AnalyticsContext'
-import { showPackagingSelector } from '../utils/packaging'
 import FavoriteBtn from './FavoriteBtn'
 import Swal from 'sweetalert2'
 
 export default function ProductCard({ product }) {
   const { addItem, items } = useCart()
-  const { content } = useContent()
   const { trackProductClick } = useAnalytics()
+  const navigate = useNavigate()
 
   // Soporte para productos con y sin variantes
   const firstVariant = product.variants?.[0]
@@ -27,15 +25,7 @@ export default function ProductCard({ product }) {
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
-  const handleAdd = async () => {
-    const esConPackaging = product.packaging ||
-      ['mates', 'bombillas'].some(k => (product.category || '').toLowerCase().includes(k))
-    const pkgConfig = { ...content.packaging, enabled: true }
-    const { selected, cancelled } = esConPackaging
-      ? await showPackagingSelector(pkgConfig)
-      : { selected: content.packaging?.options?.[0] ?? null, cancelled: false }
-    if (cancelled) return
-
+  const handleAdd = () => {
     const result = addItem({
       cartKey,
       productId: product.id,
@@ -45,7 +35,6 @@ export default function ProductCard({ product }) {
       price,
       image,
       stock,
-      packaging: selected,
     })
     if (!result.ok) {
       Swal.fire({
@@ -57,7 +46,9 @@ export default function ProductCard({ product }) {
         background: '#FDF9F0',
         color: '#1a1209',
       })
+      return
     }
+    navigate('/carrito')
   }
 
   return (
