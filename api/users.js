@@ -1,4 +1,4 @@
-import { getDb } from './lib/mongodb.js'
+import { getDb } from '../lib/mongodb.js'
 import { ObjectId } from 'mongodb'
 
 const CORS = {

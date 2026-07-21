@@ -1,4 +1,4 @@
-import { getDb } from './lib/mongodb.js'
+import { getDb } from '../lib/mongodb.js'
 import { ObjectId } from 'mongodb'
 
 const isMdp = (cp) => /^760\d$/.test(cp?.trim())
