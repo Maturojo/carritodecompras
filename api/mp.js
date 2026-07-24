@@ -1,6 +1,6 @@
 import { getDb } from '../lib/mongodb.js'
 import { ObjectId } from 'mongodb'
-import { getCouponDiscount, findCoupon } from '../src/data/coupons.js'
+import { getCouponDiscount, normalizeCouponCode, validateCouponRules } from '../src/data/coupons.js'
 
 const isMdp = (cp) => /^760\d$/.test(cp?.trim())
 
@@ -157,7 +157,11 @@ export default async function handler(req, res) {
 
     const orderId = `MC-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
     const subtotal = getProductsSubtotal(items)
-    const validCoupon = coupon?.code ? findCoupon(coupon.code) : null
+    const db = await getDb()
+    const couponCode = normalizeCouponCode(coupon?.code || '')
+    const validCoupon = couponCode ? await db.collection('coupons').findOne({ code: couponCode }) : null
+    const couponResult = couponCode ? validateCouponRules(validCoupon, subtotal) : { ok: true }
+    if (!couponResult.ok) return res.status(400).json({ error: couponResult.error })
     const descuento = getCouponDiscount(validCoupon, subtotal)
     const total = subtotal - descuento + (Number(envio?.precio) || 0)
 
@@ -192,7 +196,6 @@ export default async function handler(req, res) {
       const mpData = await mpRes.json()
       if (!mpRes.ok) throw new Error(mpData.message || 'Error al crear preferencia en MercadoPago')
 
-      const db = await getDb()
       await db.collection('orders').insertOne({
         orderId, nombre, email, telefono,
         direccion, ciudad, provincia, codigoPostal,
@@ -251,6 +254,16 @@ export default async function handler(req, res) {
           await db.collection('orders').updateOne(
             { orderId: external_reference },
             { $set: { stockDescontado: true, stockDescontadoAt: new Date().toISOString() } }
+          )
+        }
+        if (order?.coupon?._id && !order.couponUsoRegistrado) {
+          await db.collection('coupons').updateOne(
+            { _id: order.coupon._id },
+            { $inc: { usedCount: 1 }, $set: { updatedAt: new Date().toISOString() } }
+          )
+          await db.collection('orders').updateOne(
+            { orderId: external_reference },
+            { $set: { couponUsoRegistrado: true } }
           )
         }
         if (order) await notificarDueno(order)

@@ -1,39 +1,5 @@
-export const COUPONS = [
-  {
-    code: 'BIENVENIDO10',
-    label: '10% OFF',
-    description: 'Para tu primera compra online.',
-    type: 'percent',
-    value: 10,
-    minSubtotal: 15000,
-    maxDiscount: 8000,
-  },
-  {
-    code: 'MATE15',
-    label: '15% OFF',
-    description: 'Ideal para compras grandes.',
-    type: 'percent',
-    value: 15,
-    minSubtotal: 45000,
-    maxDiscount: 15000,
-  },
-  {
-    code: 'LOCAL5000',
-    label: '$5.000 OFF',
-    description: 'Cupón especial para clientes de Mar del Plata.',
-    type: 'fixed',
-    value: 5000,
-    minSubtotal: 30000,
-  },
-]
-
 export function normalizeCouponCode(code = '') {
   return String(code).trim().toUpperCase().replace(/\s+/g, '')
-}
-
-export function findCoupon(code) {
-  const normalized = normalizeCouponCode(code)
-  return COUPONS.find(coupon => coupon.code === normalized) || null
 }
 
 export function getCouponDiscount(coupon, subtotal) {
@@ -53,11 +19,29 @@ export function getCouponDiscount(coupon, subtotal) {
 }
 
 export function validateCoupon(code, subtotal) {
-  const coupon = findCoupon(code)
-  if (!coupon) {
+  if (!normalizeCouponCode(code)) {
     return { ok: false, error: 'Ese cupón no existe o ya no está disponible.' }
   }
 
+  return { ok: true }
+}
+
+export function validateCouponRules(coupon, subtotal) {
+  if (!coupon) {
+    return { ok: false, error: 'Ese cupón no existe o ya no está disponible.' }
+  }
+  if (coupon.active === false) {
+    return { ok: false, coupon, error: 'Ese cupón está desactivado.' }
+  }
+  const expiresAt = coupon.expiresAt && String(coupon.expiresAt).length === 10
+    ? `${coupon.expiresAt}T23:59:59.999`
+    : coupon.expiresAt
+  if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
+    return { ok: false, coupon, error: 'Ese cupón ya venció.' }
+  }
+  if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) {
+    return { ok: false, coupon, error: 'Ese cupón ya alcanzó su límite de usos.' }
+  }
   if ((Number(subtotal) || 0) < (coupon.minSubtotal || 0)) {
     return {
       ok: false,
@@ -71,15 +55,6 @@ export function validateCoupon(code, subtotal) {
     coupon,
     discount: getCouponDiscount(coupon, subtotal),
   }
-}
-
-export function getBestCoupon(subtotal) {
-  const eligible = COUPONS
-    .map(coupon => ({ coupon, discount: getCouponDiscount(coupon, subtotal) }))
-    .filter(item => item.discount > 0)
-    .sort((a, b) => b.discount - a.discount)
-
-  return eligible[0]?.coupon || COUPONS[0]
 }
 
 export function formatCouponMoney(value) {

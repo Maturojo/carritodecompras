@@ -16,7 +16,6 @@ export default function Cart() {
     discountedTotal,
     applyCoupon,
     removeCoupon,
-    generateCoupon,
   } = useCart()
   const [couponCode, setCouponCode] = useState('')
   const [couponMessage, setCouponMessage] = useState('')
@@ -24,25 +23,15 @@ export default function Cart() {
   const formatPrice = (price) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price)
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault()
-    const result = applyCoupon(couponCode)
+    const result = await applyCoupon(couponCode)
     if (!result.ok) {
       setCouponMessage(result.error)
       return
     }
     setCouponCode('')
     setCouponMessage(`Cupón ${result.coupon.code} aplicado.`)
-  }
-
-  const handleGenerateCoupon = () => {
-    const result = generateCoupon()
-    if (!result.ok) {
-      setCouponMessage(result.error)
-      return
-    }
-    setCouponCode('')
-    setCouponMessage(`Te generamos ${result.coupon.code}.`)
   }
 
   if (items.length === 0) {
@@ -124,11 +113,8 @@ export default function Cart() {
             <div className="coupon-box-header">
               <div>
                 <h3>Cupones</h3>
-                <p>Generá uno o ingresá tu código.</p>
+                <p>Ingresá el código que te compartimos.</p>
               </div>
-              <button type="button" className="coupon-generate-btn" onClick={handleGenerateCoupon}>
-                Generar
-              </button>
             </div>
 
             {coupon && (

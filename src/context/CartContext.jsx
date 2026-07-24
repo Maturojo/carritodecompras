@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useEffect } from 'react'
-import { findCoupon, getBestCoupon, getCouponDiscount, validateCoupon } from '../data/coupons'
+import { getCouponDiscount, normalizeCouponCode } from '../data/coupons'
 
 const CartContext = createContext(null)
 const STORAGE_KEY = 'ms_cart'
@@ -70,22 +70,22 @@ export function CartProvider({ children }) {
   const removeItem     = (cartKey)           => dispatch({ type: 'REMOVE_ITEM', cartKey })
   const updateQuantity = (cartKey, quantity)  => dispatch({ type: 'UPDATE_QUANTITY', cartKey, quantity })
   const clearCart      = ()                 => dispatch({ type: 'CLEAR' })
-  const applyCoupon = (code) => {
-    const result = validateCoupon(code, totalPrice)
-    if (!result.ok) return result
-    dispatch({ type: 'APPLY_COUPON', coupon: result.coupon })
-    return result
+  const applyCoupon = async (code) => {
+    const normalized = normalizeCouponCode(code)
+    if (!normalized) return { ok: false, error: 'Ingresá un código de cupón.' }
+
+    const res = await fetch(`/api/coupons?code=${encodeURIComponent(normalized)}&subtotal=${totalPrice}`)
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, error: data.error || 'No pudimos validar el cupón.' }
+
+    dispatch({ type: 'APPLY_COUPON', coupon: data.coupon })
+    return { ok: true, coupon: data.coupon, discount: data.discount }
   }
   const removeCoupon = () => dispatch({ type: 'REMOVE_COUPON' })
-  const generateCoupon = () => {
-    const coupon = getBestCoupon(totalPrice)
-    dispatch({ type: 'APPLY_COUPON', coupon })
-    return validateCoupon(coupon.code, totalPrice)
-  }
 
   const totalItems    = items.reduce((sum, i) => sum + i.quantity, 0)
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const activeCoupon = state.coupon ? findCoupon(state.coupon.code) : null
+  const activeCoupon = state.coupon || null
   const discountAmount = getCouponDiscount(activeCoupon, totalPrice)
   const discountedTotal = Math.max(0, totalPrice - discountAmount)
 
@@ -103,7 +103,6 @@ export function CartProvider({ children }) {
       discountedTotal,
       applyCoupon,
       removeCoupon,
-      generateCoupon,
     }}>
       {children}
     </CartContext.Provider>

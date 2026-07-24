@@ -4,17 +4,19 @@ import AdminProducts from './AdminProducts'
 import AdminOrders from './AdminOrders'
 import AdminAnalytics from './AdminAnalytics'
 import AdminClientes from './AdminClientes'
+import AdminCoupons from './AdminCoupons'
 import AdminContent from './AdminContent'
-import AdminConfig  from './AdminConfig'
+import AdminConfig from './AdminConfig'
 
 const SECTIONS = [
-  { id: 'dashboard', label: 'Dashboard',  icon: '📊' },
-  { id: 'products',  label: 'Productos',  icon: '📦' },
-  { id: 'orders',    label: 'Pedidos',    icon: '🛒' },
-  { id: 'analytics', label: 'Analytics',  icon: '📈' },
-  { id: 'clientes',  label: 'Clientes',   icon: '👥' },
-  { id: 'content',   label: 'Contenido',  icon: '✏️' },
-  { id: 'config',    label: 'Config',     icon: '⚙️' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'D' },
+  { id: 'products', label: 'Productos', icon: 'P' },
+  { id: 'orders', label: 'Pedidos', icon: 'O' },
+  { id: 'analytics', label: 'Analytics', icon: 'A' },
+  { id: 'clientes', label: 'Clientes', icon: 'C' },
+  { id: 'coupons', label: 'Cupones', icon: '$' },
+  { id: 'content', label: 'Contenido', icon: 'T' },
+  { id: 'config', label: 'Config', icon: '*' },
 ]
 
 export default function AdminLayout({ onLogout }) {
@@ -27,20 +29,20 @@ export default function AdminLayout({ onLogout }) {
       case 'products': return <AdminProducts />
       case 'orders': return <AdminOrders />
       case 'analytics': return <AdminAnalytics />
-      case 'clientes':  return <AdminClientes />
-      case 'content':   return <AdminContent />
-      case 'config':    return <AdminConfig />
+      case 'clientes': return <AdminClientes />
+      case 'coupons': return <AdminCoupons />
+      case 'content': return <AdminContent />
+      case 'config': return <AdminConfig />
       default: return null
     }
   }
 
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <span className="admin-logo">🧉 Mate&amp;Co</span>
-          <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>✕</button>
+          <span className="admin-logo">Mate&amp;Co</span>
+          <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>x</button>
         </div>
         <nav className="admin-nav">
           {SECTIONS.map(s => (
@@ -56,15 +58,14 @@ export default function AdminLayout({ onLogout }) {
         </nav>
         <div className="admin-sidebar-footer">
           <a href="/" target="_blank" className="admin-nav-item secondary">
-            <span>🌐</span><span>Ver sitio</span>
+            <span>W</span><span>Ver sitio</span>
           </a>
           <button className="admin-nav-item secondary" onClick={onLogout}>
-            <span>🚪</span><span>Salir</span>
+            <span>X</span><span>Salir</span>
           </button>
         </div>
       </aside>
 
-      {/* Main */}
       <div className="admin-main">
         <header className="admin-topbar">
           <button className="admin-hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
