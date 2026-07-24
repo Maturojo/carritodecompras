@@ -1,10 +1,44 @@
 import { getDb } from '../lib/mongodb.js'
 import { ObjectId } from 'mongodb'
+import { getCouponDiscount, findCoupon } from '../src/data/coupons.js'
 
 const isMdp = (cp) => /^760\d$/.test(cp?.trim())
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
+
+function getProductsSubtotal(items = []) {
+  return items.reduce((sum, item) => {
+    const price = Number(item.price) || 0
+    const quantity = Number(item.quantity) || 0
+    return sum + price * quantity
+  }, 0)
+}
+
+function buildMercadoPagoItems(items = [], discount = 0) {
+  const subtotal = getProductsSubtotal(items)
+  if (subtotal <= 0) return []
+  let remainingDiscount = Math.min(Math.max(0, Number(discount) || 0), subtotal)
+
+  return items.map((item, index) => {
+    const quantity = Math.max(1, Number(item.quantity) || 1)
+    const lineTotal = (Number(item.price) || 0) * quantity
+    const lineDiscount = index === items.length - 1
+      ? remainingDiscount
+      : Math.round((lineTotal / subtotal) * discount * 100) / 100
+
+    remainingDiscount = Math.max(0, remainingDiscount - lineDiscount)
+    const discountedLineTotal = Math.max(quantity, lineTotal - lineDiscount)
+
+    return {
+      id:          String(item.id),
+      title:       item.name,
+      quantity,
+      unit_price:  Number((discountedLineTotal / quantity).toFixed(2)),
+      currency_id: 'ARS',
+    }
+  })
+}
 
 async function descontarStock(db, order) {
   if (!Array.isArray(order.items) || order.items.length === 0) return
@@ -50,6 +84,9 @@ async function notificarDueno(order) {
   const itemsHtml = order.items
     .map(i => `<tr><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4">${i.name}</td><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4;text-align:center">x${i.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #f0ebe4;text-align:right">${formatARS(i.price * i.quantity)}</td></tr>`)
     .join('')
+  const discountHtml = order.descuento > 0
+    ? `<p style="margin:4px 0"><b>CupÃ³n:</b> ${order.coupon?.code || 'Aplicado'} (-${formatARS(order.descuento)})</p>`
+    : ''
 
   const html = `
   <div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#2d1a0e">
@@ -72,6 +109,7 @@ async function notificarDueno(order) {
 
       <div style="margin-top:16px;padding:14px 16px;background:#f8f4ef;border-radius:8px">
         <p style="margin:4px 0"><b>Envío:</b> ${order.envio?.nombre || '—'} ${order.envio?.precio > 0 ? formatARS(order.envio.precio) : '(a convenir)'}</p>
+        ${discountHtml}
         <p style="margin:8px 0 0;font-size:18px;font-weight:700">Total: ${formatARS(order.total)}</p>
       </div>
       <p style="margin-top:16px;font-size:11px;color:#aaa">Pedido #${order.orderId}</p>
@@ -112,20 +150,18 @@ export default async function handler(req, res) {
     if (!accessToken) return res.status(500).json({ error: 'MP_ACCESS_TOKEN no configurado en Vercel' })
 
     const {
-      items, envio, total, subtotal,
+      items, envio, coupon,
       nombre, email, telefono,
       direccion, ciudad, provincia, codigoPostal,
     } = req.body
 
     const orderId = `MC-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+    const subtotal = getProductsSubtotal(items)
+    const validCoupon = coupon?.code ? findCoupon(coupon.code) : null
+    const descuento = getCouponDiscount(validCoupon, subtotal)
+    const total = subtotal - descuento + (Number(envio?.precio) || 0)
 
-    const mpItems = items.map(i => ({
-      id:          String(i.id),
-      title:       i.name,
-      quantity:    Number(i.quantity),
-      unit_price:  Number(i.price),
-      currency_id: 'ARS',
-    }))
+    const mpItems = buildMercadoPagoItems(items, descuento)
 
     if (envio?.precio > 0) {
       mpItems.push({
@@ -161,8 +197,10 @@ export default async function handler(req, res) {
         orderId, nombre, email, telefono,
         direccion, ciudad, provincia, codigoPostal,
         items, envio,
-        subtotal: Number(subtotal),
-        total:    Number(total),
+        coupon: validCoupon,
+        descuento,
+        subtotal,
+        total,
         status:   'pendiente_pago',
         mpPreferenciaId: mpData.id,
         date: new Date().toISOString(),

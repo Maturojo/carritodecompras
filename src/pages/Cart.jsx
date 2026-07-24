@@ -1,14 +1,49 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { useCart } from '../context/CartContext'
 import CartSuggestions from '../components/CartSuggestions'
 import Swal from 'sweetalert2'
 
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, totalPrice } = useCart()
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    totalPrice,
+    coupon,
+    discountAmount,
+    discountedTotal,
+    applyCoupon,
+    removeCoupon,
+    generateCoupon,
+  } = useCart()
+  const [couponCode, setCouponCode] = useState('')
+  const [couponMessage, setCouponMessage] = useState('')
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price)
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault()
+    const result = applyCoupon(couponCode)
+    if (!result.ok) {
+      setCouponMessage(result.error)
+      return
+    }
+    setCouponCode('')
+    setCouponMessage(`Cupón ${result.coupon.code} aplicado.`)
+  }
+
+  const handleGenerateCoupon = () => {
+    const result = generateCoupon()
+    if (!result.ok) {
+      setCouponMessage(result.error)
+      return
+    }
+    setCouponCode('')
+    setCouponMessage(`Te generamos ${result.coupon.code}.`)
+  }
 
   if (items.length === 0) {
     return (
@@ -71,13 +106,53 @@ export default function Cart() {
             <span>Subtotal productos</span>
             <span>{formatPrice(totalPrice)}</span>
           </div>
+          {coupon && discountAmount > 0 && (
+            <div className="summary-row coupon-discount-row">
+              <span>Cupón {coupon.code}</span>
+              <span>-{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="summary-row">
             <span>Envío</span>
             <span>A convenir</span>
           </div>
           <div className="summary-row total">
             <span>Total</span>
-            <span>{formatPrice(totalPrice)}</span>
+            <span>{formatPrice(discountedTotal)}</span>
+          </div>
+          <div className="coupon-box">
+            <div className="coupon-box-header">
+              <div>
+                <h3>Cupones</h3>
+                <p>Generá uno o ingresá tu código.</p>
+              </div>
+              <button type="button" className="coupon-generate-btn" onClick={handleGenerateCoupon}>
+                Generar
+              </button>
+            </div>
+
+            {coupon && (
+              <div className="coupon-active">
+                <div>
+                  <strong>{coupon.label}</strong>
+                  <span>{coupon.description}</span>
+                </div>
+                <button type="button" onClick={() => { removeCoupon(); setCouponMessage('Cupón quitado.') }}>
+                  Quitar
+                </button>
+              </div>
+            )}
+
+            <form className="coupon-form" onSubmit={handleApplyCoupon}>
+              <input
+                value={couponCode}
+                onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Ej: BIENVENIDO10"
+                aria-label="Código de cupón"
+              />
+              <button type="submit">Aplicar</button>
+            </form>
+            {couponMessage && <p className="coupon-message">{couponMessage}</p>}
           </div>
           <Link to="/checkout" className="btn-primary full-width">
             Finalizar compra

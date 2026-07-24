@@ -192,6 +192,12 @@ export default function AdminOrders() {
                           <span>{formatPrice(item.price * item.quantity)}</span>
                         </div>
                       ))}
+                      {order.descuento > 0 && (
+                        <div className="order-item-row">
+                          <span>Cupón {order.coupon?.code || 'aplicado'}</span>
+                          <span>-{formatPrice(order.descuento)}</span>
+                        </div>
+                      )}
                       <div className="order-item-row total">
                         <strong>Total</strong>
                         <strong>{formatPrice(order.total)}</strong>

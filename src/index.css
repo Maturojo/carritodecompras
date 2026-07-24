@@ -409,6 +409,109 @@ button { cursor: pointer; border: none; font-family: inherit; }
   border-top: 2px solid var(--crema-oscuro);
   padding-top: 0.75rem;
 }
+.coupon-discount-row {
+  color: #2d6a4f;
+  font-weight: 700;
+}
+.coupon-box {
+  border-top: 1px solid var(--crema-oscuro);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.coupon-box-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.coupon-box-header h3 {
+  font-size: 0.95rem;
+  color: var(--verde-oscuro);
+  margin-bottom: 0.15rem;
+}
+.coupon-box-header p,
+.coupon-message {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+}
+.coupon-generate-btn,
+.coupon-form button,
+.coupon-active button {
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.coupon-generate-btn {
+  background: var(--verde-oscuro);
+  color: #fff;
+  padding: 0.5rem 0.7rem;
+}
+.coupon-generate-btn:hover { background: var(--verde); }
+.coupon-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45rem;
+}
+.coupon-form input {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 2px solid var(--crema-oscuro);
+  border-radius: 8px;
+  background: var(--crema);
+  color: var(--texto);
+  font-size: 0.82rem;
+  font-weight: 700;
+  outline: none;
+  text-transform: uppercase;
+}
+.coupon-form input:focus {
+  border-color: var(--verde-claro);
+  background: var(--blanco);
+}
+.coupon-form button {
+  background: var(--crema-oscuro);
+  color: var(--verde-oscuro);
+  padding: 0.55rem 0.7rem;
+}
+.coupon-form button:hover {
+  background: var(--verde);
+  color: #fff;
+}
+.coupon-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, #2d6a4f 28%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, #2d6a4f 9%, transparent);
+}
+.coupon-active div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.coupon-active strong {
+  font-size: 0.86rem;
+  color: #2d6a4f;
+}
+.coupon-active span {
+  font-size: 0.74rem;
+  color: var(--texto-suave);
+}
+.coupon-active button {
+  background: transparent;
+  color: var(--verde);
+  padding: 0.35rem 0.45rem;
+}
+.coupon-active button:hover {
+  background: rgba(156,102,77,0.12);
+}
 .free-shipping { color: var(--verde-claro); font-weight: 600; }
 
 /* ── Empty Cart ── */

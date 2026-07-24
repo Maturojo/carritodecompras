@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext'
 import ShippingQuote from '../components/ShippingQuote'
 
 export default function Checkout() {
-  const { items, totalPrice } = useCart()
+  const { items, totalPrice, coupon, discountAmount, discountedTotal } = useCart()
 
   // Peso estimado: 300g base por ítem (mínimo 0.5kg para cotización)
   const pesoTotalKg = Math.max(0.5, items.reduce((acc, item) => acc + (item.quantity * 0.3), 0))
@@ -23,7 +23,7 @@ export default function Checkout() {
 
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
-  const totalConEnvio = totalPrice + (selectedShipping?.precio || 0)
+  const totalConEnvio = discountedTotal + (selectedShipping?.precio || 0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -42,6 +42,8 @@ export default function Checkout() {
           items,
           envio:    selectedShipping,
           subtotal: totalPrice,
+          coupon,
+          descuento: discountAmount,
           total:    totalConEnvio,
         }),
       })
@@ -178,6 +180,12 @@ export default function Checkout() {
             <span>Subtotal</span>
             <span>{formatPrice(totalPrice)}</span>
           </div>
+          {coupon && discountAmount > 0 && (
+            <div className="summary-row coupon-discount-row">
+              <span>Cupón {coupon.code}</span>
+              <span>-{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="summary-row">
             <span>Envío {selectedShipping ? `(${selectedShipping.nombre})` : ''}</span>
             <span>{selectedShipping ? (selectedShipping.precio === 0 ? 'GRATIS' : formatPrice(selectedShipping.precio)) : '—'}</span>
