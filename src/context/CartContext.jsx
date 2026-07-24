@@ -74,7 +74,7 @@ export function CartProvider({ children }) {
     const normalized = normalizeCouponCode(code)
     if (!normalized) return { ok: false, error: 'Ingresá un código de cupón.' }
 
-    const res = await fetch(`/api/coupons?code=${encodeURIComponent(normalized)}&subtotal=${totalPrice}`)
+    const res = await fetch(`/api/products?resource=coupons&code=${encodeURIComponent(normalized)}&subtotal=${totalPrice}`)
     const data = await res.json().catch(() => ({}))
     if (!res.ok) return { ok: false, error: data.error || 'No pudimos validar el cupón.' }
 

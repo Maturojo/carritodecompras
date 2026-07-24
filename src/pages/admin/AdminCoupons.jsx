@@ -23,7 +23,7 @@ export default function AdminCoupons() {
 
   const fetchCoupons = async () => {
     setLoading(true)
-    const res = await fetch('/api/coupons').catch(() => null)
+    const res = await fetch('/api/products?resource=coupons').catch(() => null)
     const data = res?.ok ? await res.json() : []
     setCoupons(Array.isArray(data) ? data : [])
     setLoading(false)
@@ -65,7 +65,7 @@ export default function AdminCoupons() {
     e.preventDefault()
     const method = editingId ? 'PUT' : 'POST'
     const payload = editingId ? { id: editingId, ...form } : form
-    const res = await fetch('/api/coupons', {
+    const res = await fetch('/api/products?resource=coupons', {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -81,7 +81,7 @@ export default function AdminCoupons() {
   }
 
   const handleToggle = async (coupon) => {
-    await fetch('/api/coupons', {
+    await fetch('/api/products?resource=coupons', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...coupon, active: coupon.active === false }),
@@ -100,7 +100,7 @@ export default function AdminCoupons() {
       confirmButtonColor: '#e63946',
     })
     if (!ok.isConfirmed) return
-    await fetch('/api/coupons', {
+    await fetch('/api/products?resource=coupons', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: coupon.id }),
