@@ -11,14 +11,36 @@ const SORT_OPTIONS = [
   { value: 'name',       label: 'Nombre A-Z' },
 ]
 
+const normalizeTextKey = (value) =>
+  String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+const normalizePrice = (value) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+  const clean = String(value ?? '').replace(/[^\d.,-]/g, '')
+  if (!clean) return 0
+  const normalized = clean.includes(',')
+    ? clean.replace(/\./g, '').replace(',', '.')
+    : clean.replace(/\.(?=\d{3}(?:\D|$))/g, '')
+  const price = Number(normalized)
+  return Number.isFinite(price) ? price : 0
+}
+
 export default function Home() {
   const { products, categories } = useStore()
 
   // Categorías visibles = las de la BD + las que usan los productos pero no están en la BD
   const visibleCategories = useMemo(() => {
-    const dbSlugs = new Set(categories.map(c => (c.slug || c.id).toLowerCase()))
+    const dbSlugs = new Set(categories.flatMap(c => [
+      normalizeTextKey(c.slug || c.id),
+      normalizeTextKey(c.label),
+    ]))
     const fromProducts = [...new Set(products.map(p => p.category).filter(Boolean))]
-      .filter(cat => !dbSlugs.has(cat.toLowerCase()))
+      .filter(cat => !dbSlugs.has(normalizeTextKey(cat)))
       .map(cat => ({ id: cat, slug: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ') }))
     return [...categories.filter(c => c.id !== 'todos'), ...fromProducts]
   }, [categories, products])
@@ -27,26 +49,35 @@ export default function Home() {
   const [sort, setSort] = useState('default')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Precio base: primer variante o precio directo
-  const getPrice = (p) => p.variants?.[0]?.price ?? p.price ?? 0
+  const getProductPrices = (p) => {
+    const variantPrices = p.variants?.map(v => normalizePrice(v.price)).filter(price => price > 0) || []
+    const basePrice = normalizePrice(p.price)
+    return variantPrices.length ? variantPrices : [basePrice]
+  }
 
-  const prices = products.map(getPrice)
+  const getPrice = (p) => Math.min(...getProductPrices(p))
+
+  const prices = products.flatMap(getProductPrices)
   const globalMin = prices.length ? Math.min(...prices) : 0
-  const globalMax = prices.length ? Math.max(...prices) : 99999
+  const globalMax = prices.length ? Math.max(...prices) : 0
   const [priceMin, setPriceMin] = useState(0)
-  const [priceMax, setPriceMax] = useState(99999)
+  const [priceMax, setPriceMax] = useState(Infinity)
+  const selectedPriceMax = Number.isFinite(priceMax) ? priceMax : globalMax
 
   const filtered = useMemo(() => {
     let list = products.filter(p => {
-      const precio = getPrice(p)
-      // Buscar la categoría activa por slug o id para comparar de ambas formas
-      const activeCat   = categories.find(c => (c.slug || c.id) === activeCategory)
-      const matchCat    = activeCategory === 'todos'
-        || (p.category || '').toLowerCase() === activeCategory.toLowerCase()
-        || (activeCat && (p.category || '').toLowerCase() === (activeCat.slug || '').toLowerCase())
-        || (activeCat && (p.category || '').toLowerCase() === activeCat.id.toLowerCase())
+      const productPrices = getProductPrices(p)
+      const productCategory = normalizeTextKey(p.category)
+      const activeCat = categories.find(c => normalizeTextKey(c.slug || c.id) === normalizeTextKey(activeCategory))
+      const activeCategoryKeys = [
+        activeCategory,
+        activeCat?.slug,
+        activeCat?.id,
+        activeCat?.label,
+      ].map(normalizeTextKey).filter(Boolean)
+      const matchCat = activeCategory === 'todos' || activeCategoryKeys.includes(productCategory)
       const matchSearch = (p.name || '').toLowerCase().includes(search.toLowerCase())
-      const matchPrice  = precio >= priceMin && precio <= priceMax
+      const matchPrice  = productPrices.some(precio => precio >= priceMin && precio <= selectedPriceMax)
       return matchCat && matchSearch && matchPrice
     })
 
@@ -57,7 +88,7 @@ export default function Home() {
       case 'name':       return [...list].sort((a, b) => a.name.localeCompare(b.name))
       default:           return list
     }
-  }, [products, activeCategory, search, priceMin, priceMax, sort])
+  }, [products, categories, activeCategory, search, priceMin, selectedPriceMax, sort])
 
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
@@ -67,10 +98,10 @@ export default function Home() {
     setSearch('')
     setSort('default')
     setPriceMin(globalMin)
-    setPriceMax(globalMax)
+    setPriceMax(Infinity)
   }
 
-  const hasActiveFilters = activeCategory !== 'todos' || priceMin !== globalMin || priceMax !== globalMax || sort !== 'default'
+  const hasActiveFilters = activeCategory !== 'todos' || priceMin !== globalMin || selectedPriceMax !== globalMax || sort !== 'default'
 
   return (
     <>
@@ -142,21 +173,21 @@ export default function Home() {
             <div className="filter-price">
               <div className="filter-price-header">
                 <span>Precio</span>
-                <span className="filter-price-range">{formatPrice(priceMin)} — {formatPrice(priceMax)}</span>
+                <span className="filter-price-range">{formatPrice(priceMin)} — {formatPrice(selectedPriceMax)}</span>
               </div>
               <div className="price-slider-wrap">
                 <input
                   type="range"
                   min={globalMin} max={globalMax}
                   value={priceMin}
-                  onChange={e => setPriceMin(Math.min(Number(e.target.value), priceMax - 100))}
+                  onChange={e => setPriceMin(Math.min(Number(e.target.value), selectedPriceMax))}
                   className="price-slider price-slider-min"
                 />
                 <input
                   type="range"
                   min={globalMin} max={globalMax}
-                  value={priceMax}
-                  onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin + 100))}
+                  value={selectedPriceMax}
+                  onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin))}
                   className="price-slider price-slider-max"
                 />
               </div>
