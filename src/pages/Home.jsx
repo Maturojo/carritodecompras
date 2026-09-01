@@ -30,6 +30,13 @@ const normalizePrice = (value) => {
   return Number.isFinite(price) ? price : 0
 }
 
+const getProductOrder = (product) => {
+  const manualOrder = Number(product.categoryOrder)
+  if (Number.isFinite(manualOrder)) return manualOrder
+  const createdTime = Date.parse(product.createdAt || '')
+  return Number.isFinite(createdTime) ? createdTime : 0
+}
+
 export default function Home() {
   const { products, categories } = useStore()
 
@@ -86,7 +93,7 @@ export default function Home() {
       case 'price-desc': return [...list].sort((a, b) => getPrice(b) - getPrice(a))
       case 'newest':     return [...list].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
       case 'name':       return [...list].sort((a, b) => a.name.localeCompare(b.name))
-      default:           return list
+      default:           return [...list].sort((a, b) => getProductOrder(a) - getProductOrder(b))
     }
   }, [products, categories, activeCategory, search, priceMin, selectedPriceMax, sort])
 

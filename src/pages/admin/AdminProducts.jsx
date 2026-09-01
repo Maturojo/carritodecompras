@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useStore } from '../../context/StoreContext'
 import { exportToExcel, importFromExcel } from '../../utils/excel'
 
@@ -62,8 +62,23 @@ const emptyForm = (firstCat = 'mates') => ({
   variants: [newVariant()],
 })
 
+const normalizeCategoryKey = (value) =>
+  String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+const getProductOrder = (product) => {
+  const manualOrder = Number(product.categoryOrder)
+  if (Number.isFinite(manualOrder)) return manualOrder
+  const createdTime = Date.parse(product.createdAt || '')
+  return Number.isFinite(createdTime) ? createdTime : 0
+}
+
 export default function AdminProducts() {
-  const { products, addProduct, updateProduct, deleteProduct, categories, addCategory, updateCategory, deleteCategory } = useStore()
+  const { products, addProduct, updateProduct, updateProductOrder, deleteProduct, categories, addCategory, updateCategory, deleteCategory } = useStore()
   const [showForm, setShowForm]           = useState(false)
   const [editingId, setEditingId]         = useState(null)
   const [form, setForm]                   = useState(emptyForm())
@@ -75,6 +90,7 @@ export default function AdminProducts() {
   const [newCatLabel, setNewCatLabel]     = useState('')
   const [editingCat, setEditingCat]       = useState(null) // { id, label }
   const [skuError, setSkuError]           = useState('')
+  const [orderCategory, setOrderCategory] = useState('')
 
   // Validar SKU en tiempo real cuando cambia el form
   useEffect(() => {
@@ -295,6 +311,12 @@ export default function AdminProducts() {
       stock: cleanVariants[0]?.stock  || 0,
       image: cleanVariants[0]?.images[0] || '',
     }
+    if (!editingId) {
+      const currentCategoryProducts = products.filter(p => normalizeCategoryKey(p.category) === normalizeCategoryKey(form.category))
+      data.categoryOrder = currentCategoryProducts.length
+        ? Math.max(...currentCategoryProducts.map(getProductOrder)) + 1
+        : 0
+    }
     if (editingId) updateProduct(editingId, data)
     else           addProduct(data)
     setForm(emptyForm())
@@ -333,7 +355,38 @@ export default function AdminProducts() {
   const orphanCats = [...new Set(products.map(p => p.category).filter(Boolean))]
     .filter(cat => !registeredSlugs.has(cat.toLowerCase()))
     .map(cat => ({ slug: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ') }))
-  const filtered   = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase()))
+  const allCategoryOptions = [...catOptions, ...orphanCats]
+  const selectedOrderCategory = orderCategory || allCategoryOptions[0]?.slug || allCategoryOptions[0]?.id || ''
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase()
+    return products
+      .filter(p => p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term))
+      .filter(p => !selectedOrderCategory || normalizeCategoryKey(p.category) === normalizeCategoryKey(selectedOrderCategory))
+      .sort((a, b) => getProductOrder(a) - getProductOrder(b))
+  }, [products, search, selectedOrderCategory])
+
+  const moveProductInCategory = async (product, direction) => {
+    const sameCategory = products
+      .filter(p => normalizeCategoryKey(p.category) === normalizeCategoryKey(product.category))
+      .sort((a, b) => getProductOrder(a) - getProductOrder(b))
+
+    const index = sameCategory.findIndex(p => p.id === product.id)
+    const target = sameCategory[index + direction]
+    if (!target) return
+
+    const nextCurrentOrder = getProductOrder(target)
+    const nextTargetOrder = getProductOrder(product)
+    await Promise.all([
+      updateProductOrder(product.id, nextCurrentOrder),
+      updateProductOrder(target.id, nextTargetOrder),
+    ])
+  }
+
+  const orderedCategoryProducts = products
+    .filter(p => !selectedOrderCategory || normalizeCategoryKey(p.category) === normalizeCategoryKey(selectedOrderCategory))
+    .sort((a, b) => getProductOrder(a) - getProductOrder(b))
+  const firstOrderedId = orderedCategoryProducts[0]?.id
+  const lastOrderedId = orderedCategoryProducts[orderedCategoryProducts.length - 1]?.id
 
   return (
     <div className="admin-products">
@@ -588,11 +641,16 @@ export default function AdminProducts() {
 
       {/* Tabla */}
       <div className="admin-card">
-        <p className="admin-count">{filtered.length} productos</p>
+        <div className="products-list-header">
+          <p className="admin-count">{filtered.length} productos</p>
+          <select className="admin-input products-category-filter" value={selectedOrderCategory} onChange={e => setOrderCategory(e.target.value)}>
+            {allCategoryOptions.map(c => <option key={c.id || c.slug} value={c.slug || c.id}>{c.label}</option>)}
+          </select>
+        </div>
         <div className="products-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Imagen</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Variantes</th><th>Precio desde</th><th>Acciones</th></tr>
+              <tr><th>Orden</th><th>Imagen</th><th>Nombre</th><th>Código</th><th>Categoría</th><th>Variantes</th><th>Precio desde</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {filtered.map(p => {
@@ -601,6 +659,12 @@ export default function AdminProducts() {
                 const img = firstVariant?.images?.[0] || p.image || ''
                 return (
                   <tr key={p.id}>
+                    <td>
+                      <div className="order-controls">
+                        <button className="action-btn order" onClick={() => moveProductInCategory(p, -1)} disabled={p.id === firstOrderedId}>↑</button>
+                        <button className="action-btn order" onClick={() => moveProductInCategory(p, 1)} disabled={p.id === lastOrderedId}>↓</button>
+                      </div>
+                    </td>
                     <td><img src={img || 'https://placehold.co/48x48/e8e0d5/888?text=?'} alt={p.name} className="table-product-img" /></td>
                     <td className="product-name-cell">
                       {p.featured && <span title="Destacado en inicio" style={{ marginRight: 4 }}>⭐</span>}

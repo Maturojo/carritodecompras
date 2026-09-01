@@ -251,7 +251,7 @@ export default function ProductDetail() {
                 ? '❌ Sin stock'
                 : added
                   ? '✓ ¡Agregado al carrito!'
-                  : '🛒 Agregar al carrito'}
+                  : 'Comprar'}
             </button>
             {inCart && (
               <Link to="/carrito" className="btn-ver-carrito">

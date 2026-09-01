@@ -77,7 +77,7 @@ export default function ProductCard({ product }) {
           {hasVariants
             ? <Link to={`/tienda/${product.id}`} className="btn-add">Ver variantes</Link>
             : <button className={inCart ? 'btn-add added' : 'btn-add'} onClick={handleAdd} disabled={stock === 0}>
-                {stock === 0 ? 'Sin stock' : inCart ? `En carrito (${inCart.quantity})` : '+ Carrito'}
+                {stock === 0 ? 'Sin stock' : inCart ? `En carrito (${inCart.quantity})` : 'Comprar'}
               </button>
           }
         </div>

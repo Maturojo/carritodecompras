@@ -51,8 +51,24 @@ export function StoreProvider({ children }) {
       body: JSON.stringify({ id, ...data }),
     })
     setProducts(prev => prev.map(p =>
-      p.id === id ? { ...p, ...data, price: Number(data.price), stock: Number(data.stock) } : p
+      p.id === id
+        ? {
+            ...p,
+            ...data,
+            ...(data.price !== undefined ? { price: Number(data.price) } : {}),
+            ...(data.stock !== undefined ? { stock: Number(data.stock) } : {}),
+          }
+        : p
     ))
+  }, [])
+
+  const updateProductOrder = useCallback(async (id, categoryOrder) => {
+    await fetch(`${API}/products`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, categoryOrder }),
+    })
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, categoryOrder } : p))
   }, [])
 
   const deleteProduct = useCallback(async (id) => {
@@ -111,7 +127,7 @@ export function StoreProvider({ children }) {
 
   return (
     <StoreContext.Provider value={{
-      products, addProduct, updateProduct, deleteProduct,
+      products, addProduct, updateProduct, updateProductOrder, deleteProduct,
       orders, addOrder, updateOrderStatus,
       categories, addCategory, updateCategory, deleteCategory,
       loading,

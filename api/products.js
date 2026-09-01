@@ -160,7 +160,7 @@ export default async function handler(req, res) {
 
     // GET → listar todos
     if (req.method === 'GET') {
-      const products = await col.find({}).toArray()
+      const products = await col.find({}).sort({ category: 1, categoryOrder: 1, createdAt: -1 }).toArray()
       return res.status(200).json(
         products.map(p => ({ ...p, id: p._id.toString(), _id: undefined }))
       )
@@ -168,13 +168,14 @@ export default async function handler(req, res) {
 
     // POST → crear nuevo (soporta variantes)
     if (req.method === 'POST') {
-      const { name, description, category, variants, price, stock, image } = req.body
+      const { name, description, category, variants, price, stock, image, categoryOrder } = req.body
       if (!name) return res.status(400).json({ error: 'Falta el nombre del producto' })
 
       const doc = {
         name,
         description: description || '',
         category:    category    || 'otros',
+        categoryOrder: Number.isFinite(Number(categoryOrder)) ? Number(categoryOrder) : Date.now(),
         createdAt:   new Date().toISOString(),
       }
 

@@ -264,6 +264,18 @@
 }
 .admin-table tr:last-child td { border-bottom: none; }
 .products-table-wrap { overflow-x: auto; }
+.products-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.products-category-filter {
+  width: auto;
+  min-width: 190px;
+}
 .table-product-img { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; }
 .product-name-cell { font-weight: 600; max-width: 200px; }
 .price-cell { font-weight: 700; color: var(--accent); }
@@ -291,6 +303,23 @@
 }
 .action-btn.edit:hover { border-color: var(--accent); color: var(--accent); }
 .action-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+.action-btn.order {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.action-btn.order:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.order-controls {
+  display: flex;
+  gap: 0.35rem;
+  min-width: 68px;
+}
 
 /* ─── DASHBOARD ─── */
 .kpi-grid {
