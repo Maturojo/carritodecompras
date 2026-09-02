@@ -2183,17 +2183,17 @@ button { cursor: pointer; border: none; font-family: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  max-width: 100%;
+  max-width: min(100%, 270px);
   background: color-mix(in srgb, var(--marron) 15%, transparent);
   color: var(--marron);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   padding: 0.25rem 0.75rem;
   border-radius: 100px;
   border: 1px solid color-mix(in srgb, var(--marron) 25%, transparent);
-  line-height: 1.2;
+  line-height: 1.15;
   overflow-wrap: anywhere;
   text-align: center;
   white-space: normal;
@@ -2275,21 +2275,26 @@ button { cursor: pointer; border: none; font-family: inherit; }
 }
 
 /* Chips de meta */
-.detail-chips { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.detail-chips { display: flex; align-items: stretch; gap: 0.75rem; flex-wrap: wrap; }
 .detail-chip {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.6rem;
   background: var(--blanco);
   border: 1px solid var(--crema-oscuro);
   border-radius: 10px;
   padding: 0.6rem 0.9rem;
-  flex: 1;
-  min-width: 120px;
+  flex: 1 1 135px;
+  min-width: 0;
   min-height: 50px;
-  overflow: hidden;
+  overflow: visible;
 }
-.chip-icon { font-size: 1.2rem; }
+.detail-chip > div {
+  flex: 1;
+  min-width: 0;
+}
+.detail-chip-category { flex-basis: 170px; }
+.chip-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }
 .chip-label { display: block; font-size: 0.7rem; color: var(--texto-suave); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 .chip-value {
   display: block;
@@ -2301,6 +2306,7 @@ button { cursor: pointer; border: none; font-family: inherit; }
   overflow-wrap: anywhere;
   white-space: normal;
 }
+.detail-chip-category .chip-value { font-size: 0.78rem; }
 .chip-value.low { color: #e63946; }
 .chip-value.free { color: #2d6a4f; }
 

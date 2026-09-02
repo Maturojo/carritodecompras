@@ -244,7 +244,7 @@ export default function ProductDetail() {
                 </span>
               </div>
             </div>
-            <div className="detail-chip">
+            <div className="detail-chip detail-chip-category">
               <span className="chip-icon">🏷️</span>
               <div>
                 <span className="chip-label">Categoría</span>
