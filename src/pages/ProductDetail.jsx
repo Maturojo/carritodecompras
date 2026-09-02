@@ -7,9 +7,24 @@ import Lightbox from '../components/Lightbox'
 import SEO from '../components/SEO'
 import Swal from 'sweetalert2'
 
+const normalizeCategoryKey = (value) =>
+  String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+const formatCategoryName = (value) =>
+  String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, letter => letter.toUpperCase())
+
 export default function ProductDetail() {
   const { id } = useParams()
-  const { products } = useStore()
+  const { products, categories } = useStore()
   const { addItem, items } = useCart()
   const navigate = useNavigate()
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0)
@@ -49,6 +64,11 @@ export default function ProductDetail() {
   const minPrice = Math.min(...variants.map(v => v.price))
   const maxPrice = Math.max(...variants.map(v => v.price))
   const priceLabel = minPrice === maxPrice ? formatPrice(minPrice) : `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`
+  const category = categories.find(cat => {
+    const productCategory = normalizeCategoryKey(product.category)
+    return [cat.slug, cat.id, cat.label].some(value => normalizeCategoryKey(value) === productCategory)
+  })
+  const categoryLabel = category?.label || formatCategoryName(product.category)
 
   const handleVariantChange = (idx) => {
     setSelectedVariantIdx(idx)
@@ -163,7 +183,7 @@ export default function ProductDetail() {
 
           {/* Categoría + nombre */}
           <div className="detail-header">
-            <span className="detail-category-tag">{product.category}</span>
+            <span className="detail-category-tag">{categoryLabel}</span>
 
           </div>
           <h1 className="detail-title">{product.name}</h1>
@@ -228,7 +248,7 @@ export default function ProductDetail() {
               <span className="chip-icon">🏷️</span>
               <div>
                 <span className="chip-label">Categoría</span>
-                <span className="chip-value capitalize">{product.category}</span>
+                <span className="chip-value capitalize">{categoryLabel}</span>
               </div>
             </div>
             <div className="detail-chip">
