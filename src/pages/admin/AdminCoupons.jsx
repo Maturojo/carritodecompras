@@ -15,15 +15,6 @@ const EMPTY_FORM = {
   active: true,
 }
 
-const getCouponEndTime = (coupon) => {
-  if (!coupon.expiresAt) return Infinity
-  const date = String(coupon.expiresAt).length === 10
-    ? `${coupon.expiresAt}T23:59:59.999`
-    : coupon.expiresAt
-  const time = new Date(date).getTime()
-  return Number.isFinite(time) ? time : Infinity
-}
-
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
@@ -42,10 +33,6 @@ export default function AdminCoupons() {
 
   const formatPrice = (n) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0)
-
-  const upcomingCoupons = coupons
-    .filter(coupon => getCouponEndTime(coupon) >= Date.now())
-    .sort((a, b) => getCouponEndTime(a) - getCouponEndTime(b))
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -202,14 +189,14 @@ export default function AdminCoupons() {
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h3>Cupones por venir</h3>
-          <span className="admin-badge">{upcomingCoupons.length} vigentes</span>
+          <h3>Cupones creados</h3>
+          <span className="admin-badge">{coupons.length} total</span>
         </div>
 
         {loading ? (
           <p className="admin-empty">Cargando cupones...</p>
-        ) : upcomingCoupons.length === 0 ? (
-          <p className="admin-empty">No hay cupones por venir.</p>
+        ) : coupons.length === 0 ? (
+          <p className="admin-empty">Todavia no hay cupones.</p>
         ) : (
           <div className="products-table-wrap">
             <table className="admin-table">
@@ -224,7 +211,7 @@ export default function AdminCoupons() {
                 </tr>
               </thead>
               <tbody>
-                {upcomingCoupons.map(coupon => (
+                {coupons.map(coupon => (
                   <tr key={coupon.id}>
                     <td className="product-name-cell">{coupon.code}</td>
                     <td>{coupon.type === 'percent' ? `${coupon.value}%` : formatPrice(coupon.value)}</td>
